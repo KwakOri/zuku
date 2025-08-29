@@ -1,8 +1,8 @@
 // 학생 정보
 export interface Student {
-  id: string;
+  id: number;
   name: string;
-  grade: string;
+  grade: number;
   phone?: string;
   parentPhone?: string;
   email?: string;
@@ -25,21 +25,21 @@ export interface Class {
   teacherId: string;
   teacherName: string;
   startTime: string; // HH:mm 형식
-  endTime: string;   // HH:mm 형식
+  endTime: string; // HH:mm 형식
   dayOfWeek: number; // 0: 일요일, 1: 월요일, ..., 6: 토요일
-  color: string;     // 수업 블록 색상
+  color: string; // 수업 블록 색상
   room?: string;
   maxStudents?: number;
   description?: string;
-  rrule?: string;    // 반복 규칙 (RRULE 형식)
+  rrule?: string; // 반복 규칙 (RRULE 형식)
 }
 
 // 수업 예외 정보 (휴강, 시간 변경 등)
 export interface ClassException {
   id: string;
   classId: string;
-  date: string;      // YYYY-MM-DD 형식
-  type: 'cancel' | 'reschedule' | 'substitute';
+  date: string; // YYYY-MM-DD 형식
+  type: "cancel" | "reschedule" | "substitute";
   reason?: string;
   newStartTime?: string;
   newEndTime?: string;
@@ -53,7 +53,7 @@ export interface ClassStudent {
   classId: string;
   studentId: string;
   enrolledDate: string; // YYYY-MM-DD 형식
-  status: 'active' | 'paused' | 'withdrawn';
+  status: "active" | "paused" | "withdrawn";
 }
 
 // UI에서 사용할 수업 블록 데이터
@@ -70,16 +70,16 @@ export interface ClassBlock {
   room?: string;
   studentCount: number;
   maxStudents?: number;
-  date?: string;     // 특정 날짜 (예외 처리용)
+  date?: string; // 특정 날짜 (예외 처리용)
   isException?: boolean;
 }
 
 // 시간표 편집 모드
-export type EditMode = 'view' | 'edit' | 'admin';
+export type EditMode = "view" | "edit" | "admin";
 
 // 드래그 앤 드롭 데이터
 export interface DragData {
-  type: 'class-block';
+  type: "class-block";
   classBlock: ClassBlock;
   sourceDay: number;
   sourceTime: string;
@@ -87,8 +87,8 @@ export interface DragData {
 
 // 시간표 설정
 export interface ScheduleConfig {
-  startHour: number;    // 시작 시간 (기본: 9)
-  endHour: number;      // 종료 시간 (기본: 22)
+  startHour: number; // 시작 시간 (기본: 9)
+  endHour: number; // 종료 시간 (기본: 22)
   timeSlotMinutes: number; // 시간 슬롯 단위 (기본: 30분)
   showWeekend: boolean; // 주말 표시 여부
   firstDayOfWeek: number; // 주의 시작일 (0: 일요일, 1: 월요일)

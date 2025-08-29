@@ -3,7 +3,7 @@
 import { EditMode } from "@/types/schedule";
 import { Edit, Eye, Settings, Shield } from "lucide-react";
 import { useState } from "react";
-import WeeklySchedule from "./WeeklySchedule";
+import CanvasSchedule from "./CanvasSchedule";
 
 export default function EditableSchedule() {
   const [editMode, setEditMode] = useState<EditMode>("view");
@@ -69,7 +69,7 @@ export default function EditableSchedule() {
       </div>
 
       {/* 시간표 */}
-      <WeeklySchedule editMode={editMode} />
+      <CanvasSchedule editMode={editMode} />
 
       {/* 사용법 안내 */}
       <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
