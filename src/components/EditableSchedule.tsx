@@ -1,12 +1,13 @@
 "use client";
 
 import { EditMode } from "@/types/schedule";
-import { Edit, Eye, Settings, Shield } from "lucide-react";
+import { BarChart3, Edit, Eye, Settings, Shield } from "lucide-react";
 import { useState } from "react";
 import CanvasSchedule from "./CanvasSchedule";
 
 export default function EditableSchedule() {
   const [editMode, setEditMode] = useState<EditMode>("view");
+  const [showDensity, setShowDensity] = useState(false);
 
   const modeOptions = [
     {
@@ -66,10 +67,31 @@ export default function EditableSchedule() {
             );
           })}
         </div>
+
+        {/* 학생 일정 밀집도 토글 */}
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showDensity}
+              onChange={(e) => setShowDensity(e.target.checked)}
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <div className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-gray-600" />
+              <span className="text-sm font-medium text-gray-700">
+                학생 일정 밀집도 표시
+              </span>
+            </div>
+          </label>
+          <p className="text-xs text-gray-500 mt-1 ml-7">
+            시간대별 학생들의 개인 일정 수를 히트맵으로 표시합니다
+          </p>
+        </div>
       </div>
 
       {/* 시간표 */}
-      <CanvasSchedule editMode={editMode} />
+      <CanvasSchedule editMode={editMode} showDensity={showDensity} />
 
       {/* 사용법 안내 */}
       <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">

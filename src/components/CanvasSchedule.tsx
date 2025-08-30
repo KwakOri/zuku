@@ -1,6 +1,6 @@
 "use client";
 
-import { defaultScheduleConfig, generateClassBlocks } from "@/lib/mockData";
+import { calculateStudentDensity, defaultScheduleConfig, generateClassBlocks, getDensityColor, getStudentsAtTime } from "@/lib/mockData";
 import { ClassBlock, EditMode, ScheduleConfig } from "@/types/schedule";
 import { Check, Clock, Plus, Users, X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -10,6 +10,7 @@ const days = ["월", "화", "수", "목", "금", "토", "일"];
 interface CanvasScheduleProps {
   editMode?: EditMode;
   config?: ScheduleConfig;
+  showDensity?: boolean;
 }
 
 interface ClassModalProps {
@@ -251,6 +252,7 @@ function ClassModal({
 export default function CanvasSchedule({
   editMode = "view",
   config = defaultScheduleConfig,
+  showDensity = false,
 }: CanvasScheduleProps) {
   const timeCanvasRef = useRef<HTMLCanvasElement>(null);
   const headerCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -285,6 +287,14 @@ export default function CanvasSchedule({
     offsetY: 0,
     previewPosition: null,
   });
+  const [tooltip, setTooltip] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    dayOfWeek: number;
+    time: string;
+    studentCount: number;
+  } | null>(null);
 
   // 동적 캔버스 설정
   const MIN_DAY_COLUMN_WIDTH = 120; // 요일당 최소 가로 길이
@@ -322,6 +332,28 @@ export default function CanvasSchedule({
     return `${hours.toString().padStart(2, "0")}:${mins
       .toString()
       .padStart(2, "0")}`;
+  };
+
+  // 모서리가 둥근 사각형을 그리는 함수
+  const drawRoundedRect = (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    radius: number
+  ) => {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
   };
 
   // 시간 캔버스 그리기 함수 (고정, 세로 스크롤만)
@@ -451,6 +483,33 @@ export default function CanvasSchedule({
       ctx.stroke();
     }
 
+    // 학생 일정 밀집도 표시
+    if (showDensity) {
+      const densityData = calculateStudentDensity(config);
+      const maxDensity = Math.max(...Object.values(densityData));
+      
+      for (let day = 0; day < 7; day++) {
+        for (let hour = config.startHour; hour <= config.endHour; hour++) {
+          for (let minute = 0; minute < 60; minute += config.timeSlotMinutes) {
+            const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            const key = `${day}-${time}`;
+            const density = densityData[key] || 0;
+            
+            if (density > 0) {
+              const x = day * DAY_COLUMN_WIDTH;
+              const y = ((hour - config.startHour) * 60 + minute) / config.timeSlotMinutes * SLOT_HEIGHT + 20;
+              const width = DAY_COLUMN_WIDTH;
+              const height = SLOT_HEIGHT;
+              
+              const color = getDensityColor(density, maxDensity);
+              ctx.fillStyle = color;
+              ctx.fillRect(x, y, width, height);
+            }
+          }
+        }
+      }
+    }
+
     // 수업 블록 그리기
     classBlocks.forEach((block) => {
       if (dragState.isDragging && dragState.draggedBlock?.id === block.id)
@@ -469,14 +528,17 @@ export default function CanvasSchedule({
       const height =
         ((endMinutes - startMinutes) / config.timeSlotMinutes) * SLOT_HEIGHT;
 
-      // 블록 배경
+      // 블록 배경 (둥근 모서리)
+      const radius = 8;
       ctx.fillStyle = block.color;
-      ctx.fillRect(x, y, width, height);
+      drawRoundedRect(ctx, x, y, width, height, radius);
+      ctx.fill();
 
-      // 블록 테두리
+      // 블록 테두리 (둥근 모서리)
       ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
       ctx.lineWidth = 1;
-      ctx.strokeRect(x, y, width, height);
+      drawRoundedRect(ctx, x, y, width, height, radius);
+      ctx.stroke();
 
       // 텍스트
       ctx.fillStyle = "white";
@@ -541,14 +603,17 @@ export default function CanvasSchedule({
       const x = dragState.startX + dragState.offsetX - width / 2;
       const y = dragState.startY + dragState.offsetY - height / 2;
 
-      // 반투명 블록
+      // 반투명 블록 (둥근 모서리)
+      const radius = 8;
       ctx.globalAlpha = 0.8;
       ctx.fillStyle = block.color;
-      ctx.fillRect(x, y, width, height);
+      drawRoundedRect(ctx, x, y, width, height, radius);
+      ctx.fill();
 
       ctx.strokeStyle = "white";
       ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, width, height);
+      drawRoundedRect(ctx, x, y, width, height, radius);
+      ctx.stroke();
 
       // 텍스트
       ctx.fillStyle = "white";
@@ -574,23 +639,26 @@ export default function CanvasSchedule({
         const pheight =
           ((endMinutes - startMinutes) / config.timeSlotMinutes) * SLOT_HEIGHT;
 
-        // 반투명 프리뷰 박스
+        // 반투명 프리뷰 박스 (둥근 모서리)
+        const radius = 8;
         ctx.globalAlpha = 0.3;
         ctx.fillStyle = dragState.draggedBlock.color;
-        ctx.fillRect(px, py, pwidth, pheight);
+        drawRoundedRect(ctx, px, py, pwidth, pheight, radius);
+        ctx.fill();
 
-        // 점선 테두리
+        // 점선 테두리 (둥근 모서리)
         ctx.globalAlpha = 0.8;
         ctx.strokeStyle = dragState.draggedBlock.color;
         ctx.lineWidth = 2;
         ctx.setLineDash([5, 5]);
-        ctx.strokeRect(px, py, pwidth, pheight);
+        drawRoundedRect(ctx, px, py, pwidth, pheight, radius);
+        ctx.stroke();
         ctx.setLineDash([]);
 
         ctx.globalAlpha = 1.0;
       }
     }
-  }, [classBlocks, dragState, config, editMode, DAY_COLUMN_WIDTH]);
+  }, [classBlocks, dragState, config, editMode, showDensity, DAY_COLUMN_WIDTH]);
 
   // 마우스 이벤트 핸들러
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -631,8 +699,6 @@ export default function CanvasSchedule({
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!dragState.isDragging) return;
-
     const canvas = scheduleCanvasRef.current;
     if (!canvas) return;
 
@@ -640,15 +706,47 @@ export default function CanvasSchedule({
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    // 드롭 프리뷰 위치 계산
-    const previewPosition = getDropPosition(x, y);
+    // 밀집도 모드에서 툴팁 표시
+    if (showDensity && !dragState.isDragging) {
+      const dayIndex = Math.floor(x / DAY_COLUMN_WIDTH);
+      const slotIndex = Math.floor((y - 20) / SLOT_HEIGHT);
+      
+      if (dayIndex >= 0 && dayIndex < 7 && slotIndex >= 0) {
+        const hour = Math.floor(slotIndex * config.timeSlotMinutes / 60) + config.startHour;
+        const minute = (slotIndex * config.timeSlotMinutes) % 60;
+        const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        
+        const studentsAtTime = getStudentsAtTime(dayIndex, time);
+        
+        if (studentsAtTime.length > 0) {
+          setTooltip({
+            visible: true,
+            x: e.clientX,
+            y: e.clientY,
+            dayOfWeek: dayIndex,
+            time,
+            studentCount: studentsAtTime.length,
+          });
+        } else {
+          setTooltip(null);
+        }
+      } else {
+        setTooltip(null);
+      }
+    }
 
-    setDragState((prev) => ({
-      ...prev,
-      offsetX: x - prev.startX,
-      offsetY: y - prev.startY,
-      previewPosition,
-    }));
+    // 드래그 중일 때의 기존 로직
+    if (dragState.isDragging) {
+      // 드롭 프리뷰 위치 계산
+      const previewPosition = getDropPosition(x, y);
+
+      setDragState((prev) => ({
+        ...prev,
+        offsetX: x - prev.startX,
+        offsetY: y - prev.startY,
+        previewPosition,
+      }));
+    }
   };
 
   const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -944,11 +1042,46 @@ export default function CanvasSchedule({
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
+              onMouseLeave={(e) => {
+              handleMouseUp(e);
+              setTooltip(null);
+            }}
             />
           </div>
         </div>
       </div>
+
+      {/* 밀집도 툴팁 */}
+      {tooltip && showDensity && (
+        <div
+          className="fixed z-50 bg-gray-800 text-white px-3 py-2 rounded-lg shadow-lg text-sm pointer-events-none max-w-xs"
+          style={{
+            left: tooltip.x + 10,
+            top: tooltip.y - 40,
+            transform: tooltip.x > window.innerWidth - 250 ? 'translateX(-100%)' : 'none',
+          }}
+        >
+          <div className="font-medium mb-1">
+            {days[tooltip.dayOfWeek]} {tooltip.time}
+          </div>
+          <div className="text-xs text-gray-300 mb-2">
+            일정 있는 학생: {tooltip.studentCount}명
+          </div>
+          <div className="space-y-1">
+            {getStudentsAtTime(tooltip.dayOfWeek, tooltip.time).slice(0, 5).map(({ student, schedule }) => (
+              <div key={`${student.id}-${schedule.id}`} className="text-xs">
+                <span className="text-white">{student.name}</span>
+                <span className="text-gray-400 ml-1">- {schedule.title}</span>
+              </div>
+            ))}
+            {getStudentsAtTime(tooltip.dayOfWeek, tooltip.time).length > 5 && (
+              <div className="text-xs text-gray-400">
+                +{getStudentsAtTime(tooltip.dayOfWeek, tooltip.time).length - 5}명 더...
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 모달 */}
       <ClassModal

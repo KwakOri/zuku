@@ -94,6 +94,24 @@ export interface ScheduleConfig {
   firstDayOfWeek: number; // 주의 시작일 (0: 일요일, 1: 월요일)
 }
 
+// 학생 개인 일정
+export interface StudentSchedule {
+  id: string;
+  studentId: number;
+  title: string;
+  description?: string;
+  startTime: string; // HH:mm 형식
+  endTime: string; // HH:mm 형식
+  dayOfWeek: number; // 0: 월요일, 1: 화요일, ..., 6: 일요일
+  color: string; // 일정 블록 색상
+  type: "personal" | "extracurricular" | "study" | "appointment" | "other";
+  location?: string;
+  recurring?: boolean; // 매주 반복 여부
+  rrule?: string; // 반복 규칙 (RRULE 형식)
+  createdDate: string; // YYYY-MM-DD 형식
+  status: "active" | "cancelled" | "completed";
+}
+
 // 시간표 필터
 export interface ScheduleFilter {
   teacherIds?: string[];
