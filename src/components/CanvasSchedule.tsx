@@ -1,6 +1,12 @@
 "use client";
 
-import { calculateStudentDensity, defaultScheduleConfig, generateClassBlocks, getDensityColor, getStudentsAtTime } from "@/lib/mockData";
+import {
+  calculateStudentDensity,
+  defaultScheduleConfig,
+  generateClassBlocks,
+  getDensityColor,
+  getStudentsAtTime,
+} from "@/lib/utils";
 import { ClassBlock, EditMode, ScheduleConfig } from "@/types/schedule";
 import { Check, Clock, Plus, Users, X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -487,20 +493,26 @@ export default function CanvasSchedule({
     if (showDensity) {
       const densityData = calculateStudentDensity(config);
       const maxDensity = Math.max(...Object.values(densityData));
-      
+
       for (let day = 0; day < 7; day++) {
         for (let hour = config.startHour; hour <= config.endHour; hour++) {
           for (let minute = 0; minute < 60; minute += config.timeSlotMinutes) {
-            const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            const time = `${hour.toString().padStart(2, "0")}:${minute
+              .toString()
+              .padStart(2, "0")}`;
             const key = `${day}-${time}`;
             const density = densityData[key] || 0;
-            
+
             if (density > 0) {
               const x = day * DAY_COLUMN_WIDTH;
-              const y = ((hour - config.startHour) * 60 + minute) / config.timeSlotMinutes * SLOT_HEIGHT + 20;
+              const y =
+                (((hour - config.startHour) * 60 + minute) /
+                  config.timeSlotMinutes) *
+                  SLOT_HEIGHT +
+                20;
               const width = DAY_COLUMN_WIDTH;
               const height = SLOT_HEIGHT;
-              
+
               const color = getDensityColor(density, maxDensity);
               ctx.fillStyle = color;
               ctx.fillRect(x, y, width, height);
@@ -710,14 +722,18 @@ export default function CanvasSchedule({
     if (showDensity && !dragState.isDragging) {
       const dayIndex = Math.floor(x / DAY_COLUMN_WIDTH);
       const slotIndex = Math.floor((y - 20) / SLOT_HEIGHT);
-      
+
       if (dayIndex >= 0 && dayIndex < 7 && slotIndex >= 0) {
-        const hour = Math.floor(slotIndex * config.timeSlotMinutes / 60) + config.startHour;
+        const hour =
+          Math.floor((slotIndex * config.timeSlotMinutes) / 60) +
+          config.startHour;
         const minute = (slotIndex * config.timeSlotMinutes) % 60;
-        const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        
+        const time = `${hour.toString().padStart(2, "0")}:${minute
+          .toString()
+          .padStart(2, "0")}`;
+
         const studentsAtTime = getStudentsAtTime(dayIndex, time);
-        
+
         if (studentsAtTime.length > 0) {
           setTooltip({
             visible: true,
@@ -1043,9 +1059,9 @@ export default function CanvasSchedule({
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={(e) => {
-              handleMouseUp(e);
-              setTooltip(null);
-            }}
+                handleMouseUp(e);
+                setTooltip(null);
+              }}
             />
           </div>
         </div>
@@ -1058,7 +1074,10 @@ export default function CanvasSchedule({
           style={{
             left: tooltip.x + 10,
             top: tooltip.y - 40,
-            transform: tooltip.x > window.innerWidth - 250 ? 'translateX(-100%)' : 'none',
+            transform:
+              tooltip.x > window.innerWidth - 250
+                ? "translateX(-100%)"
+                : "none",
           }}
         >
           <div className="font-medium mb-1">
@@ -1068,15 +1087,18 @@ export default function CanvasSchedule({
             일정 있는 학생: {tooltip.studentCount}명
           </div>
           <div className="space-y-1">
-            {getStudentsAtTime(tooltip.dayOfWeek, tooltip.time).slice(0, 5).map(({ student, schedule }) => (
-              <div key={`${student.id}-${schedule.id}`} className="text-xs">
-                <span className="text-white">{student.name}</span>
-                <span className="text-gray-400 ml-1">- {schedule.title}</span>
-              </div>
-            ))}
+            {getStudentsAtTime(tooltip.dayOfWeek, tooltip.time)
+              .slice(0, 5)
+              .map(({ student, schedule }) => (
+                <div key={`${student.id}-${schedule.id}`} className="text-xs">
+                  <span className="text-white">{student.name}</span>
+                  <span className="text-gray-400 ml-1">- {schedule.title}</span>
+                </div>
+              ))}
             {getStudentsAtTime(tooltip.dayOfWeek, tooltip.time).length > 5 && (
               <div className="text-xs text-gray-400">
-                +{getStudentsAtTime(tooltip.dayOfWeek, tooltip.time).length - 5}명 더...
+                +{getStudentsAtTime(tooltip.dayOfWeek, tooltip.time).length - 5}
+                명 더...
               </div>
             )}
           </div>

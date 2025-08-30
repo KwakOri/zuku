@@ -119,3 +119,71 @@ export interface ScheduleFilter {
   grades?: string[];
   rooms?: string[];
 }
+
+// 사용자 역할
+export type UserRole = "admin" | "teacher" | "assistant" | "student" | "parent";
+
+// 조교 정보
+export interface Assistant {
+  id: string;
+  name: string;
+  teacherId: string; // 담당 강사
+  subjects: string[];
+  phone?: string;
+  email?: string;
+  assignedGrades: number[]; // 담당 학년
+}
+
+// 중등 주간 기록 (강사 작성)
+export interface MiddleSchoolRecord {
+  id: string;
+  studentId: number;
+  teacherId: string;
+  classId: string;
+  weekOf: string; // YYYY-MM-DD (주간 시작일)
+  attendance: "present" | "absent" | "late"; // 출석 상태
+  participation: 1 | 2 | 3 | 4 | 5; // 참여도 (1: 매우부족 ~ 5: 매우좋음)
+  understanding: 1 | 2 | 3 | 4 | 5; // 이해도 (1: 매우부족 ~ 5: 매우좋음)
+  homework: "excellent" | "good" | "fair" | "poor" | "not_submitted"; // 숙제 상태
+  notes: string; // 특이사항
+  createdDate: string; // YYYY-MM-DD
+  lastModified: string; // YYYY-MM-DD
+}
+
+// 고등 숙제 검사 기록 (조교 작성)
+export interface HighSchoolHomeworkRecord {
+  id: string;
+  studentId: number;
+  assistantId: string;
+  classId: string;
+  date: string; // YYYY-MM-DD
+  homeworkRange: string; // 숙제 범위 (예: "교재 p.45-67, 문제 1-20")
+  achievement: "excellent" | "good" | "fair" | "poor" | "not_submitted"; // 성취도
+  completionRate: number; // 완성도 (0-100%)
+  accuracy: number; // 정확도 (0-100%)
+  notes?: string; // 특이사항
+  createdDate: string; // YYYY-MM-DD
+}
+
+// 시간표 가용 시간 분석 결과
+export interface AvailabilityAnalysis {
+  studentId: number;
+  dayOfWeek: number;
+  availableSlots: {
+    startTime: string;
+    endTime: string;
+    duration: number; // 분 단위
+  }[];
+  conflictingSchedules: StudentSchedule[];
+}
+
+// 수업 스케줄링 제안
+export interface ClassSchedulingSuggestion {
+  classId: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  availableStudents: number[]; // 참여 가능한 학생 ID 목록
+  conflictStudents: number[]; // 시간 충돌이 있는 학생 ID 목록
+  score: number; // 추천 점수 (0-100)
+}
