@@ -72,6 +72,28 @@ export default function HomePage() {
       stats: "스마트 추천",
       features: ["충돌 검사", "가용 시간 분석", "자동 추천", "공통 시간 찾기"],
     },
+    {
+      id: "canvas-schedule",
+      title: "캔버스 시간표",
+      description:
+        "Canvas 기반으로 구현된 새로운 시간표 뷰어입니다",
+      icon: Calendar,
+      color: "bg-indigo-50 text-indigo-600 border-indigo-200",
+      href: "/canvas-schedule",
+      stats: "새로운 뷰어",
+      features: ["Canvas 렌더링", "5분 단위 정밀도", "1시간 격자 표시", "스프레드시트 형태"],
+    },
+    {
+      id: "excel-schedule",
+      title: "Excel 스타일 시간표",
+      description:
+        "스프레드시트 형태의 종합 시간표를 Excel처럼 확인할 수 있습니다",
+      icon: BarChart3,
+      color: "bg-emerald-50 text-emerald-600 border-emerald-200",
+      href: "/excel-schedule",
+      stats: "Excel 형태",
+      features: ["스프레드시트 레이아웃", "가로 스크롤", "고정 학생 정보", "1시간 격자"],
+    },
   ];
 
   const stats = [
