@@ -9,6 +9,8 @@ import {
   Star,
   Users,
   Grid3X3,
+  MessageSquare,
+  Settings,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -110,6 +112,20 @@ export default function HomePage() {
             </div>
 
             <div className="flex items-center gap-4">
+              <Link
+                href="/admin/invites"
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+              >
+                <Settings className="w-4 h-4" />
+                초대 관리
+              </Link>
+              <Link
+                href="/notifications"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+              >
+                <MessageSquare className="w-4 h-4" />
+                알림톡 발송
+              </Link>
               <Link
                 href="/schedule"
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

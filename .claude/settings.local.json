@@ -7,7 +7,8 @@
       "Read(/Users/kwakori/Desktop/**)",
       "Read(/Users/kwakori/Desktop/**)",
       "Read(/Users/kwakori/Desktop/**)",
-      "Read(/Users/kwakori/Desktop/**)"
+      "Read(/Users/kwakori/Desktop/**)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

@@ -207,6 +207,8 @@ export default function MiddleSchoolRecordManager({
     ));
   };
 
+  console.log("weekRecords", weekRecords);
+
   return (
     <div className="w-full space-y-6">
       {/* 헤더 */}
