@@ -1,18 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { 
-  GraduationCap, 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
+import {
   AlertCircle,
+  Eye,
+  EyeOff,
+  GraduationCap,
   Loader2,
-  LogIn
+  Lock,
+  LogIn,
+  Mail,
 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useLogin } from "@/queries/useAuth";
 
 interface LoginForm {
   email: string;
@@ -21,44 +22,43 @@ interface LoginForm {
 
 export default function LoginPage() {
   const router = useRouter();
+  const loginMutation = useLogin();
+  
   const [formData, setFormData] = useState<LoginForm>({
     email: "",
-    password: ""
+    password: "",
   });
-  
+
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loginError, setLoginError] = useState<string>("");
   const [rememberMe, setRememberMe] = useState(false);
 
   // 로그인 처리
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.email || !formData.password) {
-      setLoginError("이메일과 비밀번호를 모두 입력해주세요.");
       return;
     }
 
-    setIsSubmitting(true);
-    setLoginError("");
+    console.log("클라이언트: 로그인 시도", {
+      email: formData.email,
+      passwordLength: formData.password.length,
+    });
 
     try {
-      // TODO: 실제 API 호출로 교체
-      await new Promise(resolve => setTimeout(resolve, 1500)); // API 시뮬레이션
-      
-      // 더미 인증 로직 - 실제로는 서버에서 검증
-      if (formData.email === "admin@example.com" && formData.password === "password") {
-        // 로그인 성공 - 토큰을 localStorage에 저장하고 홈으로 리디렉트
-        localStorage.setItem("auth-token", "dummy-jwt-token");
+      const result = await loginMutation.mutateAsync({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      console.log("클라이언트: 로그인 결과", result);
+
+      if (result.success) {
+        console.log("클라이언트: 로그인 성공, 홈으로 리디렉트");
         router.push("/");
-      } else {
-        setLoginError("이메일 또는 비밀번호가 잘못되었습니다.");
       }
     } catch (error) {
-      setLoginError("로그인 중 오류가 발생했습니다. 다시 시도해주세요.");
-    } finally {
-      setIsSubmitting(false);
+      console.error("클라이언트: 로그인 에러", error);
     }
   };
 
@@ -78,7 +78,10 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="space-y-6">
           {/* 이메일 */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               이메일 주소
             </label>
             <div className="relative">
@@ -87,7 +90,9 @@ export default function LoginPage() {
                 type="email"
                 id="email"
                 value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, email: e.target.value }))
+                }
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="이메일을 입력해주세요"
                 required
@@ -98,7 +103,10 @@ export default function LoginPage() {
 
           {/* 비밀번호 */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               비밀번호
             </label>
             <div className="relative">
@@ -107,7 +115,9 @@ export default function LoginPage() {
                 type={showPassword ? "text" : "password"}
                 id="password"
                 value={formData.password}
-                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, password: e.target.value }))
+                }
                 className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="비밀번호를 입력해주세요"
                 required
@@ -118,7 +128,11 @@ export default function LoginPage() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
               </button>
             </div>
           </div>
@@ -133,7 +147,10 @@ export default function LoginPage() {
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
-              <label htmlFor="remember-me" className="ml-2 text-sm text-gray-600">
+              <label
+                htmlFor="remember-me"
+                className="ml-2 text-sm text-gray-600"
+              >
                 로그인 상태 유지
               </label>
             </div>
@@ -147,11 +164,13 @@ export default function LoginPage() {
           </div>
 
           {/* 오류 메시지 */}
-          {loginError && (
+          {loginMutation.error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-red-500" />
-                <span className="text-sm text-red-700">{loginError}</span>
+                <span className="text-sm text-red-700">
+                  {loginMutation.error.message || "로그인에 실패했습니다."}
+                </span>
               </div>
             </div>
           )}
@@ -159,10 +178,10 @@ export default function LoginPage() {
           {/* 로그인 버튼 */}
           <button
             type="submit"
-            disabled={isSubmitting || !formData.email || !formData.password}
+            disabled={loginMutation.isPending || !formData.email || !formData.password}
             className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
-            {isSubmitting ? (
+            {loginMutation.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 로그인 중...
@@ -178,7 +197,9 @@ export default function LoginPage() {
 
         {/* 테스트 계정 안내 */}
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">테스트 계정</h3>
+          <h3 className="text-sm font-medium text-gray-700 mb-2">
+            테스트 계정
+          </h3>
           <div className="text-xs text-gray-600 space-y-1">
             <p>이메일: admin@example.com</p>
             <p>비밀번호: password</p>

@@ -335,8 +335,10 @@ export const getGrade = (
 };
 
 // 학생 개별 시간표 데이터 생성 함수
-export function generateStudentWeeklyView(studentId: number): StudentWeeklyView {
-  const student = students.find(s => s.id === studentId);
+export function generateStudentWeeklyView(
+  studentId: number
+): StudentWeeklyView {
+  const student = students.find((s) => s.id === studentId);
   if (!student) {
     throw new Error(`Student with id ${studentId} not found`);
   }
@@ -352,21 +354,23 @@ export function generateStudentWeeklyView(studentId: number): StudentWeeklyView 
 
   // 해당 학생의 수업 일정
   const studentClassIds = classStudents
-    .filter(cs => cs.studentId === studentId && cs.status === "active")
-    .map(cs => cs.classId);
-  
-  const studentClasses = classes.filter(cls => studentClassIds.includes(cls.id));
+    .filter((cs) => cs.studentId === studentId && cs.status === "active")
+    .map((cs) => cs.classId);
+
+  const studentClasses = classes.filter((cls) =>
+    studentClassIds.includes(cls.id)
+  );
 
   // 해당 학생의 개인 일정
   const studentPersonalSchedules = studentSchedules.filter(
-    s => s.studentId === studentId && s.status === "active"
+    (s) => s.studentId === studentId && s.status === "active"
   );
 
   // 스케줄 블록 생성
   const scheduleBlocks: StudentScheduleBlock[] = [];
 
   // 수업 블록 추가
-  studentClasses.forEach(cls => {
+  studentClasses.forEach((cls) => {
     scheduleBlocks.push({
       id: `class-${cls.id}`,
       title: cls.title,
@@ -384,7 +388,7 @@ export function generateStudentWeeklyView(studentId: number): StudentWeeklyView 
   });
 
   // 개인 일정 블록 추가
-  studentPersonalSchedules.forEach(schedule => {
+  studentPersonalSchedules.forEach((schedule) => {
     const typeColorMap = {
       personal: "#10b981", // green-500
       extracurricular: "#8b5cf6", // violet-500

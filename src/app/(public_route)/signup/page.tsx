@@ -1,5 +1,7 @@
 "use client";
 
+import { useSignup, useValidateInviteToken } from "@/queries/useAuth";
+import { SignupRequest } from "@/services/client/authApi";
 import {
   AlertCircle,
   CheckCircle,
@@ -12,8 +14,8 @@ import {
   User,
 } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 
 interface TokenValidation {
   valid: boolean;
@@ -39,13 +41,17 @@ interface PasswordValidation {
 }
 
 export default function SignupPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
-  const [tokenValidation, setTokenValidation] = useState<TokenValidation>({
-    valid: false,
-    loading: true,
-  });
+  // React Query 훅 사용
+  const {
+    data: tokenValidation,
+    isLoading: tokenLoading,
+    error: tokenError,
+  } = useValidateInviteToken(token);
+  const signupMutation = useSignup();
 
   const [formData, setFormData] = useState<SignupForm>({
     name: "",
@@ -55,7 +61,6 @@ export default function SignupPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [signupError, setSignupError] = useState<string>("");
   const [signupSuccess, setSignupSuccess] = useState(false);
 
@@ -90,69 +95,36 @@ export default function SignupPage() {
     }
   };
 
-  // 토큰 검증
-  useEffect(() => {
-    const validateToken = async () => {
-      if (!token) {
-        setTokenValidation({
-          valid: false,
-          error: "초대 토큰이 없습니다.",
-          loading: false,
-        });
-        return;
-      }
-
-      try {
-        // TODO: 실제 API 호출로 교체
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // 로딩 시뮬레이션
-
-        // 더미 데이터 - 실제로는 API에서 받아올 데이터
-        const mockValidation = {
-          valid: true,
-          email: "teacher1@example.com",
-          role: "teacher",
-          inviterName: "관리자",
-          loading: false,
-        };
-
-        setTokenValidation(mockValidation);
-      } catch (error) {
-        setTokenValidation({
-          valid: false,
-          error: "초대 토큰을 확인할 수 없습니다.",
-          loading: false,
-        });
-      }
-    };
-
-    validateToken();
-  }, [token]);
-
   // 회원가입 처리
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isPasswordValid || !passwordsMatch) {
+    if (!isPasswordValid || !passwordsMatch || !token) {
       return;
     }
 
-    setIsSubmitting(true);
-    setSignupError("");
+    const signupData: SignupRequest = {
+      email: tokenValidation?.email || "",
+      password: formData.password,
+      name: formData.name,
+      inviteToken: token,
+    };
 
-    try {
-      // TODO: 실제 API 호출로 교체
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // API 시뮬레이션
-
-      setSignupSuccess(true);
-    } catch (error) {
-      setSignupError("회원가입 중 오류가 발생했습니다. 다시 시도해주세요.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    signupMutation.mutate(signupData, {
+      onSuccess: () => {
+        setSignupSuccess(true);
+        setTimeout(() => {
+          router.push("/login");
+        }, 2000);
+      },
+      onError: (error) => {
+        setSignupError(error.message || "회원가입 중 오류가 발생했습니다.");
+      },
+    });
   };
 
   // 로딩 중
-  if (tokenValidation.loading) {
+  if (tokenLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
@@ -169,7 +141,7 @@ export default function SignupPage() {
   }
 
   // 토큰이 유효하지 않은 경우
-  if (!tokenValidation.valid) {
+  if (!tokenValidation?.success || tokenError) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
@@ -179,7 +151,8 @@ export default function SignupPage() {
               초대가 유효하지 않습니다
             </h2>
             <p className="text-gray-600 mb-6">
-              {tokenValidation.error ||
+              {tokenError?.message ||
+                tokenValidation?.error ||
                 "초대 링크가 만료되었거나 유효하지 않습니다."}
             </p>
             <Link
@@ -240,12 +213,12 @@ export default function SignupPage() {
           <div className="flex items-center gap-3 mb-2">
             <Mail className="w-5 h-5 text-blue-600" />
             <span className="font-medium text-gray-900">
-              {tokenValidation.email}
+              {tokenValidation?.email}
             </span>
           </div>
           <div className="text-sm text-gray-600">
-            {tokenValidation.inviterName}님이{" "}
-            {getRoleDisplayName(tokenValidation.role || "")}로 초대하셨습니다.
+            관리자님이 {getRoleDisplayName(tokenValidation?.role || "")}로
+            초대하셨습니다.
           </div>
         </div>
 
@@ -430,11 +403,11 @@ export default function SignupPage() {
               !formData.name ||
               !isPasswordValid ||
               !passwordsMatch ||
-              isSubmitting
+              signupMutation.isPending
             }
             className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
-            {isSubmitting ? (
+            {signupMutation.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 회원가입 중...

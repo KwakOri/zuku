@@ -45,6 +45,10 @@ export async function loginUser(
   password: string
 ): Promise<LoginResult> {
   try {
+    console.log('=== 로그인 시도 ===');
+    console.log('이메일:', email);
+    console.log('비밀번호 길이:', password.length);
+    
     const supabase = createAdminSupabaseClient();
 
     // 사용자 조회
@@ -55,7 +59,20 @@ export async function loginUser(
       .eq("is_active", true)
       .single();
 
+    console.log('DB 조회 결과:', { user: user ? '찾음' : '없음', error: userError });
+    if (user) {
+      console.log('사용자 정보:', {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        is_active: user.is_active,
+        hasPasswordHash: !!user.password_hash
+      });
+    }
+
     if (userError || !user) {
+      console.log('사용자 조회 실패:', userError);
       return {
         success: false,
         error: "이메일 또는 비밀번호가 올바르지 않습니다.",
@@ -63,8 +80,12 @@ export async function loginUser(
     }
 
     // 비밀번호 검증
+    console.log('비밀번호 검증 시작...');
     const isValidPassword = await verifyPassword(password, user.password_hash);
+    console.log('비밀번호 검증 결과:', isValidPassword);
+    
     if (!isValidPassword) {
+      console.log('비밀번호 검증 실패');
       return {
         success: false,
         error: "이메일 또는 비밀번호가 올바르지 않습니다.",
@@ -389,6 +410,72 @@ export async function getAllUsers(): Promise<AuthUser[]> {
     }));
   } catch (error) {
     console.error("사용자 목록 조회 실패:", error);
+    return [];
+  }
+}
+
+/**
+ * 초대 목록 조회
+ */
+export async function getInvitations(): Promise<Array<{
+  id: string;
+  email: string;
+  role: string;
+  invitedBy: string;
+  invitedAt: string;
+  expiresAt: string;
+  status: 'pending' | 'accepted' | 'expired';
+  acceptedAt?: string;
+}>> {
+  try {
+    const supabase = createAdminSupabaseClient();
+
+    const { data: invitations, error } = await supabase
+      .from("signup_invitations")
+      .select(`
+        id,
+        email,
+        role,
+        expires_at,
+        used_at,
+        created_at,
+        invited_by
+      `)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("초대 목록 조회 실패:", error);
+      return [];
+    }
+
+    return invitations.map((invitation) => {
+      const now = new Date();
+      const expiresAt = new Date(invitation.expires_at);
+      const isExpired = now > expiresAt;
+      const isAccepted = !!invitation.used_at;
+
+      let status: 'pending' | 'accepted' | 'expired';
+      if (isAccepted) {
+        status = 'accepted';
+      } else if (isExpired) {
+        status = 'expired';
+      } else {
+        status = 'pending';
+      }
+
+      return {
+        id: invitation.id,
+        email: invitation.email,
+        role: invitation.role,
+        invitedBy: '관리자', // TODO: invited_by로 실제 초대자 이름 조회
+        invitedAt: invitation.created_at,
+        expiresAt: invitation.expires_at,
+        status,
+        acceptedAt: invitation.used_at || undefined,
+      };
+    });
+  } catch (error) {
+    console.error("초대 목록 조회 실패:", error);
     return [];
   }
 }

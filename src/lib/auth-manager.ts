@@ -1,7 +1,5 @@
 "use client";
 
-import { verifyAccessToken } from "./auth/jwt";
-
 // 클라이언트 사이드 JWT 토큰 관리
 export class AuthManager {
   private static instance: AuthManager;
@@ -25,8 +23,8 @@ export class AuthManager {
   // localStorage에서 토큰 로드
   private loadTokensFromStorage(): void {
     try {
-      this.accessToken = localStorage.getItem('access-token');
-      this.refreshToken = localStorage.getItem('refresh-token');
+      this.accessToken = localStorage.getItem('zuku_access_token');
+      this.refreshToken = localStorage.getItem('zuku_refresh_token');
     } catch (error) {
       console.warn('토큰 로드 실패:', error);
     }
@@ -39,8 +37,8 @@ export class AuthManager {
 
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem('access-token', accessToken);
-        localStorage.setItem('refresh-token', refreshToken);
+        localStorage.setItem('zuku_access_token', accessToken);
+        localStorage.setItem('zuku_refresh_token', refreshToken);
       } catch (error) {
         console.warn('토큰 저장 실패:', error);
       }
@@ -57,23 +55,32 @@ export class AuthManager {
     return this.refreshToken;
   }
 
-  // 토큰 유효성 검사
+  // 토큰 존재 여부만 확인 (클라이언트에서는 JWT 검증 불가)
   public isAuthenticated(): boolean {
-    if (!this.accessToken) {
-      return false;
-    }
-
-    const payload = verifyAccessToken(this.accessToken);
-    return payload !== null;
+    return !!this.accessToken;
   }
 
-  // 현재 사용자 정보 가져오기
+  // JWT 디코딩 (클라이언트에서는 페이로드 디코딩만, 검증은 서버에서)
+  private decodeTokenPayload(token: string): any | null {
+    try {
+      const payload = token.split('.')[1];
+      if (!payload) return null;
+      
+      const decoded = atob(payload);
+      return JSON.parse(decoded);
+    } catch (error) {
+      console.warn('토큰 디코딩 실패:', error);
+      return null;
+    }
+  }
+
+  // 현재 사용자 정보 가져오기 (JWT 페이로드에서)
   public getCurrentUser(): { userId: string; email: string; name: string; role: string } | null {
     if (!this.accessToken) {
       return null;
     }
 
-    const payload = verifyAccessToken(this.accessToken);
+    const payload = this.decodeTokenPayload(this.accessToken);
     if (!payload) {
       return null;
     }
@@ -93,8 +100,8 @@ export class AuthManager {
 
     if (typeof window !== 'undefined') {
       try {
-        localStorage.removeItem('access-token');
-        localStorage.removeItem('refresh-token');
+        localStorage.removeItem('zuku_access_token');
+        localStorage.removeItem('zuku_refresh_token');
       } catch (error) {
         console.warn('토큰 삭제 실패:', error);
       }

@@ -14,6 +14,8 @@ import {
   UserCheck,
   Settings
 } from "lucide-react";
+import { useInviteUser, useInvitations } from "@/queries/useAuth";
+import { InviteUserRequest } from "@/services/client/authApi";
 
 // 초대 상태 타입
 type InviteStatus = 'pending' | 'accepted' | 'expired';
@@ -30,40 +32,9 @@ interface Invitation {
   acceptedAt?: string;
 }
 
-// 더미 데이터
-const mockInvitations: Invitation[] = [
-  {
-    id: "1",
-    email: "teacher1@example.com",
-    role: "teacher",
-    invitedBy: "관리자",
-    invitedAt: "2024-01-15T10:00:00Z",
-    expiresAt: "2024-01-22T10:00:00Z",
-    status: "accepted",
-    acceptedAt: "2024-01-16T14:30:00Z"
-  },
-  {
-    id: "2", 
-    email: "assistant1@example.com",
-    role: "assistant",
-    invitedBy: "관리자",
-    invitedAt: "2024-01-16T09:00:00Z",
-    expiresAt: "2024-01-23T09:00:00Z",
-    status: "pending"
-  },
-  {
-    id: "3",
-    email: "manager1@example.com", 
-    role: "manager",
-    invitedBy: "관리자",
-    invitedAt: "2024-01-10T15:00:00Z",
-    expiresAt: "2024-01-17T15:00:00Z",
-    status: "expired"
-  }
-];
-
 export default function AdminInvitesPage() {
-  const [invitations, setInvitations] = useState<Invitation[]>(mockInvitations);
+  // React Query 훅 사용
+  const { data: invitations = [], isLoading, error } = useInvitations();
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -106,24 +77,60 @@ export default function AdminInvitesPage() {
     }
   };
 
+  // React Query 훅 사용
+  const inviteMutation = useInviteUser();
+
   // 초대 보내기
   const handleSendInvite = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const newInvite: Invitation = {
-      id: Date.now().toString(),
+    if (!formData.email || !formData.role) {
+      alert('이메일과 역할을 모두 입력해주세요.');
+      return;
+    }
+
+    const inviteData: InviteUserRequest = {
       email: formData.email,
       role: formData.role,
-      invitedBy: "관리자",
-      invitedAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7일 후
-      status: 'pending'
+      name: formData.email.split('@')[0], // 이메일 앞부분을 이름으로 사용
     };
 
-    setInvitations(prev => [newInvite, ...prev]);
-    setFormData({ email: "", role: "teacher" });
-    setShowInviteForm(false);
+    inviteMutation.mutate(inviteData, {
+      onSuccess: () => {
+        alert('초대 이메일이 발송되었습니다!');
+        setFormData({ email: "", role: "teacher" });
+        setShowInviteForm(false);
+        // React Query의 onSuccess에서 자동으로 캐시 무효화됨
+      },
+      onError: (error: any) => {
+        alert(`초대 실패: ${error.message || '알 수 없는 오류'}`);
+      },
+    });
   };
+
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">초대 목록을 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600">초대 목록을 불러오는데 실패했습니다.</p>
+          <p className="text-gray-600 mt-1">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   // 필터링된 초대 목록
   const filteredInvitations = invitations.filter(invite => 

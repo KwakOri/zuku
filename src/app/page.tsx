@@ -1,3 +1,5 @@
+"use client";
+
 import {
   ArrowRight,
   BarChart3,
@@ -6,6 +8,7 @@ import {
   Calendar,
   Clock,
   GraduationCap,
+  LogOut,
   Star,
   Users,
   Grid3X3,
@@ -13,8 +16,16 @@ import {
   Settings,
 } from "lucide-react";
 import Link from "next/link";
+import { useAuthState, useLogout } from "@/queries/useAuth";
 
 export default function HomePage() {
+  const { isAuthenticated, user } = useAuthState();
+  const logoutMutation = useLogout();
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
+
   const features = [
     {
       id: "students",
@@ -112,32 +123,53 @@ export default function HomePage() {
             </div>
 
             <div className="flex items-center gap-4">
-              <Link
-                href="/admin/invites"
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
-              >
-                <Settings className="w-4 h-4" />
-                초대 관리
-              </Link>
-              <Link
-                href="/notifications"
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-              >
-                <MessageSquare className="w-4 h-4" />
-                알림톡 발송
-              </Link>
-              <Link
-                href="/schedule"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                시간표 바로가기
-              </Link>
-              <Link
-                href="/combined-schedule"
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                통합 시간표
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  {/* 관리자만 초대 관리 버튼 표시 */}
+                  {(user?.role === 'admin' || user?.role === 'manager') && (
+                    <Link
+                      href="/admin/invites"
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                    >
+                      <Settings className="w-4 h-4" />
+                      초대 관리
+                    </Link>
+                  )}
+                  <Link
+                    href="/notifications"
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    알림톡 발송
+                  </Link>
+                  <Link
+                    href="/schedule"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    시간표 바로가기
+                  </Link>
+                  <Link
+                    href="/combined-schedule"
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  >
+                    통합 시간표
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    로그아웃
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  로그인
+                </Link>
+              )}
             </div>
           </div>
         </div>
