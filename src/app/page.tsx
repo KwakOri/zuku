@@ -94,6 +94,17 @@ export default function HomePage() {
       stats: "Excel 형태",
       features: ["스프레드시트 레이아웃", "가로 스크롤", "고정 학생 정보", "1시간 격자"],
     },
+    {
+      id: "student-schedule",
+      title: "학생 시간표 관리",
+      description:
+        "학생별 개별 시간표를 한눈에 보고 편집할 수 있는 종합 관리 시스템입니다",
+      icon: Users,
+      color: "bg-teal-50 text-teal-600 border-teal-200",
+      href: "/student-schedule",
+      stats: "종합 관리",
+      features: ["학생별 시간표", "실시간 편집", "필터 및 검색", "내보내기 기능"],
+    },
   ];
 
   const stats = [

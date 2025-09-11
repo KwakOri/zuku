@@ -9,6 +9,8 @@ import {
   ScheduleConfig,
   Student,
   StudentSchedule,
+  StudentScheduleBlock,
+  StudentWeeklyView,
 } from "@/types/schedule";
 
 // 기본 시간표 설정
@@ -331,3 +333,84 @@ export const getGrade = (
 
   return gradeLabels[grade - 1];
 };
+
+// 학생 개별 시간표 데이터 생성 함수
+export function generateStudentWeeklyView(studentId: number): StudentWeeklyView {
+  const student = students.find(s => s.id === studentId);
+  if (!student) {
+    throw new Error(`Student with id ${studentId} not found`);
+  }
+
+  // 시간 슬롯 생성 (9:00 ~ 22:00, 30분 단위)
+  const timeSlots: string[] = [];
+  for (let hour = 9; hour <= 22; hour++) {
+    timeSlots.push(`${hour.toString().padStart(2, "0")}:00`);
+    if (hour < 22) {
+      timeSlots.push(`${hour.toString().padStart(2, "0")}:30`);
+    }
+  }
+
+  // 해당 학생의 수업 일정
+  const studentClassIds = classStudents
+    .filter(cs => cs.studentId === studentId && cs.status === "active")
+    .map(cs => cs.classId);
+  
+  const studentClasses = classes.filter(cls => studentClassIds.includes(cls.id));
+
+  // 해당 학생의 개인 일정
+  const studentPersonalSchedules = studentSchedules.filter(
+    s => s.studentId === studentId && s.status === "active"
+  );
+
+  // 스케줄 블록 생성
+  const scheduleBlocks: StudentScheduleBlock[] = [];
+
+  // 수업 블록 추가
+  studentClasses.forEach(cls => {
+    scheduleBlocks.push({
+      id: `class-${cls.id}`,
+      title: cls.title,
+      type: "class",
+      startTime: cls.startTime,
+      endTime: cls.endTime,
+      dayOfWeek: cls.dayOfWeek,
+      color: cls.color,
+      location: cls.room,
+      teacherName: cls.teacherName,
+      subject: cls.subject,
+      description: `${cls.subject} 수업 - ${cls.teacherName} 강사`,
+      isEditable: false, // 수업은 편집 불가
+    });
+  });
+
+  // 개인 일정 블록 추가
+  studentPersonalSchedules.forEach(schedule => {
+    const typeColorMap = {
+      personal: "#10b981", // green-500
+      extracurricular: "#8b5cf6", // violet-500
+      study: "#f59e0b", // amber-500
+      appointment: "#ec4899", // pink-500
+      other: "#6b7280", // gray-500
+    };
+
+    scheduleBlocks.push({
+      id: schedule.id,
+      title: schedule.title,
+      type: schedule.type,
+      startTime: schedule.startTime,
+      endTime: schedule.endTime,
+      dayOfWeek: schedule.dayOfWeek,
+      color: typeColorMap[schedule.type] || typeColorMap.other,
+      location: schedule.location,
+      description: schedule.description,
+      isEditable: true, // 개인 일정은 편집 가능
+    });
+  });
+
+  return {
+    student,
+    scheduleBlocks,
+    weekDays: ["월", "화", "수", "목", "금", "토", "일"],
+    timeSlots,
+  };
+}

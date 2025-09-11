@@ -187,3 +187,27 @@ export interface ClassSchedulingSuggestion {
   conflictStudents: number[]; // 시간 충돌이 있는 학생 ID 목록
   score: number; // 추천 점수 (0-100)
 }
+
+// 학생 시간표 블록 (수업 + 개인 일정)
+export interface StudentScheduleBlock {
+  id: string;
+  title: string;
+  type: "class" | "personal" | "extracurricular" | "study" | "appointment" | "other";
+  startTime: string; // HH:mm 형식
+  endTime: string; // HH:mm 형식
+  dayOfWeek: number; // 0: 월요일, 1: 화요일, ..., 6: 일요일
+  color: string;
+  location?: string;
+  teacherName?: string; // 수업일 경우만
+  subject?: string; // 수업일 경우만
+  description?: string;
+  isEditable: boolean; // 편집 가능 여부 (개인 일정은 편집 가능, 수업은 불가)
+}
+
+// 학생 주간 시간표 구성 정보
+export interface StudentWeeklyView {
+  student: Student;
+  scheduleBlocks: StudentScheduleBlock[];
+  weekDays: string[]; // ["월", "화", "수", "목", "금", "토", "일"]
+  timeSlots: string[]; // ["09:00", "09:30", "10:00", ...]
+}
