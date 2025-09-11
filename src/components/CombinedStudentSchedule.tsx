@@ -159,7 +159,7 @@ export default function CombinedStudentSchedule() {
                   className="time-header hour-marker"
                   style={{ gridColumn: `${hourSlot} / span 12` }}
                 >
-                  {hour}:00
+                  {hour}
                 </div>
               );
             }

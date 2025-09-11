@@ -8,6 +8,7 @@ import {
   GraduationCap,
   Star,
   Users,
+  Grid3X3,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -39,6 +40,17 @@ export default function HomePage() {
       href: "/schedule",
       stats: "메인 시간표",
       features: ["드래그 앤 드롭", "실시간 편집", "시간표 모드", "밀집도 표시"],
+    },
+    {
+      id: "combined-schedule",
+      title: "학생별 통합 시간표",
+      description:
+        "모든 학생의 시간표를 한눈에 보고 스크롤 시 시간대가 고정되는 향상된 뷰",
+      icon: Grid3X3,
+      color: "bg-indigo-50 text-indigo-600 border-indigo-200",
+      href: "/combined-schedule",
+      stats: "통합 뷰",
+      features: ["학생별 일정 조회", "고정 타임라인", "세로 스크롤", "통합 관리"],
     },
     {
       id: "middle-records",
@@ -103,6 +115,12 @@ export default function HomePage() {
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 시간표 바로가기
+              </Link>
+              <Link
+                href="/combined-schedule"
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                통합 시간표
               </Link>
             </div>
           </div>

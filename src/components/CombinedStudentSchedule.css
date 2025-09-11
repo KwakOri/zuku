@@ -1,7 +1,7 @@
 .schedule-container {
   width: 100%;
-  overflow-x: auto;
-
+  height: 600px; /* Set a fixed height to enable vertical scrolling */
+  overflow: auto; /* Enable both horizontal and vertical scrolling */
   background-color: #f9fafb;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
@@ -17,7 +17,8 @@
   grid-column: 1;
   position: sticky;
   left: 0;
-  z-index: 20;
+  top: 0; /* Stick to top when scrolling vertically */
+  z-index: 30; /* Higher z-index to stay above timeline headers */
   background-color: #fff;
   border-bottom: 1px solid #e5e7eb;
   border-right: 1px solid #e5e7eb;
@@ -29,26 +30,34 @@
   padding: 0.25rem 0;
   background-color: #fff;
   border-bottom: 1px solid #e5e7eb;
-  z-index: 10;
+  position: sticky;
+  top: 0; /* Stick to top when scrolling vertically */
+  z-index: 20; /* High z-index to stay above student rows */
 }
 
 .day-header {
   grid-row: 1;
   font-weight: 600;
-  border-right: 2px solid #d1d5db;
+  border-right: 1px solid #d1d5db;
+  position: sticky;
+  top: 0; /* Stick to top when scrolling vertically */
+  z-index: 25; /* Higher than time headers to be on top */
 }
 
 .hour-marker {
   grid-row: 2;
   color: #6b7280;
   border-right: 1px solid #e5e7eb;
+  position: sticky;
+  top: 27px; /* Position below day headers (approximately day header height) */
+  z-index: 20; /* Same as other time headers */
 }
 
 .student-name {
   grid-column: 1;
   position: sticky;
   left: 0;
-  z-index: 10;
+  z-index: 15; /* Adjusted z-index to be below timeline headers but above schedule items */
   background-color: #fff;
   padding: 0.75rem 1rem;
   font-weight: 500;
