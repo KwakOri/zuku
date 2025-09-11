@@ -6,7 +6,10 @@ import { students } from "@/lib/mock/students";
 import { studentSchedules } from "@/lib/mock/studentSchedules";
 import { Class } from "@/types/schedule";
 import { Fragment, useMemo, useState } from "react";
+import { Clock, Calendar, User, BookOpen } from "lucide-react";
+import Tooltip from "./Tooltip";
 import "./CombinedStudentSchedule.css";
+import "./Tooltip.css";
 
 // Helper function to convert time string "HH:mm" to minutes from midnight
 const timeToMinutes = (time: string): number => {
@@ -131,6 +134,41 @@ export default function CombinedStudentSchedule() {
     };
   };
 
+  const renderTooltipContent = (event: TimelineEvent) => {
+    const dayName = daysOfWeek[event.dayOfWeek]?.name || "";
+    
+    return (
+      <div className="schedule-tooltip-content">
+        <div className="schedule-tooltip-title">{event.title}</div>
+        <div className="schedule-tooltip-details">
+          <div className="schedule-tooltip-detail">
+            <Clock className="schedule-tooltip-icon" />
+            <span>{event.startTime} - {event.endTime}</span>
+          </div>
+          <div className="schedule-tooltip-detail">
+            <Calendar className="schedule-tooltip-icon" />
+            <span>{dayName}요일</span>
+          </div>
+          {event.type === "class" && (
+            <div className="schedule-tooltip-detail">
+              <BookOpen className="schedule-tooltip-icon" />
+              <span>정규 수업</span>
+            </div>
+          )}
+          {event.type === "schedule" && (
+            <div className="schedule-tooltip-detail">
+              <User className="schedule-tooltip-icon" />
+              <span>개인 일정</span>
+            </div>
+          )}
+        </div>
+        <div className={`schedule-tooltip-type ${event.type}`}>
+          {event.type === "class" ? "정규 수업" : "개인 일정"}
+        </div>
+      </div>
+    );
+  };
+
   const renderTimelineHeader = () => {
     let currentSlot = 2; // Start after student name column
     return (
@@ -197,15 +235,27 @@ export default function CombinedStudentSchedule() {
               return (
                 <div
                   key={event.id}
-                  className="schedule-item"
                   style={{
                     ...position,
                     gridRow: rowIndex + 3,
-                    backgroundColor: event.color,
                   }}
-                  title={`${event.title} (${event.startTime} - ${event.endTime})`}
                 >
-                  <span className="schedule-item-title">{event.title}</span>
+                  <Tooltip
+                    content={renderTooltipContent(event)}
+                    position="top"
+                    delay={200}
+                  >
+                    <div
+                      className="schedule-item"
+                      style={{
+                        backgroundColor: event.color,
+                        width: "100%",
+                        height: "100%",
+                      }}
+                    >
+                      <span className="schedule-item-title">{event.title}</span>
+                    </div>
+                  </Tooltip>
                 </div>
               );
             })}

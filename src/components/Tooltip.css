@@ -1,0 +1,122 @@
+.tooltip-container {
+  animation: tooltip-fade-in 0.2s ease-out;
+  pointer-events: auto;
+}
+
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.tooltip-content {
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  max-width: 280px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tooltip-arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* Arrow positioning for different directions */
+.tooltip-container.top .tooltip-arrow {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(0, 0, 0, 0.9);
+}
+
+.tooltip-container.bottom .tooltip-arrow {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 6px solid rgba(0, 0, 0, 0.9);
+}
+
+.tooltip-container.left .tooltip-arrow {
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-left: 6px solid rgba(0, 0, 0, 0.9);
+}
+
+.tooltip-container.right .tooltip-arrow {
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-right: 6px solid rgba(0, 0, 0, 0.9);
+}
+
+/* Tooltip content styling for schedule items */
+.schedule-tooltip-content {
+  text-align: left;
+}
+
+.schedule-tooltip-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  color: #ffffff;
+}
+
+.schedule-tooltip-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.schedule-tooltip-detail {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.schedule-tooltip-icon {
+  width: 14px;
+  height: 14px;
+  opacity: 0.8;
+}
+
+.schedule-tooltip-type {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+
+.schedule-tooltip-type.class {
+  background-color: rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+}
+
+.schedule-tooltip-type.schedule {
+  background-color: rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
+}
