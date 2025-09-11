@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { students } from "@/lib/mock/students";
 import { classes } from "@/lib/mock/classes";
 import { classStudents } from "@/lib/mock/classStudents";
+import { students } from "@/lib/mock/students";
 import { studentSchedules } from "@/lib/mock/studentSchedules";
-import { Student, Class, StudentSchedule } from "@/types/schedule";
+import { Class } from "@/types/schedule";
+import { Fragment, useMemo, useState } from "react";
 import "./CombinedStudentSchedule.css";
 
 // Helper function to convert time string "HH:mm" to minutes from midnight
@@ -141,7 +141,9 @@ export default function CombinedStudentSchedule() {
             <div
               key={`day-${dayIndex}`}
               className="time-header day-header"
-              style={{ gridColumn: `${currentSlot} / span ${timelineMetrics.daySlots[dayIndex]}` }}
+              style={{
+                gridColumn: `${currentSlot} / span ${timelineMetrics.daySlots[dayIndex]}`,
+              }}
             >
               {day.name}
             </div>
@@ -162,7 +164,7 @@ export default function CombinedStudentSchedule() {
               );
             }
           );
-          
+
           currentSlot += timelineMetrics.daySlots[dayIndex];
           return [dayHeader, ...hourMarkers];
         })}
@@ -184,11 +186,8 @@ export default function CombinedStudentSchedule() {
 
         {/* Student Rows */}
         {studentData.map((student, rowIndex) => (
-          <React.Fragment key={student.id}>
-            <div
-              className="student-name"
-              style={{ gridRow: rowIndex + 3 }}
-            >
+          <Fragment key={student.id}>
+            <div className="student-name" style={{ gridRow: rowIndex + 3 }}>
               {student.name}
             </div>
             {student.events.map((event) => {
@@ -210,7 +209,7 @@ export default function CombinedStudentSchedule() {
                 </div>
               );
             })}
-          </React.Fragment>
+          </Fragment>
         ))}
       </div>
     </div>
