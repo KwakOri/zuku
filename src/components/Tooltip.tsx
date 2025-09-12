@@ -121,6 +121,7 @@ export default function Tooltip({
   const hideTooltip = () => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
     setIsVisible(false);
   };
@@ -157,7 +158,7 @@ export default function Tooltip({
         ref={triggerRef}
         onMouseEnter={showTooltip}
         onMouseLeave={hideTooltip}
-        className="w-full h-full relative z-30"
+        className="w-full h-full "
       >
         {children}
       </div>
@@ -166,10 +167,8 @@ export default function Tooltip({
         <div
           className={cn(
             getTooltipClasses(),
-            "animate-tooltip-fade-in pointer-events-auto"
+            "animate-tooltip-fade-in pointer-events-none"
           )}
-          onMouseEnter={showTooltip}
-          onMouseLeave={hideTooltip}
         >
           {content}
           <TooltipArrow position={dynamicPosition} />

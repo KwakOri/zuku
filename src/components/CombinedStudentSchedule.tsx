@@ -96,6 +96,44 @@ export default function CombinedStudentSchedule() {
       });
   }, [selectedStudents]);
 
+  // 겹치는 이벤트들을 그룹화하는 함수
+  const groupOverlappingEvents = (events: TimelineEvent[]) => {
+    const groups: TimelineEvent[][] = [];
+    
+    events.forEach((event) => {
+      // 이 이벤트와 겹치는 기존 그룹이 있는지 확인
+      let addedToGroup = false;
+      
+      for (const group of groups) {
+        const overlapsWithGroup = group.some(groupEvent => {
+          // 같은 요일이고 시간이 겹치는지 확인
+          if (groupEvent.dayOfWeek !== event.dayOfWeek) return false;
+          
+          const groupStart = timeToMinutes(groupEvent.startTime);
+          const groupEnd = timeToMinutes(groupEvent.endTime);
+          const eventStart = timeToMinutes(event.startTime);
+          const eventEnd = timeToMinutes(event.endTime);
+          
+          // 시간이 겹치는지 확인
+          return !(eventEnd <= groupStart || eventStart >= groupEnd);
+        });
+        
+        if (overlapsWithGroup) {
+          group.push(event);
+          addedToGroup = true;
+          break;
+        }
+      }
+      
+      // 겹치는 그룹이 없으면 새 그룹 생성
+      if (!addedToGroup) {
+        groups.push([event]);
+      }
+    });
+    
+    return groups;
+  };
+
   // Function to calculate the grid position for an event
   const getGridPosition = (event: TimelineEvent) => {
     const dayInfo = daysOfWeek[event.dayOfWeek];
@@ -138,21 +176,52 @@ export default function CombinedStudentSchedule() {
     };
   };
 
-  const renderTooltipContent = (event: TimelineEvent) => {
-    const dayName = daysOfWeek[event.dayOfWeek]?.name || "";
+  const renderTooltipContent = (events: TimelineEvent[]) => {
+    const dayName = daysOfWeek[events[0]?.dayOfWeek]?.name || "";
+    
+    // 단일 이벤트인 경우
+    if (events.length === 1) {
+      const event = events[0];
+      return (
+        <div className="text-left">
+          <div className="font-bold text-base mb-2 text-white">{event.title}</div>
+          <div className="flex items-center gap-2 text-sm text-gray-200 mb-1">
+            <Clock className="w-4 h-4 text-blue-300" />
+            <span>
+              {event.startTime} - {event.endTime}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-200">
+            <Calendar className="w-4 h-4 text-green-300" />
+            <span>{dayName}요일</span>
+          </div>
+        </div>
+      );
+    }
 
+    // 다중 이벤트인 경우
     return (
       <div className="text-left">
-        <div className="font-bold text-base mb-2 text-white">{event.title}</div>
-        <div className="flex items-center gap-2 text-sm text-gray-200 mb-1">
-          <Clock className="w-4 h-4 text-blue-300" />
-          <span>
-            {event.startTime} - {event.endTime}
-          </span>
+        <div className="font-bold text-sm mb-2 text-white">
+          겹치는 일정 ({events.length}개)
         </div>
-        <div className="flex items-center gap-2 text-sm text-gray-200">
-          <Calendar className="w-4 h-4 text-green-300" />
+        <div className="flex items-center gap-2 text-xs text-gray-200 mb-2">
+          <Calendar className="w-3 h-3 text-green-300" />
           <span>{dayName}요일</span>
+        </div>
+        <div className="space-y-2">
+          {events.map((event, index) => (
+            <div key={event.id} className="border-l-2 pl-2" style={{ borderColor: event.color }}>
+              <div className="font-medium text-sm text-white">{event.title}</div>
+              <div className="flex items-center gap-1 text-xs text-gray-200">
+                <Clock className="w-3 h-3 text-blue-300" />
+                <span>{event.startTime} - {event.endTime}</span>
+              </div>
+              <div className="text-xs text-gray-300">
+                {event.type === "class" ? "정규 수업" : "개인 일정"}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -258,48 +327,84 @@ export default function CombinedStudentSchedule() {
         )}
 
         {/* Student Rows */}
-        {studentData.map((student, rowIndex) => (
-          <Fragment key={student.id}>
-            <div
-              className="sticky left-0 z-15 bg-white px-4 py-3 font-medium text-sm border-r border-b border-gray-200 border-b-gray-100 whitespace-nowrap"
-              style={{ gridRow: rowIndex + 3, gridColumn: "1" }}
-            >
-              {student.name}
-            </div>
-            {student.events.map((event) => {
-              const position = getGridPosition(event);
-              if (!position.gridColumn) return null;
+        {studentData.map((student, rowIndex) => {
+          // 학생의 이벤트들을 겹치는 것끼리 그룹화
+          const eventGroups = groupOverlappingEvents(student.events);
+          
+          return (
+            <Fragment key={student.id}>
+              <div
+                className="sticky left-0 z-15 bg-white px-4 py-3 font-medium text-sm border-r border-b border-gray-200 border-b-gray-100 whitespace-nowrap"
+                style={{ gridRow: rowIndex + 3, gridColumn: "1" }}
+              >
+                {student.name}
+              </div>
+              {eventGroups.map((eventGroup, groupIndex) => {
+                // 그룹의 대표 이벤트 (시간이 가장 빠른 것)
+                const representativeEvent = eventGroup.reduce((earliest, current) => 
+                  timeToMinutes(current.startTime) < timeToMinutes(earliest.startTime) ? current : earliest
+                );
+                
+                const position = getGridPosition(representativeEvent);
+                if (!position.gridColumn) return null;
 
-              return (
-                <div
-                  key={event.id}
-                  style={{
-                    ...position,
-                    gridRow: rowIndex + 3,
-                    zIndex: 10, // 이벤트가 그리드 위에 표시되도록
-                  }}
-                >
-                  <Tooltip
-                    content={renderTooltipContent(event)}
-                    position="top"
-                    delay={200}
+                // 겹치는 이벤트가 있으면 시각적 표시 (쌓인 효과)
+                const isStacked = eventGroup.length > 1;
+
+                return (
+                  <div
+                    key={`group-${student.id}-${groupIndex}`}
+                    style={{
+                      ...position,
+                      gridRow: rowIndex + 3,
+                      zIndex: 10, // 이벤트가 그리드 위에 표시되도록
+                    }}
                   >
-                    <div
-                      className="relative rounded border-0 my-0.5 text-white px-1.5 py-0.5 overflow-hidden whitespace-nowrap text-ellipsis text-xs leading-tight cursor-pointer transition-transform duration-100 ease-in-out hover:transform hover:-translate-y-px hover:shadow-sm hover:z-5"
-                      style={{
-                        backgroundColor: event.color,
-                        width: "100%",
-                        height: "100%",
-                      }}
+                    <Tooltip
+                      content={renderTooltipContent(eventGroup)}
+                      position="top"
+                      delay={200}
                     >
-                      <span className="pointer-events-none">{event.title}</span>
-                    </div>
-                  </Tooltip>
-                </div>
-              );
-            })}
-          </Fragment>
-        ))}
+                      <div className="relative w-full h-full">
+                        {/* 쌓인 효과를 위한 백그라운드 아이템들 */}
+                        {isStacked && eventGroup.slice(1).map((event, stackIndex) => (
+                          <div
+                            key={`stack-${event.id}`}
+                            className="absolute rounded border-0 text-white px-1.5 py-0.5 overflow-hidden whitespace-nowrap text-ellipsis text-xs leading-tight opacity-60"
+                            style={{
+                              backgroundColor: event.color,
+                              width: "100%",
+                              height: "100%",
+                              top: `${(stackIndex + 1) * 2}px`,
+                              left: `${(stackIndex + 1) * 2}px`,
+                              zIndex: -(stackIndex + 1),
+                            }}
+                          />
+                        ))}
+                        
+                        {/* 메인 아이템 */}
+                        <div
+                          className={`relative rounded border-0 my-0.5 text-white px-1.5 py-0.5 overflow-hidden whitespace-nowrap text-ellipsis text-xs leading-tight cursor-pointer transition-transform duration-100 ease-in-out hover:transform hover:-translate-y-px hover:shadow-sm ${
+                            isStacked ? 'shadow-md' : ''
+                          }`}
+                          style={{
+                            backgroundColor: representativeEvent.color,
+                            width: "100%",
+                            height: "100%",
+                          }}
+                        >
+                          <span className="pointer-events-none">
+                            {isStacked ? `${representativeEvent.title} +${eventGroup.length - 1}` : representativeEvent.title}
+                          </span>
+                        </div>
+                      </div>
+                    </Tooltip>
+                  </div>
+                );
+              })}
+            </Fragment>
+          );
+        })}
       </div>
     </div>
   );
