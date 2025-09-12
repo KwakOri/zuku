@@ -54,8 +54,12 @@ export default function LoginPage() {
       console.log("클라이언트: 로그인 결과", result);
 
       if (result.success) {
-        console.log("클라이언트: 로그인 성공, 홈으로 리디렉트");
-        router.push("/");
+        console.log("클라이언트: 로그인 성공, 잠시 대기 후 홈으로 리디렉트");
+        // 잠시 대기하여 상태 업데이트가 완료되도록 함
+        setTimeout(() => {
+          console.log("클라이언트: 리다이렉트 실행");
+          router.push("/");
+        }, 100);
       }
     } catch (error) {
       console.error("클라이언트: 로그인 에러", error);

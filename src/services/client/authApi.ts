@@ -72,6 +72,20 @@ export interface MeResponse {
   error?: string;
 }
 
+export interface VerifyTokenResponse {
+  success: boolean;
+  user?: {
+    userId: string;
+    email: string;
+    name: string;
+    role: string;
+  };
+  isValid?: boolean;
+  isExpired?: boolean;
+  expiresAt?: string;
+  error?: string;
+}
+
 /**
  * 사용자 로그인
  */
@@ -87,9 +101,23 @@ export async function loginApi(data: LoginRequest): Promise<LoginResponse> {
 
     const result = await response.json();
 
-    // 로그인 성공 시 토큰 저장
-    if (result.success && result.accessToken && result.refreshToken) {
-      authManager.setTokens(result.accessToken, result.refreshToken);
+    console.log('로그인 API - 서버 응답 상세:', {
+      success: result.success,
+      hasAccessToken: !!result.accessToken,
+      hasRefreshToken: !!result.refreshToken,
+      hasUser: !!result.user
+    });
+
+    // 로그인 성공 시 토큰 저장 (refreshToken은 HTTP-only 쿠키로 관리됨)
+    if (result.success && result.accessToken) {
+      console.log('로그인 API - 토큰 저장 시작:', {
+        hasAccessToken: !!result.accessToken
+      });
+      // refreshToken은 서버에서 HTTP-only 쿠키로 설정되므로 빈 문자열로 처리
+      authManager.setTokens(result.accessToken, '');
+      console.log('로그인 API - 토큰 저장 완료, AuthManager 확인:', {
+        storedToken: !!authManager.getAccessToken()
+      });
     }
 
     return result;
@@ -269,8 +297,10 @@ export async function inviteUserApi(
 export async function getInvitationsApi(): Promise<InvitationsResponse> {
   try {
     const accessToken = authManager.getAccessToken();
+    console.log('초대 목록 API 호출 - 토큰 상태:', !!accessToken);
 
     if (!accessToken) {
+      console.error('초대 목록 API - 토큰이 없습니다');
       return {
         success: false,
         error: '인증 토큰이 없습니다.',
@@ -291,6 +321,32 @@ export async function getInvitationsApi(): Promise<InvitationsResponse> {
     return result;
   } catch (error) {
     console.error('초대 목록 조회 API 호출 실패:', error);
+    return {
+      success: false,
+      error: '네트워크 오류가 발생했습니다.',
+    };
+  }
+}
+
+/**
+ * JWT 토큰 검증 (클라이언트에서 안전하게)
+ */
+export async function verifyTokenApi(accessToken: string): Promise<VerifyTokenResponse> {
+  try {
+    const response = await fetch('/api/auth/verify-token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        accessToken: accessToken,
+      }),
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('토큰 검증 API 호출 실패:', error);
     return {
       success: false,
       error: '네트워크 오류가 발생했습니다.',

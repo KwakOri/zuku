@@ -20,13 +20,14 @@ export default function PrivateRoute({ children, requiredRoles }: PrivateRoutePr
     }
   }, [isAuthenticated, isLoading, router]);
 
-  // 로딩 중
+  // 로딩 중 - 토큰 검증 및 사용자 정보 확인
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">인증 상태를 확인하고 있습니다...</p>
+          <p className="text-gray-600 text-lg font-medium mb-2">인증 확인 중</p>
+          <p className="text-gray-500 text-sm">잠시만 기다려주세요...</p>
         </div>
       </div>
     );

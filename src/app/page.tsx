@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuthState, useLogout } from "@/queries/useAuth";
 import {
   ArrowRight,
   BarChart3,
@@ -8,18 +9,18 @@ import {
   Calendar,
   Clock,
   GraduationCap,
-  LogOut,
-  Star,
-  Users,
   Grid3X3,
+  Loader2,
+  LogOut,
   MessageSquare,
   Settings,
+  Star,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useAuthState, useLogout } from "@/queries/useAuth";
 
 export default function HomePage() {
-  const { isAuthenticated, user } = useAuthState();
+  const { isAuthenticated, user, isLoading } = useAuthState();
   const logoutMutation = useLogout();
 
   const handleLogout = () => {
@@ -63,7 +64,12 @@ export default function HomePage() {
       color: "bg-indigo-50 text-indigo-600 border-indigo-200",
       href: "/combined-schedule",
       stats: "통합 뷰",
-      features: ["학생별 일정 조회", "고정 타임라인", "세로 스크롤", "통합 관리"],
+      features: [
+        "학생별 일정 조회",
+        "고정 타임라인",
+        "세로 스크롤",
+        "통합 관리",
+      ],
     },
     {
       id: "middle-records",
@@ -123,10 +129,16 @@ export default function HomePage() {
             </div>
 
             <div className="flex items-center gap-4">
-              {isAuthenticated ? (
+              {isLoading ? (
+                /* 로딩 상태 */
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                  <span className="text-sm text-gray-600">확인 중...</span>
+                </div>
+              ) : isAuthenticated ? (
                 <>
                   {/* 관리자만 초대 관리 버튼 표시 */}
-                  {(user?.role === 'admin' || user?.role === 'manager') && (
+                  {(user?.role === "admin" || user?.role === "manager") && (
                     <Link
                       href="/admin/invites"
                       className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"

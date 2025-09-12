@@ -30,15 +30,24 @@ export class AuthManager {
     }
   }
 
-  // 토큰 저장
-  public setTokens(accessToken: string, refreshToken: string): void {
+  // 토큰 저장 (refreshToken은 선택적)
+  public setTokens(accessToken: string, refreshToken: string = ''): void {
+    console.log('AuthManager - 토큰 저장 시작:', {
+      hasAccessToken: !!accessToken,
+      hasRefreshToken: !!refreshToken,
+      isClient: typeof window !== 'undefined'
+    });
+    
     this.accessToken = accessToken;
     this.refreshToken = refreshToken;
 
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem('zuku_access_token', accessToken);
-        localStorage.setItem('zuku_refresh_token', refreshToken);
+        if (refreshToken) {
+          localStorage.setItem('zuku_refresh_token', refreshToken);
+        }
+        console.log('AuthManager - localStorage 저장 완료');
       } catch (error) {
         console.warn('토큰 저장 실패:', error);
       }
@@ -55,8 +64,40 @@ export class AuthManager {
     return this.refreshToken;
   }
 
-  // 토큰 존재 여부만 확인 (클라이언트에서는 JWT 검증 불가)
-  public isAuthenticated(): boolean {
+  // API를 통한 토큰 검증
+  public async isAuthenticated(): Promise<boolean> {
+    if (!this.accessToken) {
+      return false;
+    }
+
+    try {
+      const response = await fetch('/api/auth/verify-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          accessToken: this.accessToken,
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        // 토큰이 유효하지 않으면 로컬 스토리지에서 제거
+        this.logout();
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.warn('토큰 검증 API 호출 실패:', error);
+      return false;
+    }
+  }
+
+  // 즉시 토큰 존재 여부만 확인 (동기 메서드)
+  public hasToken(): boolean {
     return !!this.accessToken;
   }
 
@@ -74,8 +115,44 @@ export class AuthManager {
     }
   }
 
-  // 현재 사용자 정보 가져오기 (JWT 페이로드에서)
-  public getCurrentUser(): { userId: string; email: string; name: string; role: string } | null {
+  // API를 통한 사용자 정보 가져오기 (검증된 정보)
+  public async getCurrentUser(): Promise<{ userId: string; email: string; name: string; role: string } | null> {
+    if (!this.accessToken) {
+      return null;
+    }
+
+    try {
+      const response = await fetch('/api/auth/verify-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          accessToken: this.accessToken,
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (!result.success || !result.user) {
+        this.logout();
+        return null;
+      }
+
+      return {
+        userId: result.user.userId,
+        email: result.user.email,
+        name: result.user.name,
+        role: result.user.role,
+      };
+    } catch (error) {
+      console.warn('사용자 정보 조회 API 호출 실패:', error);
+      return null;
+    }
+  }
+
+  // JWT 페이로드에서 사용자 정보 가져오기 (동기 메서드, 검증되지 않음)
+  public getCurrentUserFromToken(): { userId: string; email: string; name: string; role: string } | null {
     if (!this.accessToken) {
       return null;
     }

@@ -5,10 +5,19 @@ export async function POST(request: NextRequest) {
     // 요청 본문에서 토큰 받기
     const { accessToken } = await request.json();
     
-    // 토큰 검증은 클라이언트에서 이미 처리되므로 여기서는 성공 응답만
+    // 로그아웃 응답
     const response = NextResponse.json({
       success: true,
       message: '로그아웃되었습니다.',
+    });
+
+    // HTTP-only 쿠키에서 refresh_token 삭제
+    response.cookies.set('refresh_token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 0, // 즉시 만료
+      path: '/',
     });
 
     return response;
