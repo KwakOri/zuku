@@ -5,11 +5,9 @@ import { classStudents } from "@/lib/mock/classStudents";
 import { students } from "@/lib/mock/students";
 import { studentSchedules } from "@/lib/mock/studentSchedules";
 import { Class } from "@/types/schedule";
+import { BookOpen, Calendar, Clock, User } from "lucide-react";
 import { Fragment, useMemo, useState } from "react";
-import { Clock, Calendar, User, BookOpen } from "lucide-react";
 import Tooltip from "./Tooltip";
-import "./CombinedStudentSchedule.css";
-import "./Tooltip.css";
 
 // Helper function to convert time string "HH:mm" to minutes from midnight
 const timeToMinutes = (time: string): number => {
@@ -136,33 +134,43 @@ export default function CombinedStudentSchedule() {
 
   const renderTooltipContent = (event: TimelineEvent) => {
     const dayName = daysOfWeek[event.dayOfWeek]?.name || "";
-    
+
     return (
-      <div className="schedule-tooltip-content">
-        <div className="schedule-tooltip-title">{event.title}</div>
-        <div className="schedule-tooltip-details">
-          <div className="schedule-tooltip-detail">
-            <Clock className="schedule-tooltip-icon" />
-            <span>{event.startTime} - {event.endTime}</span>
+      <div className="text-left">
+        <div className="font-semibold text-base mb-2 text-white">
+          {event.title}
+        </div>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 text-sm text-white text-opacity-90">
+            <Clock className="w-3.5 h-3.5 opacity-80" />
+            <span>
+              {event.startTime} - {event.endTime}
+            </span>
           </div>
-          <div className="schedule-tooltip-detail">
-            <Calendar className="schedule-tooltip-icon" />
+          <div className="flex items-center gap-2 text-sm text-white text-opacity-90">
+            <Calendar className="w-3.5 h-3.5 opacity-80" />
             <span>{dayName}요일</span>
           </div>
           {event.type === "class" && (
-            <div className="schedule-tooltip-detail">
-              <BookOpen className="schedule-tooltip-icon" />
+            <div className="flex items-center gap-2 text-sm text-white text-opacity-90">
+              <BookOpen className="w-3.5 h-3.5 opacity-80" />
               <span>정규 수업</span>
             </div>
           )}
           {event.type === "schedule" && (
-            <div className="schedule-tooltip-detail">
-              <User className="schedule-tooltip-icon" />
+            <div className="flex items-center gap-2 text-sm text-white text-opacity-90">
+              <User className="w-3.5 h-3.5 opacity-80" />
               <span>개인 일정</span>
             </div>
           )}
         </div>
-        <div className={`schedule-tooltip-type ${event.type}`}>
+        <div
+          className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-2 ${
+            event.type === "class"
+              ? "bg-blue-500 bg-opacity-30 text-blue-300"
+              : "bg-green-500 bg-opacity-30 text-green-300"
+          }`}
+        >
           {event.type === "class" ? "정규 수업" : "개인 일정"}
         </div>
       </div>
@@ -178,9 +186,10 @@ export default function CombinedStudentSchedule() {
           const dayHeader = (
             <div
               key={`day-${dayIndex}`}
-              className="time-header day-header"
+              className="text-center text-xs py-1 bg-white border-b font-semibold border-r border-gray-200 sticky top-0 z-20"
               style={{
                 gridColumn: `${currentSlot} / span ${timelineMetrics.daySlots[dayIndex]}`,
+                gridRow: "1",
               }}
             >
               {day.name}
@@ -194,8 +203,12 @@ export default function CombinedStudentSchedule() {
               return (
                 <div
                   key={`hour-${dayIndex}-${hourIndex}`}
-                  className="time-header hour-marker"
-                  style={{ gridColumn: `${hourSlot} / span 12` }}
+                  className="text-center text-xs py-1 bg-white border-b border-r border-gray-200 text-gray-500 sticky z-20"
+                  style={{
+                    gridColumn: `${hourSlot} / span 12`,
+                    gridRow: "2",
+                    top: "27px",
+                  }}
                 >
                   {hour}
                 </div>
@@ -211,21 +224,27 @@ export default function CombinedStudentSchedule() {
   };
 
   return (
-    <div className="schedule-container">
+    <div className="w-full h-[600px] overflow-auto bg-gray-50 rounded-lg border border-gray-200">
       <div
-        className="schedule-grid"
+        className="grid min-w-[2400px]"
         style={{
           gridTemplateColumns: `min-content repeat(${timelineMetrics.totalSlots}, 1fr)`,
         }}
       >
         {/* Timeline Header */}
-        <div className="time-header-corner"></div>
+        <div
+          className="bg-white border-b border-r border-gray-200 sticky left-0 top-0 z-30"
+          style={{ gridRow: "1 / 3", gridColumn: "1" }}
+        ></div>
         {renderTimelineHeader()}
 
         {/* Student Rows */}
         {studentData.map((student, rowIndex) => (
           <Fragment key={student.id}>
-            <div className="student-name" style={{ gridRow: rowIndex + 3 }}>
+            <div
+              className="sticky left-0 z-15 bg-white px-4 py-3 font-medium text-sm border-r border-b border-gray-200 border-b-gray-100 whitespace-nowrap"
+              style={{ gridRow: rowIndex + 3, gridColumn: "1" }}
+            >
               {student.name}
             </div>
             {student.events.map((event) => {
@@ -239,6 +258,7 @@ export default function CombinedStudentSchedule() {
                     ...position,
                     gridRow: rowIndex + 3,
                   }}
+                  className="w-full h-full"
                 >
                   <Tooltip
                     content={renderTooltipContent(event)}
@@ -246,14 +266,14 @@ export default function CombinedStudentSchedule() {
                     delay={200}
                   >
                     <div
-                      className="schedule-item"
+                      className="relative rounded border-0 my-0.5 text-white px-1.5 py-0.5 overflow-hidden whitespace-nowrap text-ellipsis text-xs leading-tight cursor-pointer transition-transform duration-100 ease-in-out hover:transform hover:-translate-y-px hover:shadow-sm hover:z-5"
                       style={{
                         backgroundColor: event.color,
                         width: "100%",
                         height: "100%",
                       }}
                     >
-                      <span className="schedule-item-title">{event.title}</span>
+                      <span className="pointer-events-none">{event.title}</span>
                     </div>
                   </Tooltip>
                 </div>

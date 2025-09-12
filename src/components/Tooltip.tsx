@@ -1,14 +1,53 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import { cn } from "@/lib/utils/cn";
+import { cva, type VariantProps } from "class-variance-authority";
+import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import "./Tooltip.css";
 
-interface TooltipProps {
+const tooltipVariants = cva("animate-tooltip-fade-in pointer-events-auto", {
+  variants: {
+    position: {
+      top: "",
+      bottom: "",
+      left: "",
+      right: "",
+    },
+  },
+  defaultVariants: {
+    position: "top",
+  },
+});
+
+const arrowVariants = cva("absolute w-0 h-0", {
+  variants: {
+    position: {
+      top: "tooltip-arrow-top",
+      bottom: "tooltip-arrow-bottom",
+      left: "tooltip-arrow-left",
+      right: "tooltip-arrow-right",
+    },
+  },
+  defaultVariants: {
+    position: "top",
+  },
+});
+
+interface TooltipProps extends VariantProps<typeof tooltipVariants> {
   children: React.ReactNode;
   content: React.ReactNode;
   position?: "top" | "bottom" | "left" | "right";
   delay?: number;
 }
+
+const TooltipArrow = ({
+  position,
+}: {
+  position: "top" | "bottom" | "left" | "right";
+}) => {
+  return <div className={cn(arrowVariants({ position }))} />;
+};
 
 export default function Tooltip({
   children,
@@ -120,12 +159,12 @@ export default function Tooltip({
   }, [isVisible]);
 
   return (
-    <>
+    <div className="relative inline-block w-full h-full">
       <div
         ref={triggerRef}
         onMouseEnter={showTooltip}
         onMouseLeave={hideTooltip}
-        className="relative"
+        className="w-full h-full"
       >
         {children}
       </div>
@@ -135,17 +174,17 @@ export default function Tooltip({
           <div
             ref={tooltipRef}
             style={tooltipStyle}
-            className={`tooltip-container ${position}`}
+            className={cn(tooltipVariants({ position }))}
             onMouseEnter={showTooltip}
             onMouseLeave={hideTooltip}
           >
-            <div className="tooltip-content">
+            <div className="bg-black bg-opacity-90 text-white px-4 py-3 rounded-lg text-sm leading-relaxed max-w-[280px] shadow-2xl backdrop-blur-sm border border-white border-opacity-10">
               {content}
             </div>
-            <div className="tooltip-arrow" />
+            <TooltipArrow position={position} />
           </div>,
           document.body
         )}
-    </>
+    </div>
   );
 }
