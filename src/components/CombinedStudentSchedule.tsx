@@ -45,8 +45,9 @@ export default function CombinedStudentSchedule() {
   const timelineMetrics = useMemo(() => {
     let totalSlots = 0;
     const daySlots = daysOfWeek.map((day) => {
-      const durationMinutes = (day.endHour - day.startHour) * 60;
-      return durationMinutes / 5; // 5-minute slots
+      // 시작시간보다 30분 앞부터, 끝시간보다 30분 뒤까지 (+1시간 추가)
+      const durationMinutes = (day.endHour - day.startHour + 1) * 60;
+      return durationMinutes / 2.5; // 2.5-minute slots (double density)
     });
     const dayStartSlot = daySlots.map((_, i) =>
       daySlots.slice(0, i).reduce((acc, val) => acc + val, 0)
@@ -102,24 +103,29 @@ export default function CombinedStudentSchedule() {
 
     const eventStartMinutes = timeToMinutes(event.startTime);
     const eventEndMinutes = timeToMinutes(event.endTime);
-    const dayStartMinutes = dayInfo.startHour * 60;
+    // 30분 앞부터 시작하므로 기준점을 30분 앞으로 조정
+    const dayStartMinutes = (dayInfo.startHour - 0.5) * 60;
+
+    // 확장된 시간 범위 (30분 앞 ~ 30분 뒤)
+    const extendedStartMinutes = (dayInfo.startHour - 0.5) * 60;
+    const extendedEndMinutes = (dayInfo.endHour + 0.5) * 60;
 
     // Only render events within the visible time window
     if (
-      eventEndMinutes <= dayStartMinutes ||
-      eventStartMinutes >= dayInfo.endHour * 60
+      eventEndMinutes <= extendedStartMinutes ||
+      eventStartMinutes >= extendedEndMinutes
     ) {
       return {};
     }
 
     const startOffsetMinutes = Math.max(0, eventStartMinutes - dayStartMinutes);
     const endOffsetMinutes = Math.min(
-      (dayInfo.endHour - dayInfo.startHour) * 60,
+      (dayInfo.endHour - dayInfo.startHour + 1) * 60, // +1시간 확장된 범위
       eventEndMinutes - dayStartMinutes
     );
 
-    const startSlot = Math.floor(startOffsetMinutes / 5);
-    const endSlot = Math.ceil(endOffsetMinutes / 5);
+    const startSlot = Math.floor(startOffsetMinutes / 2.5);
+    const endSlot = Math.ceil(endOffsetMinutes / 2.5);
     const span = endSlot - startSlot;
 
     if (span <= 0) return {};
@@ -157,11 +163,12 @@ export default function CombinedStudentSchedule() {
     return (
       <>
         {daysOfWeek.map((day, dayIndex) => {
-          const dayDurationHours = day.endHour - day.startHour;
+          // 30분 앞부터 30분 뒤까지 (+1시간)
+          const dayDurationHours = day.endHour - day.startHour + 1;
           const dayHeader = (
             <div
               key={`day-${dayIndex}`}
-              className="text-center text-xs py-1 bg-white border-b font-semibold border-r border-gray-200 sticky top-0 z-20"
+              className="text-center text-xs py-1 bg-white font-semibold border-l-2 border-gray-500 sticky top-0 z-20"
               style={{
                 gridColumn: `${currentSlot} / span ${timelineMetrics.daySlots[dayIndex]}`,
                 gridRow: "1",
@@ -173,19 +180,27 @@ export default function CombinedStudentSchedule() {
 
           const hourMarkers = Array.from({ length: dayDurationHours }).map(
             (_, hourIndex) => {
-              const hour = day.startHour + hourIndex;
-              const hourSlot = currentSlot + hourIndex * 12; // 1 hour = 12 * 5-min slots
+              // 시작시간보다 30분 앞부터 시작
+              const hour = day.startHour + hourIndex - 0.5;
+              const displayHour = Math.ceil(hour); // 표시할 시간은 올림
+              const hourSlot = currentSlot + hourIndex * 24; // 시작부터 바로 시작 (이미 30분 앞부터 계산됨)
+
+              // 요일의 첫 번째 시간인지 확인 (더 두꺼운 선)
+              const isFirstHour = hourIndex === 0;
+
               return (
                 <div
                   key={`hour-${dayIndex}-${hourIndex}`}
-                  className="text-center text-xs py-1 bg-white border-b border-r border-gray-200 text-gray-500 sticky z-20"
+                  className={`text-center text-xs py-1 bg-white border-b border-gray-200 text-gray-500 sticky z-20 ${
+                    isFirstHour ? "border-l-2 border-l-gray-400" : ""
+                  }`}
                   style={{
-                    gridColumn: `${hourSlot} / span 12`,
+                    gridColumn: `${hourSlot} / span 24`, // 전체 1시간(24슬롯) 차지
                     gridRow: "2",
-                    top: "25px",
+                    top: "24px",
                   }}
                 >
-                  {hour}
+                  {displayHour}
                 </div>
               );
             }
@@ -199,9 +214,9 @@ export default function CombinedStudentSchedule() {
   };
 
   return (
-    <div className="w-full h-[600px] overflow-auto bg-gray-50 rounded-lg border border-gray-200">
+    <div className="w-full grow overflow-auto bg-gray-50 rounded-lg border border-gray-200">
       <div
-        className="grid min-w-[2400px]"
+        className="grid min-w-[4800px]"
         style={{
           gridTemplateColumns: `min-content repeat(${timelineMetrics.totalSlots}, 1fr)`,
         }}
@@ -212,6 +227,35 @@ export default function CombinedStudentSchedule() {
           style={{ gridRow: "1 / 3", gridColumn: "1" }}
         ></div>
         {renderTimelineHeader()}
+
+        {/* Grid Background */}
+        {studentData.map((student, rowIndex) =>
+          daysOfWeek.map((day, dayIndex) => {
+            const dayDurationHours = day.endHour - day.startHour + 1;
+            return Array.from({ length: dayDurationHours }).map(
+              (_, hourIndex) => {
+                const dayOffset = timelineMetrics.dayStartSlot[dayIndex] || 0;
+                const hourSlot = 2 + dayOffset + hourIndex * 24;
+                const isFirstHour = hourIndex === 0;
+
+                return (
+                  <div
+                    key={`grid-${student.id}-${dayIndex}-${hourIndex}`}
+                    className={`border-b border-gray-100 ${
+                      isFirstHour
+                        ? "border-l-2 border-l-gray-400"
+                        : "border-l border-l-gray-200"
+                    }`}
+                    style={{
+                      gridColumn: `${hourSlot} / span 24`,
+                      gridRow: rowIndex + 3,
+                    }}
+                  />
+                );
+              }
+            );
+          })
+        )}
 
         {/* Student Rows */}
         {studentData.map((student, rowIndex) => (
@@ -232,6 +276,7 @@ export default function CombinedStudentSchedule() {
                   style={{
                     ...position,
                     gridRow: rowIndex + 3,
+                    zIndex: 10, // 이벤트가 그리드 위에 표시되도록
                   }}
                 >
                   <Tooltip
