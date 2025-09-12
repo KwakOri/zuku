@@ -3,7 +3,6 @@
 import { cn } from "@/lib/utils/cn";
 import { cva, type VariantProps } from "class-variance-authority";
 import React, { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import "./Tooltip.css";
 
 const tooltipVariants = cva("animate-tooltip-fade-in pointer-events-auto", {
@@ -23,10 +22,11 @@ const tooltipVariants = cva("animate-tooltip-fade-in pointer-events-auto", {
 const arrowVariants = cva("absolute w-0 h-0", {
   variants: {
     position: {
-      top: "tooltip-arrow-top",
-      bottom: "tooltip-arrow-bottom",
-      left: "tooltip-arrow-left",
-      right: "tooltip-arrow-right",
+      top: "tooltip-arrow-bottom top-full left-1/2 transform -translate-x-1/2",
+      bottom:
+        "tooltip-arrow-top bottom-full left-1/2 transform -translate-x-1/2",
+      left: "tooltip-arrow-right left-full top-1/2 transform -translate-y-1/2",
+      right: "tooltip-arrow-left right-full top-1/2 transform -translate-y-1/2",
     },
   },
   defaultVariants: {
@@ -56,9 +56,7 @@ export default function Tooltip({
   delay = 300,
 }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
-  const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
   const triggerRef = useRef<HTMLDivElement>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const showTooltip = () => {
@@ -67,7 +65,6 @@ export default function Tooltip({
     }
     timeoutRef.current = setTimeout(() => {
       setIsVisible(true);
-      updateTooltipPosition();
     }, delay);
   };
 
@@ -78,85 +75,31 @@ export default function Tooltip({
     setIsVisible(false);
   };
 
-  const updateTooltipPosition = () => {
-    if (!triggerRef.current || !tooltipRef.current) return;
-
-    const triggerRect = triggerRef.current.getBoundingClientRect();
-    const tooltipRect = tooltipRef.current.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    // If tooltip hasn't been measured yet (first render), use estimated dimensions
-    const tooltipWidth = tooltipRect.width || 280; // fallback width
-    const tooltipHeight = tooltipRect.height || 80; // fallback height
-
-    let top = 0;
-    let left = 0;
-
-    switch (position) {
-      case "top":
-        top = triggerRect.top - tooltipHeight - 8;
-        left = triggerRect.left + (triggerRect.width - tooltipWidth) / 2;
-        break;
-      case "bottom":
-        top = triggerRect.bottom + 8;
-        left = triggerRect.left + (triggerRect.width - tooltipWidth) / 2;
-        break;
-      case "left":
-        top = triggerRect.top + (triggerRect.height - tooltipHeight) / 2;
-        left = triggerRect.left - tooltipWidth - 8;
-        break;
-      case "right":
-        top = triggerRect.top + (triggerRect.height - tooltipHeight) / 2;
-        left = triggerRect.right + 8;
-        break;
-    }
-
-    // Keep tooltip within viewport bounds
-    if (left < 8) left = 8;
-    if (left + tooltipWidth > viewportWidth - 8) {
-      left = viewportWidth - tooltipWidth - 8;
-    }
-    if (top < 8) top = 8;
-    if (top + tooltipHeight > viewportHeight - 8) {
-      top = viewportHeight - tooltipHeight - 8;
-    }
-
-    setTooltipStyle({
-      position: "fixed",
-      top: `${top}px`,
-      left: `${left}px`,
-      zIndex: 9999,
-    });
-  };
-
   useEffect(() => {
-    if (isVisible) {
-      updateTooltipPosition();
-      // Re-position after DOM has had time to render and measure the tooltip
-      const timeoutId = setTimeout(updateTooltipPosition, 0);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [isVisible]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (isVisible) {
-        updateTooltipPosition();
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, true);
-    window.addEventListener("resize", handleScroll);
-
     return () => {
-      window.removeEventListener("scroll", handleScroll, true);
-      window.removeEventListener("resize", handleScroll);
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [isVisible]);
+  }, []);
+
+  const getTooltipClasses = () => {
+    const baseClasses =
+      "absolute z-50 bg-gray-900 text-white px-4 py-3 rounded-lg text-sm leading-relaxed max-w-[280px] shadow-2xl border-2 border-gray-600 w-[200px]";
+
+    switch (position) {
+      case "top":
+        return `${baseClasses} bottom-full left-1/2 transform -translate-x-1/2 mb-2`;
+      case "bottom":
+        return `${baseClasses} top-full left-1/2 transform -translate-x-1/2 mt-2`;
+      case "left":
+        return `${baseClasses} right-full top-1/2 transform -translate-y-1/2 mr-2`;
+      case "right":
+        return `${baseClasses} left-full top-1/2 transform -translate-y-1/2 ml-2`;
+      default:
+        return `${baseClasses} bottom-full left-1/2 transform -translate-x-1/2 mb-2`;
+    }
+  };
 
   return (
     <div className="relative inline-block w-full h-full">
@@ -169,22 +112,19 @@ export default function Tooltip({
         {children}
       </div>
 
-      {isVisible &&
-        createPortal(
-          <div
-            ref={tooltipRef}
-            style={tooltipStyle}
-            className={cn(tooltipVariants({ position }))}
-            onMouseEnter={showTooltip}
-            onMouseLeave={hideTooltip}
-          >
-            <div className="bg-black bg-opacity-90 text-white px-4 py-3 rounded-lg text-sm leading-relaxed max-w-[280px] shadow-2xl backdrop-blur-sm border border-white border-opacity-10">
-              {content}
-            </div>
-            <TooltipArrow position={position} />
-          </div>,
-          document.body
-        )}
+      {isVisible && (
+        <div
+          className={cn(
+            getTooltipClasses(),
+            "animate-tooltip-fade-in pointer-events-auto"
+          )}
+          onMouseEnter={showTooltip}
+          onMouseLeave={hideTooltip}
+        >
+          {content}
+          <TooltipArrow position={position} />
+        </div>
+      )}
     </div>
   );
 }

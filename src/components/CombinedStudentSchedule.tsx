@@ -5,7 +5,7 @@ import { classStudents } from "@/lib/mock/classStudents";
 import { students } from "@/lib/mock/students";
 import { studentSchedules } from "@/lib/mock/studentSchedules";
 import { Class } from "@/types/schedule";
-import { BookOpen, Calendar, Clock, User } from "lucide-react";
+import { Calendar, Clock } from "lucide-react";
 import { Fragment, useMemo, useState } from "react";
 import Tooltip from "./Tooltip";
 
@@ -137,41 +137,16 @@ export default function CombinedStudentSchedule() {
 
     return (
       <div className="text-left">
-        <div className="font-semibold text-base mb-2 text-white">
-          {event.title}
+        <div className="font-bold text-base mb-2 text-white">{event.title}</div>
+        <div className="flex items-center gap-2 text-sm text-gray-200 mb-1">
+          <Clock className="w-4 h-4 text-blue-300" />
+          <span>
+            {event.startTime} - {event.endTime}
+          </span>
         </div>
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 text-sm text-white text-opacity-90">
-            <Clock className="w-3.5 h-3.5 opacity-80" />
-            <span>
-              {event.startTime} - {event.endTime}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-white text-opacity-90">
-            <Calendar className="w-3.5 h-3.5 opacity-80" />
-            <span>{dayName}요일</span>
-          </div>
-          {event.type === "class" && (
-            <div className="flex items-center gap-2 text-sm text-white text-opacity-90">
-              <BookOpen className="w-3.5 h-3.5 opacity-80" />
-              <span>정규 수업</span>
-            </div>
-          )}
-          {event.type === "schedule" && (
-            <div className="flex items-center gap-2 text-sm text-white text-opacity-90">
-              <User className="w-3.5 h-3.5 opacity-80" />
-              <span>개인 일정</span>
-            </div>
-          )}
-        </div>
-        <div
-          className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-2 ${
-            event.type === "class"
-              ? "bg-blue-500 bg-opacity-30 text-blue-300"
-              : "bg-green-500 bg-opacity-30 text-green-300"
-          }`}
-        >
-          {event.type === "class" ? "정규 수업" : "개인 일정"}
+        <div className="flex items-center gap-2 text-sm text-gray-200">
+          <Calendar className="w-4 h-4 text-green-300" />
+          <span>{dayName}요일</span>
         </div>
       </div>
     );
@@ -207,7 +182,7 @@ export default function CombinedStudentSchedule() {
                   style={{
                     gridColumn: `${hourSlot} / span 12`,
                     gridRow: "2",
-                    top: "27px",
+                    top: "25px",
                   }}
                 >
                   {hour}
@@ -258,7 +233,6 @@ export default function CombinedStudentSchedule() {
                     ...position,
                     gridRow: rowIndex + 3,
                   }}
-                  className="w-full h-full"
                 >
                   <Tooltip
                     content={renderTooltipContent(event)}
