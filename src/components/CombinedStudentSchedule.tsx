@@ -371,9 +371,9 @@ export default function CombinedStudentSchedule() {
                     style={{
                       ...position,
                       gridRow: rowIndex + 3,
-                      zIndex: 10, // 이벤트가 그리드 위에 표시되도록
+                      // 이벤트가 그리드 위에 표시되도록
                     }}
-                    className="hover:z-20"
+                    className="relative z-10 hover:z-20"
                   >
                     <Tooltip
                       content={renderTooltipContent(eventGroup)}

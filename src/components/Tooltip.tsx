@@ -153,7 +153,7 @@ export default function Tooltip({
   };
 
   return (
-    <div className="relative inline-block w-full h-full">
+    <>
       <div
         ref={triggerRef}
         onMouseEnter={showTooltip}
@@ -174,6 +174,6 @@ export default function Tooltip({
           <TooltipArrow position={dynamicPosition} />
         </div>
       )}
-    </div>
+    </>
   );
 }
