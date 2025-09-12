@@ -321,13 +321,36 @@ export default function CombinedStudentSchedule() {
                   <div
                     key={`grid-${student.id}-${dayIndex}-${hourIndex}`}
                     className={`border-b border-gray-100 ${
-                      isFirstHour
-                        ? "border-l-2 border-l-gray-400"
-                        : "border-l border-l-gray-200"
+                      isFirstHour && "border-l-2 border-l-gray-400"
                     }`}
                     style={{
                       gridColumn: `${hourSlot} / span 24`,
                       gridRow: rowIndex + 3,
+                    }}
+                  />
+                );
+              }
+            );
+          })
+        )}
+
+        {/* 정각 세로선 */}
+        {studentData.map((student, rowIndex) =>
+          daysOfWeek.map((day, dayIndex) => {
+            const dayDurationHours = day.endHour - day.startHour + 1;
+            return Array.from({ length: dayDurationHours }).map(
+              (_, hourIndex) => {
+                const dayOffset = timelineMetrics.dayStartSlot[dayIndex] || 0;
+                const hourSlot = 2 + dayOffset + hourIndex * 24 + 12; // 정각 위치 (30분 오프셋)
+
+                return (
+                  <div
+                    key={`hour-line-${student.id}-${dayIndex}-${hourIndex}`}
+                    className="border-l border-l-gray-200"
+                    style={{
+                      gridColumn: `${hourSlot}`,
+                      gridRow: rowIndex + 3,
+                      height: "100%",
                     }}
                   />
                 );
