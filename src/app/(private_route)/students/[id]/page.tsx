@@ -1,7 +1,12 @@
 "use client";
 
 import CanvasSchedule from "@/components/CanvasSchedule";
-import { convertStudentSchedulesToBlocks } from "@/lib/scheduleUtils";
+import {
+  convertBlockToStudentSchedule,
+  convertStudentSchedulesToBlocks,
+  findBlockChanges,
+  isNewBlock,
+} from "@/lib/scheduleUtils";
 import { getGrade } from "@/lib/utils";
 import { useStudents } from "@/queries/useStudents";
 import {
@@ -18,7 +23,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Home, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { use } from "react";
+import { use, useRef } from "react";
 
 interface StudentDetailPageProps {
   params: Promise<{
@@ -47,6 +52,19 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
   // 학생 시간표 데이터를 CanvasSchedule용 블록으로 변환
   const scheduleBlocks = convertStudentSchedulesToBlocks(studentSchedules);
+
+  // 원본 블록 데이터를 참조로 저장 (변경 감지용)
+  const originalBlocksRef = useRef<ClassBlock[]>(scheduleBlocks);
+
+  // scheduleBlocks가 변경될 때마다 원본 참조 업데이트
+  if (
+    originalBlocksRef.current.length !== scheduleBlocks.length ||
+    originalBlocksRef.current.some(
+      (block, index) => block.id !== scheduleBlocks[index]?.id
+    )
+  ) {
+    originalBlocksRef.current = scheduleBlocks;
+  }
 
   // 새 일정 생성 mutation
   const createScheduleMutation = useMutation({
@@ -87,10 +105,98 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   });
 
   // 블록 변경 핸들러
-  const handleBlocksChange = async (blocks: ClassBlock[]) => {
-    // 변경된 블록들을 학생 시간표 형태로 변환하고 API 호출
-    // 이 부분은 실제 변경 감지 로직이 필요하지만, 일단 간단히 구현
-    console.log("Blocks changed:", blocks);
+  const handleBlocksChange = async (updatedBlocks: ClassBlock[]) => {
+    try {
+      // 원본과 업데이트된 블록을 비교하여 변경사항 감지
+      const changes = findBlockChanges(
+        originalBlocksRef.current,
+        updatedBlocks
+      );
+
+      console.log("Schedule changes detected:", changes);
+
+      // 병렬로 모든 변경사항 처리
+      const promises: Promise<any>[] = [];
+
+      // 1. 삭제된 블록들 처리
+      changes.deleted.forEach((deletedBlock) => {
+        if (!isNewBlock(deletedBlock)) {
+          promises.push(
+            deleteStudentSchedule(studentId, deletedBlock.id).catch((error) => {
+              console.error(
+                `Failed to delete schedule ${deletedBlock.id}:`,
+                error
+              );
+              throw error;
+            })
+          );
+        }
+      });
+
+      // 2. 새로 추가된 블록들 처리
+      changes.added.forEach((addedBlock) => {
+        const scheduleData = convertBlockToStudentSchedule(
+          addedBlock,
+          studentId
+        );
+        promises.push(
+          createStudentSchedule(studentId, scheduleData).catch((error) => {
+            console.error(`Failed to create new schedule:`, error);
+            throw error;
+          })
+        );
+      });
+
+      // 3. 수정된 블록들 처리
+      changes.updated.forEach((updatedBlock) => {
+        if (!isNewBlock(updatedBlock)) {
+          const scheduleData = convertBlockToStudentSchedule(
+            updatedBlock,
+            studentId
+          );
+          promises.push(
+            updateStudentSchedule(
+              studentId,
+              updatedBlock.id,
+              scheduleData
+            ).catch((error) => {
+              console.error(
+                `Failed to update schedule ${updatedBlock.id}:`,
+                error
+              );
+              throw error;
+            })
+          );
+        }
+      });
+
+      // 모든 변경사항을 병렬로 처리
+      if (promises.length > 0) {
+        await Promise.all(promises);
+
+        // 성공 시 캐시 무효화하여 최신 데이터 다시 가져오기
+        queryClient.invalidateQueries({
+          queryKey: studentScheduleKeys.list(studentId),
+        });
+
+        console.log(
+          `Successfully processed ${promises.length} schedule changes`
+        );
+      }
+
+      // 원본 참조 업데이트
+      originalBlocksRef.current = updatedBlocks;
+    } catch (error) {
+      console.error("Failed to save schedule changes:", error);
+
+      // 에러 발생 시 사용자에게 알림 (선택사항)
+      // alert("시간표 저장에 실패했습니다. 다시 시도해주세요.");
+
+      // 캐시 무효화하여 원본 데이터로 되돌리기
+      queryClient.invalidateQueries({
+        queryKey: studentScheduleKeys.list(studentId),
+      });
+    }
   };
 
   // 뒤로 가기 핸들러

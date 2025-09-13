@@ -61,3 +61,56 @@ export const defaultColors = [
 export function getRandomColor(): string {
   return defaultColors[Math.floor(Math.random() * defaultColors.length)];
 }
+
+// 두 블록 배열의 차이점을 찾는 함수
+export function findBlockChanges(
+  originalBlocks: ClassBlock[],
+  updatedBlocks: ClassBlock[]
+) {
+  const added: ClassBlock[] = [];
+  const updated: ClassBlock[] = [];
+  const deleted: ClassBlock[] = [];
+
+  // 원본에서 업데이트된 배열에 없는 것들은 삭제된 것
+  originalBlocks.forEach(originalBlock => {
+    const foundInUpdated = updatedBlocks.find(block => block.id === originalBlock.id);
+    if (!foundInUpdated) {
+      deleted.push(originalBlock);
+    }
+  });
+
+  // 업데이트된 배열의 각 블록을 확인
+  updatedBlocks.forEach(updatedBlock => {
+    const originalBlock = originalBlocks.find(block => block.id === updatedBlock.id);
+    
+    if (!originalBlock) {
+      // 원본에 없으면 새로 추가된 것
+      added.push(updatedBlock);
+    } else {
+      // 원본과 비교해서 변경된 것이 있으면 수정된 것
+      if (hasBlockChanged(originalBlock, updatedBlock)) {
+        updated.push(updatedBlock);
+      }
+    }
+  });
+
+  return { added, updated, deleted };
+}
+
+// 두 블록이 다른지 확인하는 함수
+function hasBlockChanged(original: ClassBlock, updated: ClassBlock): boolean {
+  return (
+    original.title !== updated.title ||
+    original.startTime !== updated.startTime ||
+    original.endTime !== updated.endTime ||
+    original.dayOfWeek !== updated.dayOfWeek ||
+    original.color !== updated.color ||
+    original.subject !== updated.subject ||
+    original.room !== updated.room
+  );
+}
+
+// 새 블록인지 확인하는 함수 (임시 ID 패턴으로 판단)
+export function isNewBlock(block: ClassBlock): boolean {
+  return block.id.startsWith('temp-') || block.id.startsWith('new-');
+}

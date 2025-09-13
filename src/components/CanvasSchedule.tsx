@@ -7,6 +7,7 @@ import {
   getDensityColor,
   getStudentsAtTime,
 } from "@/lib/utils";
+import { formatDisplayTime } from "@/lib/utils/time";
 import { ClassBlock, EditMode, ScheduleConfig } from "@/types/schedule";
 import { Check, Clock, Plus, Users, X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -215,7 +216,8 @@ function ClassModal({
               <div className="flex items-center mt-1">
                 <Clock className="w-4 h-4 mr-2 text-gray-400" />
                 <span>
-                  {block.startTime} ~ {block.endTime}
+                  {formatDisplayTime(block.startTime)} ~{" "}
+                  {formatDisplayTime(block.endTime)}
                 </span>
               </div>
             </div>
@@ -345,6 +347,12 @@ export default function CanvasSchedule({
     return `${hours.toString().padStart(2, "0")}:${mins
       .toString()
       .padStart(2, "0")}`;
+  };
+
+  // HH:MM:SS 형식의 시간을 HH:MM 형식으로 변환
+  const formatDisplayTime = (timeString: string): string => {
+    if (!timeString) return "";
+    return timeString.slice(0, 5); // "18:00:00" → "18:00"
   };
 
   // 모서리가 둥근 사각형을 그리는 함수
@@ -573,7 +581,9 @@ export default function CanvasSchedule({
         ctx.font = "10px sans-serif";
         ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
         ctx.fillText(
-          `${block.startTime} ~ ${block.endTime}`,
+          `${formatDisplayTime(block.startTime)} ~ ${formatDisplayTime(
+            block.endTime
+          )}`,
           x + 8,
           titleY + 15
         );
