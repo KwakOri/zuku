@@ -1,62 +1,341 @@
 "use client";
 
 import { students } from "@/lib/mock/students";
-import { ClassBlock, EditMode, ScheduleConfig, Student } from "@/types/schedule";
-import { Check, Clock, Plus, Users, X } from "lucide-react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { ClassBlock, EditMode, Student } from "@/types/schedule";
+import { Check, Clock, Users, X } from "lucide-react";
+import React, { useEffect, useState } from "react";
 
 // Mock class data for demonstration based on screenshots
 const mockClassData = [
   // Student 1 (정우진) - 중2
-  { id: "1", studentId: 1, title: "무슨 수업", type: "class", dayOfWeek: 1, startTime: "16:00", endTime: "18:00", color: "#3B82F6" },
-  { id: "2", studentId: 1, title: "무슨 수업", type: "class", dayOfWeek: 3, startTime: "16:00", endTime: "18:00", color: "#3B82F6" },
-  { id: "3", studentId: 1, title: "무슨 수업", type: "class", dayOfWeek: 5, startTime: "16:00", endTime: "18:00", color: "#3B82F6" },
-  
+  {
+    id: "1",
+    studentId: 1,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 1,
+    startTime: "16:00",
+    endTime: "18:00",
+    color: "#3B82F6",
+  },
+  {
+    id: "2",
+    studentId: 1,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 3,
+    startTime: "16:00",
+    endTime: "18:00",
+    color: "#3B82F6",
+  },
+  {
+    id: "3",
+    studentId: 1,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 5,
+    startTime: "16:00",
+    endTime: "18:00",
+    color: "#3B82F6",
+  },
+
   // Student 2 (김서윤) - 중2
-  { id: "4", studentId: 2, title: "일정", type: "personal", dayOfWeek: 1, startTime: "17:00", endTime: "18:30", color: "#EF4444" },
-  { id: "5", studentId: 2, title: "일정", type: "personal", dayOfWeek: 3, startTime: "17:00", endTime: "18:30", color: "#EF4444" },
-  { id: "6", studentId: 2, title: "일정", type: "personal", dayOfWeek: 5, startTime: "17:00", endTime: "18:30", color: "#EF4444" },
-  
-  // Student 3 (이민서) - 중3  
-  { id: "7", studentId: 3, title: "무슨 수업", type: "class", dayOfWeek: 1, startTime: "18:00", endTime: "20:00", color: "#3B82F6" },
-  { id: "8", studentId: 3, title: "무슨 수업", type: "class", dayOfWeek: 3, startTime: "18:00", endTime: "20:00", color: "#3B82F6" },
-  { id: "9", studentId: 3, title: "무슨 수업", type: "class", dayOfWeek: 5, startTime: "18:00", endTime: "20:00", color: "#3B82F6" },
-  
+  {
+    id: "4",
+    studentId: 2,
+    title: "일정",
+    type: "personal",
+    dayOfWeek: 1,
+    startTime: "17:00",
+    endTime: "18:30",
+    color: "#EF4444",
+  },
+  {
+    id: "5",
+    studentId: 2,
+    title: "일정",
+    type: "personal",
+    dayOfWeek: 3,
+    startTime: "17:00",
+    endTime: "18:30",
+    color: "#EF4444",
+  },
+  {
+    id: "6",
+    studentId: 2,
+    title: "일정",
+    type: "personal",
+    dayOfWeek: 5,
+    startTime: "17:00",
+    endTime: "18:30",
+    color: "#EF4444",
+  },
+
+  // Student 3 (이민서) - 중3
+  {
+    id: "7",
+    studentId: 3,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 1,
+    startTime: "18:00",
+    endTime: "20:00",
+    color: "#3B82F6",
+  },
+  {
+    id: "8",
+    studentId: 3,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 3,
+    startTime: "18:00",
+    endTime: "20:00",
+    color: "#3B82F6",
+  },
+  {
+    id: "9",
+    studentId: 3,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 5,
+    startTime: "18:00",
+    endTime: "20:00",
+    color: "#3B82F6",
+  },
+
   // Student 4 (박하은) - 중2
-  { id: "10", studentId: 4, title: "일정", type: "personal", dayOfWeek: 2, startTime: "16:00", endTime: "17:00", color: "#EF4444" },
-  { id: "11", studentId: 4, title: "무슨 수업", type: "class", dayOfWeek: 2, startTime: "17:00", endTime: "19:00", color: "#3B82F6" },
-  { id: "12", studentId: 4, title: "일정", type: "personal", dayOfWeek: 4, startTime: "16:00", endTime: "17:00", color: "#EF4444" },
-  { id: "13", studentId: 4, title: "무슨 수업", type: "class", dayOfWeek: 4, startTime: "17:00", endTime: "19:00", color: "#3B82F6" },
-  
+  {
+    id: "10",
+    studentId: 4,
+    title: "일정",
+    type: "personal",
+    dayOfWeek: 2,
+    startTime: "16:00",
+    endTime: "17:00",
+    color: "#EF4444",
+  },
+  {
+    id: "11",
+    studentId: 4,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 2,
+    startTime: "17:00",
+    endTime: "19:00",
+    color: "#3B82F6",
+  },
+  {
+    id: "12",
+    studentId: 4,
+    title: "일정",
+    type: "personal",
+    dayOfWeek: 4,
+    startTime: "16:00",
+    endTime: "17:00",
+    color: "#EF4444",
+  },
+  {
+    id: "13",
+    studentId: 4,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 4,
+    startTime: "17:00",
+    endTime: "19:00",
+    color: "#3B82F6",
+  },
+
   // Student 5 (최도윤) - 중2
-  { id: "14", studentId: 5, title: "무슨 수업", type: "class", dayOfWeek: 1, startTime: "19:00", endTime: "21:00", color: "#3B82F6" },
-  { id: "15", studentId: 5, title: "무슨 수업", type: "class", dayOfWeek: 3, startTime: "19:00", endTime: "21:00", color: "#3B82F6" },
-  { id: "16", studentId: 5, title: "무슨 수업", type: "class", dayOfWeek: 5, startTime: "19:00", endTime: "21:00", color: "#3B82F6" },
-  
+  {
+    id: "14",
+    studentId: 5,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 1,
+    startTime: "19:00",
+    endTime: "21:00",
+    color: "#3B82F6",
+  },
+  {
+    id: "15",
+    studentId: 5,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 3,
+    startTime: "19:00",
+    endTime: "21:00",
+    color: "#3B82F6",
+  },
+  {
+    id: "16",
+    studentId: 5,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 5,
+    startTime: "19:00",
+    endTime: "21:00",
+    color: "#3B82F6",
+  },
+
   // Student 6 (강민규) - 중2
-  { id: "17", studentId: 6, title: "무슨 수업", type: "class", dayOfWeek: 2, startTime: "18:00", endTime: "20:00", color: "#3B82F6" },
-  { id: "18", studentId: 6, title: "무슨 수업", type: "class", dayOfWeek: 4, startTime: "18:00", endTime: "20:00", color: "#3B82F6" },
-  
+  {
+    id: "17",
+    studentId: 6,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 2,
+    startTime: "18:00",
+    endTime: "20:00",
+    color: "#3B82F6",
+  },
+  {
+    id: "18",
+    studentId: 6,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 4,
+    startTime: "18:00",
+    endTime: "20:00",
+    color: "#3B82F6",
+  },
+
   // Student 7 (조서현) - 중3
-  { id: "19", studentId: 7, title: "무슨 수업", type: "class", dayOfWeek: 1, startTime: "17:00", endTime: "18:00", color: "#3B82F6" },
-  { id: "20", studentId: 7, title: "무슨 수업", type: "class", dayOfWeek: 3, startTime: "17:00", endTime: "18:00", color: "#3B82F6" },
-  { id: "21", studentId: 7, title: "무슨 수업", type: "class", dayOfWeek: 5, startTime: "17:00", endTime: "18:00", color: "#3B82F6" },
-  
+  {
+    id: "19",
+    studentId: 7,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 1,
+    startTime: "17:00",
+    endTime: "18:00",
+    color: "#3B82F6",
+  },
+  {
+    id: "20",
+    studentId: 7,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 3,
+    startTime: "17:00",
+    endTime: "18:00",
+    color: "#3B82F6",
+  },
+  {
+    id: "21",
+    studentId: 7,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 5,
+    startTime: "17:00",
+    endTime: "18:00",
+    color: "#3B82F6",
+  },
+
   // Student 8 (윤지훈) - 중3
-  { id: "22", studentId: 8, title: "무슨 수업", type: "class", dayOfWeek: 2, startTime: "19:00", endTime: "21:00", color: "#3B82F6" },
-  { id: "23", studentId: 8, title: "무슨 수업", type: "class", dayOfWeek: 4, startTime: "19:00", endTime: "21:00", color: "#3B82F6" },
-  
+  {
+    id: "22",
+    studentId: 8,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 2,
+    startTime: "19:00",
+    endTime: "21:00",
+    color: "#3B82F6",
+  },
+  {
+    id: "23",
+    studentId: 8,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 4,
+    startTime: "19:00",
+    endTime: "21:00",
+    color: "#3B82F6",
+  },
+
   // Student 9 (송은서) - 중2
-  { id: "24", studentId: 9, title: "일정", type: "personal", dayOfWeek: 1, startTime: "16:00", endTime: "17:00", color: "#EF4444" },
-  { id: "25", studentId: 9, title: "무슨 수업", type: "class", dayOfWeek: 1, startTime: "17:00", endTime: "19:00", color: "#3B82F6" },
-  { id: "26", studentId: 9, title: "일정", type: "personal", dayOfWeek: 3, startTime: "16:00", endTime: "17:00", color: "#EF4444" },
-  { id: "27", studentId: 9, title: "무슨 수업", type: "class", dayOfWeek: 3, startTime: "17:00", endTime: "19:00", color: "#3B82F6" },
-  { id: "28", studentId: 9, title: "일정", type: "personal", dayOfWeek: 5, startTime: "16:00", endTime: "17:00", color: "#EF4444" },
-  { id: "29", studentId: 9, title: "무슨 수업", type: "class", dayOfWeek: 5, startTime: "17:00", endTime: "19:00", color: "#3B82F6" },
-  
+  {
+    id: "24",
+    studentId: 9,
+    title: "일정",
+    type: "personal",
+    dayOfWeek: 1,
+    startTime: "16:00",
+    endTime: "17:00",
+    color: "#EF4444",
+  },
+  {
+    id: "25",
+    studentId: 9,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 1,
+    startTime: "17:00",
+    endTime: "19:00",
+    color: "#3B82F6",
+  },
+  {
+    id: "26",
+    studentId: 9,
+    title: "일정",
+    type: "personal",
+    dayOfWeek: 3,
+    startTime: "16:00",
+    endTime: "17:00",
+    color: "#EF4444",
+  },
+  {
+    id: "27",
+    studentId: 9,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 3,
+    startTime: "17:00",
+    endTime: "19:00",
+    color: "#3B82F6",
+  },
+  {
+    id: "28",
+    studentId: 9,
+    title: "일정",
+    type: "personal",
+    dayOfWeek: 5,
+    startTime: "16:00",
+    endTime: "17:00",
+    color: "#EF4444",
+  },
+  {
+    id: "29",
+    studentId: 9,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 5,
+    startTime: "17:00",
+    endTime: "19:00",
+    color: "#3B82F6",
+  },
+
   // Student 10 (한준서) - 중2
-  { id: "30", studentId: 10, title: "무슨 수업", type: "class", dayOfWeek: 2, startTime: "16:00", endTime: "18:00", color: "#3B82F6" },
-  { id: "31", studentId: 10, title: "무슨 수업", type: "class", dayOfWeek: 4, startTime: "16:00", endTime: "18:00", color: "#3B82F6" },
+  {
+    id: "30",
+    studentId: 10,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 2,
+    startTime: "16:00",
+    endTime: "18:00",
+    color: "#3B82F6",
+  },
+  {
+    id: "31",
+    studentId: 10,
+    title: "무슨 수업",
+    type: "class",
+    dayOfWeek: 4,
+    startTime: "16:00",
+    endTime: "18:00",
+    color: "#3B82F6",
+  },
 ];
 
 const timeSlots = Array.from({ length: 7 }, (_, i) => {
@@ -319,36 +598,46 @@ function ClassModal({
 export default function CanvasScheduleHome({
   editMode = "view",
 }: CanvasScheduleProps) {
-  const [studentSchedules, setStudentSchedules] = useState<StudentScheduleRow[]>([]);
+  const [studentSchedules, setStudentSchedules] = useState<
+    StudentScheduleRow[]
+  >([]);
 
   // Create student rows with their schedules
   useEffect(() => {
-    const studentRows = students.slice(0, 15).map(student => ({
+    const studentRows = students.slice(0, 15).map((student) => ({
       ...student,
-      schedules: mockClassData.filter(schedule => schedule.studentId === student.id)
+      schedules: mockClassData.filter(
+        (schedule) => schedule.studentId === student.id
+      ),
     }));
     setStudentSchedules(studentRows);
   }, []);
 
   // Get schedule for specific student and time slot
-  const getScheduleAtTime = (studentId: number, dayOfWeek: number, hour: number) => {
-    const student = studentSchedules.find(s => s.id === studentId);
+  const getScheduleAtTime = (
+    studentId: number,
+    dayOfWeek: number,
+    hour: number
+  ) => {
+    const student = studentSchedules.find((s) => s.id === studentId);
     if (!student) return null;
 
-    return student.schedules.find(schedule => {
-      const startHour = parseInt(schedule.startTime.split(':')[0]);
-      const endHour = parseInt(schedule.endTime.split(':')[0]);
-      return schedule.dayOfWeek === dayOfWeek && hour >= startHour && hour < endHour;
+    return student.schedules.find((schedule) => {
+      const startHour = parseInt(schedule.startTime.split(":")[0]);
+      const endHour = parseInt(schedule.endTime.split(":")[0]);
+      return (
+        schedule.dayOfWeek === dayOfWeek && hour >= startHour && hour < endHour
+      );
     });
   };
 
   // Days of the week - 월(1), 화(2), 수(3), 목(4), 금(5)
   const days = [
     { name: "월", value: 1 },
-    { name: "화", value: 2 }, 
+    { name: "화", value: 2 },
     { name: "수", value: 3 },
     { name: "목", value: 4 },
-    { name: "금", value: 5 }
+    { name: "금", value: 5 },
   ];
 
   // Time slots from 4 PM to 10 PM
@@ -373,22 +662,32 @@ export default function CanvasScheduleHome({
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
         {/* Table Header */}
         <div className="grid grid-cols-[80px_100px_100px_80px_repeat(35,_1fr)] bg-gray-50 border-b border-gray-200">
-          <div className="p-3 font-semibold text-gray-700 border-r border-gray-200">id</div>
-          <div className="p-3 font-semibold text-gray-700 border-r border-gray-200">이름</div>
-          <div className="p-3 font-semibold text-gray-700 border-r border-gray-200">학교</div>
-          <div className="p-3 font-semibold text-gray-700 border-r border-gray-200">학년</div>
-          
+          <div className="p-3 font-semibold text-gray-700 border-r border-gray-200">
+            id
+          </div>
+          <div className="p-3 font-semibold text-gray-700 border-r border-gray-200">
+            이름
+          </div>
+          <div className="p-3 font-semibold text-gray-700 border-r border-gray-200">
+            학교
+          </div>
+          <div className="p-3 font-semibold text-gray-700 border-r border-gray-200">
+            학년
+          </div>
+
           {/* Days and Hours Headers */}
           {days.map((day, dayIndex) => (
             <React.Fragment key={day.value}>
               {hours.map((hour, hourIndex) => (
-                <div 
+                <div
                   key={`${day.value}-${hour}`}
                   className={`p-2 text-center text-sm font-medium text-gray-600 border-r border-gray-200 ${
-                    hourIndex === 0 ? 'bg-gray-100' : ''
+                    hourIndex === 0 ? "bg-gray-100" : ""
                   }`}
                 >
-                  {hourIndex === 0 && <div className="font-bold">{day.name}</div>}
+                  {hourIndex === 0 && (
+                    <div className="font-bold">{day.name}</div>
+                  )}
                   <div className="text-xs">{hour}</div>
                 </div>
               ))}
@@ -399,31 +698,43 @@ export default function CanvasScheduleHome({
         {/* Table Body */}
         <div className="max-h-[600px] overflow-y-auto">
           {studentSchedules.map((student, index) => (
-            <div 
-              key={student.id} 
+            <div
+              key={student.id}
               className={`grid grid-cols-[80px_100px_100px_80px_repeat(35,_1fr)] border-b border-gray-100 ${
-                index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                index % 2 === 0 ? "bg-white" : "bg-gray-50"
               }`}
             >
               <div className="p-3 border-r border-gray-200">{student.id}</div>
-              <div className="p-3 border-r border-gray-200 font-medium">{student.name}</div>
-              <div className="p-3 border-r border-gray-200 text-sm text-gray-600">무슨학교</div>
-              <div className="p-3 border-r border-gray-200 text-center">
-                {student.grade === 8 ? '중2' : student.grade === 9 ? '중3' : `고${student.grade - 9}`}
+              <div className="p-3 border-r border-gray-200 font-medium">
+                {student.name}
               </div>
-              
+              <div className="p-3 border-r border-gray-200 text-sm text-gray-600">
+                무슨학교
+              </div>
+              <div className="p-3 border-r border-gray-200 text-center">
+                {student.grade === 8
+                  ? "중2"
+                  : student.grade === 9
+                  ? "중3"
+                  : `고${student.grade - 9}`}
+              </div>
+
               {/* Schedule Blocks */}
-              {days.map(day => (
+              {days.map((day) => (
                 <React.Fragment key={`${student.id}-${day.value}`}>
-                  {hours.map(hour => {
-                    const schedule = getScheduleAtTime(student.id, day.value, hour);
+                  {hours.map((hour) => {
+                    const schedule = getScheduleAtTime(
+                      student.id,
+                      day.value,
+                      hour
+                    );
                     return (
-                      <div 
+                      <div
                         key={`${student.id}-${day.value}-${hour}`}
                         className="p-1 border-r border-gray-200 relative h-12"
                       >
                         {schedule && (
-                          <div 
+                          <div
                             className={`absolute inset-1 rounded text-white text-xs flex items-center justify-center font-medium`}
                             style={{ backgroundColor: schedule.color }}
                           >
@@ -431,13 +742,16 @@ export default function CanvasScheduleHome({
                           </div>
                         )}
                         {/* Show gray background for certain time slots like in the screenshot */}
-                        {!schedule && (
-                          (student.id <= 3 && hour === 10) || // Some students have blocked 10 PM slot
-                          (student.id >= 4 && student.id <= 6 && (hour === 4 || hour === 10)) || // Some blocked early/late
-                          (student.id >= 7 && student.id <= 10 && hour === 10) // Some have 10 PM blocked
-                        ) && (
-                          <div className="absolute inset-1 bg-gray-400 rounded"></div>
-                        )}
+                        {!schedule &&
+                          ((student.id <= 3 && hour === 10) || // Some students have blocked 10 PM slot
+                            (student.id >= 4 &&
+                              student.id <= 6 &&
+                              (hour === 4 || hour === 10)) || // Some blocked early/late
+                            (student.id >= 7 &&
+                              student.id <= 10 &&
+                              hour === 10)) && ( // Some have 10 PM blocked
+                            <div className="absolute inset-1 bg-gray-400 rounded"></div>
+                          )}
                       </div>
                     );
                   })}

@@ -1,0 +1,188 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { classApi } from "@/services/client/classApi";
+import { TablesInsert, TablesUpdate } from "@/types/supabase";
+import { toast } from "react-hot-toast";
+
+// Query Keys
+export const classKeys = {
+  all: ["classes"] as const,
+  lists: () => [...classKeys.all, "list"] as const,
+  list: (filters?: Record<string, unknown>) => [...classKeys.lists(), { filters }] as const,
+  details: () => [...classKeys.all, "detail"] as const,
+  detail: (id: string) => [...classKeys.details(), id] as const,
+  byTeacher: (teacherId: string) => [...classKeys.all, "byTeacher", teacherId] as const,
+  bySubject: (subject: string) => [...classKeys.all, "bySubject", subject] as const,
+  byDay: (dayOfWeek: number) => [...classKeys.all, "byDay", dayOfWeek] as const,
+};
+
+// Queries
+export function useClasses() {
+  return useQuery({
+    queryKey: classKeys.lists(),
+    queryFn: () => classApi.getClasses(),
+    staleTime: 5 * 60 * 1000, // 5분
+  });
+}
+
+export function useClass(id: string) {
+  return useQuery({
+    queryKey: classKeys.detail(id),
+    queryFn: () => classApi.getClassById(id),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useClassesByTeacher(teacherId: string) {
+  return useQuery({
+    queryKey: classKeys.byTeacher(teacherId),
+    queryFn: () => classApi.getClassesByTeacher(teacherId),
+    enabled: !!teacherId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useClassesBySubject(subject: string) {
+  return useQuery({
+    queryKey: classKeys.bySubject(subject),
+    queryFn: () => classApi.getClassesBySubject(subject),
+    enabled: !!subject,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useClassesByDayOfWeek(dayOfWeek: number) {
+  return useQuery({
+    queryKey: classKeys.byDay(dayOfWeek),
+    queryFn: () => classApi.getClassesByDayOfWeek(dayOfWeek),
+    enabled: dayOfWeek >= 0 && dayOfWeek <= 6,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// Mutations
+export function useCreateClass() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: TablesInsert<"classes">) => classApi.createClass(data),
+    onSuccess: (newClass) => {
+      // 수업 목록 쿼리 무효화
+      queryClient.invalidateQueries({ queryKey: classKeys.lists() });
+      
+      // 강사별 쿼리 무효화
+      if (newClass.teacher_id) {
+        queryClient.invalidateQueries({ 
+          queryKey: classKeys.byTeacher(newClass.teacher_id) 
+        });
+      }
+
+      // 과목별 쿼리 무효화
+      queryClient.invalidateQueries({ 
+        queryKey: classKeys.bySubject(newClass.subject) 
+      });
+
+      // 요일별 쿼리 무효화
+      queryClient.invalidateQueries({ 
+        queryKey: classKeys.byDay(newClass.day_of_week) 
+      });
+
+      toast.success("수업이 성공적으로 등록되었습니다.");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "수업 등록 중 오류가 발생했습니다.");
+    },
+  });
+}
+
+export function useUpdateClass() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: TablesUpdate<"classes"> }) =>
+      classApi.updateClass(id, data),
+    onSuccess: (updatedClass, variables) => {
+      // 해당 수업의 상세 정보 쿼리 업데이트
+      queryClient.setQueryData(
+        classKeys.detail(variables.id),
+        updatedClass
+      );
+
+      // 관련 쿼리들 무효화
+      queryClient.invalidateQueries({ queryKey: classKeys.lists() });
+      
+      // 강사, 과목, 요일별 쿼리 무효화 (변경될 수 있음)
+      queryClient.invalidateQueries({ 
+        queryKey: classKeys.all,
+        predicate: (query) => 
+          query.queryKey.includes("byTeacher") ||
+          query.queryKey.includes("bySubject") ||
+          query.queryKey.includes("byDay")
+      });
+
+      toast.success("수업 정보가 성공적으로 수정되었습니다.");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "수업 정보 수정 중 오류가 발생했습니다.");
+    },
+  });
+}
+
+export function useDeleteClass() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => classApi.deleteClass(id),
+    onSuccess: (_, deletedId) => {
+      // 해당 수업의 모든 쿼리 제거
+      queryClient.removeQueries({ queryKey: classKeys.detail(deletedId) });
+
+      // 수업 목록 쿼리 무효화
+      queryClient.invalidateQueries({ queryKey: classKeys.lists() });
+      
+      // 분류별 쿼리들 무효화
+      queryClient.invalidateQueries({ 
+        queryKey: classKeys.all,
+        predicate: (query) => 
+          query.queryKey.includes("byTeacher") ||
+          query.queryKey.includes("bySubject") ||
+          query.queryKey.includes("byDay")
+      });
+
+      toast.success("수업이 성공적으로 삭제되었습니다.");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "수업 삭제 중 오류가 발생했습니다.");
+    },
+  });
+}
+
+// 수업 시간표 관련 유틸리티 훅
+export function useWeeklyClasses() {
+  return useQuery({
+    queryKey: [...classKeys.all, "weekly"],
+    queryFn: async () => {
+      const classes = await classApi.getClasses();
+      
+      // 요일별로 그룹화
+      const weeklySchedule = classes.reduce((acc, classItem) => {
+        const day = classItem.day_of_week;
+        if (!acc[day]) {
+          acc[day] = [];
+        }
+        acc[day].push(classItem);
+        return acc;
+      }, {} as Record<number, typeof classes>);
+
+      // 각 요일의 수업을 시간 순으로 정렬
+      Object.keys(weeklySchedule).forEach((day) => {
+        weeklySchedule[parseInt(day)].sort((a, b) => 
+          a.start_time.localeCompare(b.start_time)
+        );
+      });
+
+      return weeklySchedule;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}

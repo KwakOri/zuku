@@ -1,18 +1,24 @@
 "use client";
 
-import { classes } from "@/lib/mock/classes";
-import { classStudents } from "@/lib/mock/classStudents";
-import { students } from "@/lib/mock/students";
-import { studentSchedules } from "@/lib/mock/studentSchedules";
-import { Class } from "@/types/schedule";
+import { useStudents } from "@/queries/useStudents";
+import { useClasses } from "@/queries/useClasses";
+import { useClassStudents } from "@/queries/useSchedules";
+import { useStudentSchedules } from "@/queries/useSchedules";
+import { Tables } from "@/types/supabase";
 import { Calendar, Clock } from "lucide-react";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useMemo, useState, useEffect } from "react";
 import Tooltip from "./Tooltip";
 
 // Helper function to convert time string "HH:mm" to minutes from midnight
 const timeToMinutes = (time: string): number => {
   const [hours, minutes] = time.split(":").map(Number);
   return hours * 60 + minutes;
+};
+
+// Helper function to format time as HH:MM (remove seconds if present)
+const formatTime = (time: string): string => {
+  const [hours, minutes] = time.split(":");
+  return `${hours}:${minutes}`;
 };
 
 // Represents a single event on the timeline
@@ -27,11 +33,23 @@ interface TimelineEvent {
 }
 
 export default function CombinedStudentSchedule() {
-  const [selectedStudents, setSelectedStudents] = useState<number[]>(() =>
-    students.map((s) => s.id)
-  );
+  // API에서 데이터 가져오기
+  const { data: students = [], isLoading: studentsLoading } = useStudents();
+  const { data: classes = [], isLoading: classesLoading } = useClasses();
+  const { data: classStudents = [], isLoading: classStudentsLoading } = useClassStudents();
+  const { data: studentSchedules = [], isLoading: studentSchedulesLoading } = useStudentSchedules();
 
-  const daysOfWeek = [
+  // 선택된 학생들 상태
+  const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
+
+  // 학생 데이터가 로드되면 전체 선택으로 초기화
+  useEffect(() => {
+    if (students.length > 0 && selectedStudents.length === 0) {
+      setSelectedStudents(students.map((s) => s.id));
+    }
+  }, [students, selectedStudents.length]);
+
+  const daysOfWeek = useMemo(() => [
     { name: "월", startHour: 16, endHour: 22 },
     { name: "화", startHour: 16, endHour: 22 },
     { name: "수", startHour: 16, endHour: 22 },
@@ -39,7 +57,7 @@ export default function CombinedStudentSchedule() {
     { name: "금", startHour: 16, endHour: 22 },
     { name: "토", startHour: 10, endHour: 22 },
     { name: "일", startHour: 10, endHour: 22 },
-  ];
+  ], []);
 
   // Pre-calculate timeline metrics for performance
   const timelineMetrics = useMemo(() => {
@@ -63,29 +81,29 @@ export default function CombinedStudentSchedule() {
       .filter((s) => selectedStudents.includes(s.id))
       .map((student) => {
         const studentClasses = classStudents
-          .filter((cs) => cs.studentId === student.id)
-          .map((cs) => classes.find((c) => c.id === cs.classId))
-          .filter((c): c is Class => !!c);
+          .filter((cs) => cs.student_id === student.id)
+          .map((cs) => classes.find((c) => c.id === cs.class_id))
+          .filter((c): c is Tables<"classes"> => !!c);
 
         const classEvents: TimelineEvent[] = studentClasses.map((c) => ({
           id: `class-${c.id}`,
           title: c.title,
-          startTime: c.startTime,
-          endTime: c.endTime,
-          dayOfWeek: c.dayOfWeek === 0 ? 6 : c.dayOfWeek - 1, // Adjust dayOfWeek (Sun=0 -> Sun=6)
+          startTime: c.start_time,
+          endTime: c.end_time,
+          dayOfWeek: c.day_of_week === 0 ? 6 : c.day_of_week - 1, // Adjust dayOfWeek (Sun=0 -> Sun=6)
           color: c.color,
           type: "class",
         }));
 
         const personalEvents: TimelineEvent[] = studentSchedules
-          .filter((ss) => ss.studentId === student.id)
+          .filter((ss) => ss.student_id === student.id)
           .map((ss) => ({
             id: `schedule-${ss.id}`,
             title: ss.title,
-            startTime: ss.startTime,
-            endTime: ss.endTime,
-            dayOfWeek: ss.dayOfWeek, // Already 0-6 for Mon-Sun
-            color: ss.color,
+            startTime: ss.start_time,
+            endTime: ss.end_time,
+            dayOfWeek: ss.day_of_week, // Already 0-6 for Mon-Sun
+            color: ss.color || "#EF4444", // Default color if null
             type: "schedule",
           }));
 
@@ -94,7 +112,7 @@ export default function CombinedStudentSchedule() {
           events: [...classEvents, ...personalEvents],
         };
       });
-  }, [selectedStudents]);
+  }, [selectedStudents, students, classes, classStudents, studentSchedules]);
 
   // 겹치는 이벤트들을 그룹화하는 함수
   const groupOverlappingEvents = (events: TimelineEvent[]) => {
@@ -190,7 +208,7 @@ export default function CombinedStudentSchedule() {
           <div className="flex items-center gap-2 text-sm text-gray-200 mb-1">
             <Clock className="w-4 h-4 text-blue-300" />
             <span>
-              {event.startTime} - {event.endTime}
+              {formatTime(event.startTime)} - {formatTime(event.endTime)}
             </span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-200">
@@ -212,7 +230,7 @@ export default function CombinedStudentSchedule() {
           <span>{dayName}요일</span>
         </div>
         <div className="space-y-2">
-          {events.map((event, index) => (
+          {events.map((event) => (
             <div
               key={event.id}
               className="border-l-2 pl-2"
@@ -224,7 +242,7 @@ export default function CombinedStudentSchedule() {
               <div className="flex items-center gap-1 text-xs text-gray-200">
                 <Clock className="w-3 h-3 text-blue-300" />
                 <span>
-                  {event.startTime} - {event.endTime}
+                  {formatTime(event.startTime)} - {formatTime(event.endTime)}
                 </span>
               </div>
               <div className="text-xs text-gray-300">
@@ -291,6 +309,20 @@ export default function CombinedStudentSchedule() {
       </>
     );
   };
+
+  // 로딩 상태
+  const isLoading = studentsLoading || classesLoading || classStudentsLoading || studentSchedulesLoading;
+
+  if (isLoading) {
+    return (
+      <div className="w-full grow overflow-auto bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">스케줄 데이터를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full grow overflow-auto bg-gray-50 rounded-lg border border-gray-200">

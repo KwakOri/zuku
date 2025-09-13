@@ -13,8 +13,8 @@ import {
   Loader2,
   LogOut,
   MessageSquare,
-  Settings,
   Star,
+  UserPlus,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -103,6 +103,26 @@ export default function HomePage() {
       stats: "스마트 추천",
       features: ["충돌 검사", "가용 시간 분석", "자동 추천", "공통 시간 찾기"],
     },
+    {
+      id: "admin-invites",
+      title: "초대 관리",
+      description: "새로운 사용자를 초대하고 계정 권한을 관리합니다",
+      icon: UserPlus,
+      color: "bg-red-50 text-red-600 border-red-200",
+      href: "/admin/invites",
+      stats: "관리자 전용",
+      features: ["사용자 초대", "권한 설정", "계정 관리", "접근 제어"],
+    },
+    {
+      id: "notifications",
+      title: "알림톡 발송",
+      description: "학부모에게 학습 현황과 중요한 정보를 알림톡으로 전달합니다",
+      icon: MessageSquare,
+      color: "bg-emerald-50 text-emerald-600 border-emerald-200",
+      href: "/notifications",
+      stats: "실시간 발송",
+      features: ["개별 발송", "일괄 발송", "템플릿 관리", "발송 내역"],
+    },
   ];
 
   const stats = [
@@ -137,35 +157,6 @@ export default function HomePage() {
                 </div>
               ) : isAuthenticated ? (
                 <>
-                  {/* 관리자만 초대 관리 버튼 표시 */}
-                  {(user?.role === "admin" || user?.role === "manager") && (
-                    <Link
-                      href="/admin/invites"
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
-                    >
-                      <Settings className="w-4 h-4" />
-                      초대 관리
-                    </Link>
-                  )}
-                  <Link
-                    href="/notifications"
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    알림톡 발송
-                  </Link>
-                  <Link
-                    href="/schedule"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    시간표 바로가기
-                  </Link>
-                  <Link
-                    href="/combined-schedule"
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                  >
-                    통합 시간표
-                  </Link>
                   <button
                     onClick={handleLogout}
                     className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
@@ -227,11 +218,22 @@ export default function HomePage() {
           </h2>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature) => {
-              const IconComponent = feature.icon;
-              return (
-                <Link key={feature.id} href={feature.href} className="group">
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 h-full hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+            {features
+              .filter((feature) => {
+                // 초대 관리는 관리자와 매니저만 볼 수 있음
+                if (feature.id === "admin-invites") {
+                  return (
+                    isAuthenticated &&
+                    (user?.role === "admin" || user?.role === "manager")
+                  );
+                }
+                return true;
+              })
+              .map((feature) => {
+                const IconComponent = feature.icon;
+                return (
+                  <Link key={feature.id} href={feature.href} className="group">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 h-full hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
                     {/* 아이콘과 제목 */}
                     <div className="flex items-center gap-4 mb-6">
                       <div

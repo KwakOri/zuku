@@ -1,8 +1,8 @@
 "use client";
 
-import { students } from "@/lib/mock/students";
 import { getGrade } from "@/lib/utils";
-import { Student } from "@/types/schedule";
+import { Tables } from "@/types/supabase";
+import { useStudents } from "@/queries/useStudents";
 import {
   Calendar,
   ChevronDown,
@@ -18,8 +18,8 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 interface StudentListProps {
-  onStudentSelect?: (student: Student) => void;
-  onStudentEdit?: (student: Student) => void;
+  onStudentSelect?: (student: Tables<"students">) => void;
+  onStudentEdit?: (student: Tables<"students">) => void;
 }
 
 export default function StudentList({
@@ -30,6 +30,9 @@ export default function StudentList({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGrade, setSelectedGrade] = useState<number | "all">("all");
   const [showFilters, setShowFilters] = useState(false);
+  
+  // API에서 학생 데이터 가져오기
+  const { data: students = [], isLoading, error } = useStudents();
 
   // 학년별 필터링된 학생 목록
   const filteredStudents = useMemo(() => {
@@ -44,11 +47,11 @@ export default function StudentList({
 
       return matchesSearch && matchesGrade;
     });
-  }, [searchTerm, selectedGrade]);
+  }, [searchTerm, selectedGrade, students]);
 
   // 학년별 그룹화
   const studentsByGrade = useMemo(() => {
-    const groups: { [grade: number]: Student[] } = {};
+    const groups: { [grade: number]: Tables<"students">[] } = {};
     filteredStudents.forEach((student) => {
       if (!groups[student.grade]) {
         groups[student.grade] = [];
@@ -64,17 +67,45 @@ export default function StudentList({
       (a, b) => a - b
     );
     return grades;
-  }, []);
+  }, [students]);
 
-  const getGradeLabel = (grade: number) => {
-    if (grade <= 9) return `${grade}학년 (중등)`;
-    return `${grade}학년 (고등)`;
-  };
 
   const getGradeColor = (grade: number) => {
     if (grade <= 9) return "bg-blue-50 text-blue-700 border-blue-200";
     return "bg-purple-50 text-purple-700 border-purple-200";
   };
+
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <div className="w-full space-y-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-full mb-4"></div>
+            <div className="h-12 bg-gray-200 rounded w-full"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (error) {
+    return (
+      <div className="w-full space-y-6">
+        <div className="bg-white rounded-lg border border-red-200 p-6">
+          <div className="text-center">
+            <div className="text-red-600 mb-4">⚠️</div>
+            <h3 className="text-lg font-medium text-red-900 mb-2">
+              데이터를 불러오는 중 오류가 발생했습니다
+            </h3>
+            <p className="text-red-600 text-sm">{error.message}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full space-y-6">
@@ -261,9 +292,9 @@ export default function StudentList({
                                 </div>
                               )}
                             </div>
-                            {student.parentPhone && (
+                            {student.parent_phone && (
                               <div className="text-xs text-gray-500">
-                                학부모: {student.parentPhone}
+                                학부모: {student.parent_phone}
                               </div>
                             )}
                           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { StudentScheduleBlock, StudentWeeklyView } from "@/types/schedule";
-import { Clock, MapPin, User, Book, Calendar, Plus, Edit3 } from "lucide-react";
+import { Book, Calendar, Clock, Edit3, MapPin, Plus, User } from "lucide-react";
 import React, { useState } from "react";
 
 interface StudentWeeklyScheduleProps {
@@ -17,10 +17,16 @@ interface EditModalProps {
   onDelete?: (blockId: string) => void;
 }
 
-function EditModal({ block, isOpen, onClose, onSave, onDelete }: EditModalProps) {
+function EditModal({
+  block,
+  isOpen,
+  onClose,
+  onSave,
+  onDelete,
+}: EditModalProps) {
   const [editData, setEditData] = useState({
     title: block?.title || "",
-    type: block?.type || "personal" as const,
+    type: block?.type || ("personal" as const),
     startTime: block?.startTime || "",
     endTime: block?.endTime || "",
     location: block?.location || "",
@@ -72,7 +78,9 @@ function EditModal({ block, isOpen, onClose, onSave, onDelete }: EditModalProps)
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-800">개인 일정 편집</h3>
+          <h3 className="text-lg font-semibold text-gray-800">
+            개인 일정 편집
+          </h3>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
@@ -89,7 +97,9 @@ function EditModal({ block, isOpen, onClose, onSave, onDelete }: EditModalProps)
             <input
               type="text"
               value={editData.title}
-              onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+              onChange={(e) =>
+                setEditData({ ...editData, title: e.target.value })
+              }
               className="w-full border rounded-md px-3 py-2"
             />
           </div>
@@ -100,7 +110,9 @@ function EditModal({ block, isOpen, onClose, onSave, onDelete }: EditModalProps)
             </label>
             <select
               value={editData.type}
-              onChange={(e) => setEditData({ ...editData, type: e.target.value as any })}
+              onChange={(e) =>
+                setEditData({ ...editData, type: e.target.value as any })
+              }
               className="w-full border rounded-md px-3 py-2"
             >
               {typeOptions.map((option) => (
@@ -119,7 +131,9 @@ function EditModal({ block, isOpen, onClose, onSave, onDelete }: EditModalProps)
               <input
                 type="time"
                 value={editData.startTime}
-                onChange={(e) => setEditData({ ...editData, startTime: e.target.value })}
+                onChange={(e) =>
+                  setEditData({ ...editData, startTime: e.target.value })
+                }
                 className="w-full border rounded-md px-3 py-2"
               />
             </div>
@@ -130,7 +144,9 @@ function EditModal({ block, isOpen, onClose, onSave, onDelete }: EditModalProps)
               <input
                 type="time"
                 value={editData.endTime}
-                onChange={(e) => setEditData({ ...editData, endTime: e.target.value })}
+                onChange={(e) =>
+                  setEditData({ ...editData, endTime: e.target.value })
+                }
                 className="w-full border rounded-md px-3 py-2"
               />
             </div>
@@ -143,7 +159,9 @@ function EditModal({ block, isOpen, onClose, onSave, onDelete }: EditModalProps)
             <input
               type="text"
               value={editData.location}
-              onChange={(e) => setEditData({ ...editData, location: e.target.value })}
+              onChange={(e) =>
+                setEditData({ ...editData, location: e.target.value })
+              }
               className="w-full border rounded-md px-3 py-2"
               placeholder="선택사항"
             />
@@ -155,7 +173,9 @@ function EditModal({ block, isOpen, onClose, onSave, onDelete }: EditModalProps)
             </label>
             <textarea
               value={editData.description}
-              onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+              onChange={(e) =>
+                setEditData({ ...editData, description: e.target.value })
+              }
               className="w-full border rounded-md px-3 py-2 h-20 resize-none"
               placeholder="선택사항"
             />
@@ -194,8 +214,12 @@ export default function StudentWeeklySchedule({
   studentWeeklyView,
   viewMode = "view",
 }: StudentWeeklyScheduleProps) {
-  const [scheduleBlocks, setScheduleBlocks] = useState(studentWeeklyView.scheduleBlocks);
-  const [editingBlock, setEditingBlock] = useState<StudentScheduleBlock | null>(null);
+  const [scheduleBlocks, setScheduleBlocks] = useState(
+    studentWeeklyView.scheduleBlocks
+  );
+  const [editingBlock, setEditingBlock] = useState<StudentScheduleBlock | null>(
+    null
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // 요일별로 시간대를 나열하여 그리드 구성
@@ -206,21 +230,21 @@ export default function StudentWeeklySchedule({
   const getBlocksForDayAndTime = (dayIndex: number, timeSlot: string) => {
     return scheduleBlocks.filter((block) => {
       if (block.dayOfWeek !== dayIndex) return false;
-      
+
       const blockStart = block.startTime;
       const blockEnd = block.endTime;
       const slotTime = timeSlot;
-      
+
       // 시간을 분 단위로 변환하여 비교
       const timeToMinutes = (time: string) => {
-        const [hours, minutes] = time.split(':').map(Number);
+        const [hours, minutes] = time.split(":").map(Number);
         return hours * 60 + minutes;
       };
-      
+
       const blockStartMin = timeToMinutes(blockStart);
       const blockEndMin = timeToMinutes(blockEnd);
       const slotMin = timeToMinutes(slotTime);
-      
+
       return slotMin >= blockStartMin && slotMin < blockEndMin;
     });
   };
@@ -228,14 +252,14 @@ export default function StudentWeeklySchedule({
   // 블록의 높이 계산 (시간 지속 시간에 따라)
   const getBlockHeight = (block: StudentScheduleBlock) => {
     const timeToMinutes = (time: string) => {
-      const [hours, minutes] = time.split(':').map(Number);
+      const [hours, minutes] = time.split(":").map(Number);
       return hours * 60 + minutes;
     };
-    
+
     const startMin = timeToMinutes(block.startTime);
     const endMin = timeToMinutes(block.endTime);
     const duration = endMin - startMin;
-    
+
     // 30분당 한 셀 높이
     const cellsSpanned = duration / 30;
     return `${cellsSpanned * 3}rem`; // 각 셀이 3rem 높이
@@ -249,7 +273,10 @@ export default function StudentWeeklySchedule({
     }
   };
 
-  const handleSaveBlock = (blockId: string, updatedData: Partial<StudentScheduleBlock>) => {
+  const handleSaveBlock = (
+    blockId: string,
+    updatedData: Partial<StudentScheduleBlock>
+  ) => {
     setScheduleBlocks((blocks) =>
       blocks.map((block) =>
         block.id === blockId ? { ...block, ...updatedData } : block
@@ -258,7 +285,9 @@ export default function StudentWeeklySchedule({
   };
 
   const handleDeleteBlock = (blockId: string) => {
-    setScheduleBlocks((blocks) => blocks.filter((block) => block.id !== blockId));
+    setScheduleBlocks((blocks) =>
+      blocks.filter((block) => block.id !== blockId)
+    );
   };
 
   return (
@@ -290,7 +319,10 @@ export default function StudentWeeklySchedule({
             시간
           </div>
           {weekDays.map((day, dayIndex) => (
-            <div key={day} className="bg-gray-50 border-r border-b border-gray-200 p-3 font-semibold text-center text-gray-700">
+            <div
+              key={day}
+              className="bg-gray-50 border-r border-b border-gray-200 p-3 font-semibold text-center text-gray-700"
+            >
               {day}요일
             </div>
           ))}
@@ -302,65 +334,75 @@ export default function StudentWeeklySchedule({
               <div className="bg-gray-50 border-r border-b border-gray-200 p-3 text-center text-sm font-medium text-gray-600">
                 {timeSlot}
               </div>
-              
+
               {/* 각 요일의 해당 시간 셀 */}
               {weekDays.map((day, dayIndex) => {
                 const blocksInCell = getBlocksForDayAndTime(dayIndex, timeSlot);
-                const isFirstRowOfBlock = blocksInCell.length > 0 && 
-                  blocksInCell.every(block => block.startTime === timeSlot);
+                const isFirstRowOfBlock =
+                  blocksInCell.length > 0 &&
+                  blocksInCell.every((block) => block.startTime === timeSlot);
 
                 return (
                   <div
                     key={`${day}-${timeSlot}`}
                     className="border-r border-b border-gray-200 p-1 relative min-h-[3rem]"
                   >
-                    {isFirstRowOfBlock && blocksInCell.map((block) => (
-                      <div
-                        key={block.id}
-                        className={`absolute inset-1 rounded-lg p-2 cursor-pointer transition-all hover:shadow-md ${
-                          block.isEditable && viewMode === "edit" ? "hover:ring-2 hover:ring-blue-300" : ""
-                        }`}
-                        style={{
-                          backgroundColor: block.color,
-                          height: getBlockHeight(block),
-                          zIndex: 10,
-                        }}
-                        onClick={() => viewMode === "edit" && handleEditBlock(block)}
-                      >
-                        <div className="text-white text-xs font-semibold mb-1 truncate">
-                          {block.title}
+                    {isFirstRowOfBlock &&
+                      blocksInCell.map((block) => (
+                        <div
+                          key={block.id}
+                          className={`absolute inset-1 rounded-lg p-2 cursor-pointer transition-all hover:shadow-md ${
+                            block.isEditable && viewMode === "edit"
+                              ? "hover:ring-2 hover:ring-blue-300"
+                              : ""
+                          }`}
+                          style={{
+                            backgroundColor: block.color,
+                            height: getBlockHeight(block),
+                            zIndex: 10,
+                          }}
+                          onClick={() =>
+                            viewMode === "edit" && handleEditBlock(block)
+                          }
+                        >
+                          <div className="text-white text-xs font-semibold mb-1 truncate">
+                            {block.title}
+                          </div>
+                          <div className="flex items-center gap-1 text-white text-xs opacity-90">
+                            <Clock className="w-3 h-3" />
+                            <span>
+                              {block.startTime} - {block.endTime}
+                            </span>
+                          </div>
+                          {block.location && (
+                            <div className="flex items-center gap-1 text-white text-xs opacity-90 mt-1">
+                              <MapPin className="w-3 h-3" />
+                              <span className="truncate">{block.location}</span>
+                            </div>
+                          )}
+                          {block.teacherName && (
+                            <div className="flex items-center gap-1 text-white text-xs opacity-90 mt-1">
+                              <User className="w-3 h-3" />
+                              <span className="truncate">
+                                {block.teacherName}
+                              </span>
+                            </div>
+                          )}
+                          {block.subject && (
+                            <div className="flex items-center gap-1 text-white text-xs opacity-90 mt-1">
+                              <Book className="w-3 h-3" />
+                              <span className="truncate">{block.subject}</span>
+                            </div>
+                          )}
+
+                          {/* 편집 가능 표시 */}
+                          {block.isEditable && viewMode === "edit" && (
+                            <div className="absolute top-1 right-1 bg-white bg-opacity-20 rounded p-1">
+                              <Edit3 className="w-3 h-3 text-white" />
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center gap-1 text-white text-xs opacity-90">
-                          <Clock className="w-3 h-3" />
-                          <span>{block.startTime} - {block.endTime}</span>
-                        </div>
-                        {block.location && (
-                          <div className="flex items-center gap-1 text-white text-xs opacity-90 mt-1">
-                            <MapPin className="w-3 h-3" />
-                            <span className="truncate">{block.location}</span>
-                          </div>
-                        )}
-                        {block.teacherName && (
-                          <div className="flex items-center gap-1 text-white text-xs opacity-90 mt-1">
-                            <User className="w-3 h-3" />
-                            <span className="truncate">{block.teacherName}</span>
-                          </div>
-                        )}
-                        {block.subject && (
-                          <div className="flex items-center gap-1 text-white text-xs opacity-90 mt-1">
-                            <Book className="w-3 h-3" />
-                            <span className="truncate">{block.subject}</span>
-                          </div>
-                        )}
-                        
-                        {/* 편집 가능 표시 */}
-                        {block.isEditable && viewMode === "edit" && (
-                          <div className="absolute top-1 right-1 bg-white bg-opacity-20 rounded p-1">
-                            <Edit3 className="w-3 h-3 text-white" />
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 );
               })}
@@ -399,7 +441,8 @@ export default function StudentWeeklySchedule({
         </div>
         {viewMode === "edit" && (
           <div className="text-xs text-gray-500 mt-2">
-            💡 개인 일정은 클릭하여 편집할 수 있습니다. 학원 수업은 편집할 수 없습니다.
+            💡 개인 일정은 클릭하여 편집할 수 있습니다. 학원 수업은 편집할 수
+            없습니다.
           </div>
         )}
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { middleSchoolRecords } from "@/lib/mock/middleSchoolRecords";
-import { students } from "@/lib/mock/students";
+import { useStudents } from "@/queries/useStudents";
 import { MiddleSchoolRecord } from "@/types/schedule";
 
 import {
@@ -42,10 +42,13 @@ export default function MiddleSchoolRecordManager({
     return monday.toISOString().split("T")[0];
   });
 
+  // API에서 학생 데이터 가져오기
+  const { data: students = [] } = useStudents();
+
   // 현재 강사가 담당하는 중등 학생들 (9학년 이하)
   const middleSchoolStudents = useMemo(() => {
     return students.filter((student) => student.grade <= 9);
-  }, []);
+  }, [students]);
 
   // 선택된 주차의 기록들
   const weekRecords = useMemo(() => {

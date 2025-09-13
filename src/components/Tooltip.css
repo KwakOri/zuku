@@ -15,25 +15,25 @@
 }
 
 /* Tooltip Arrow Styles */
-.tooltip-arrow-top {
+.tooltip-arrow-bottom {
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
   border-top: 6px solid #111827;
 }
 
-.tooltip-arrow-bottom {
+.tooltip-arrow-top {
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
   border-bottom: 6px solid #111827;
 }
 
-.tooltip-arrow-left {
+.tooltip-arrow-right {
   border-top: 6px solid transparent;
   border-bottom: 6px solid transparent;
   border-left: 6px solid #111827;
 }
 
-.tooltip-arrow-right {
+.tooltip-arrow-left {
   border-top: 6px solid transparent;
   border-bottom: 6px solid transparent;
   border-right: 6px solid #111827;
