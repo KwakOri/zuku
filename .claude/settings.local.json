@@ -9,7 +9,13 @@
       "Read(/Users/kwakori/Desktop/**)",
       "Read(/Users/kwakori/Desktop/**)",
       "Bash(npx tsc:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(curl:*)",
+      "Bash(npm run dev:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_click"
     ],
     "deny": [],
     "ask": []

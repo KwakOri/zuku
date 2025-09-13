@@ -1,30 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { 
-  Home, 
-  Plus, 
-  Mail, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  Users,
-  GraduationCap,
-  UserCheck,
-  Settings
-} from "lucide-react";
-import { useInviteUser, useInvitations } from "@/queries/useAuth";
+import { useInvitations, useInviteUser } from "@/queries/useAuth";
 import { InviteUserRequest } from "@/services/client/authApi";
+import {
+  CheckCircle,
+  Clock,
+  GraduationCap,
+  Home,
+  Mail,
+  Plus,
+  Settings,
+  UserCheck,
+  Users,
+  XCircle,
+} from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 
 // 초대 상태 타입
-type InviteStatus = 'pending' | 'accepted' | 'expired';
+type InviteStatus = "pending" | "accepted" | "expired";
 
 // 초대 정보 타입
 interface Invitation {
   id: string;
   email: string;
-  role: 'admin' | 'manager' | 'teacher' | 'assistant';
+  role: "admin" | "manager" | "teacher" | "assistant";
   invitedBy: string;
   invitedAt: string;
   expiresAt: string;
@@ -36,43 +36,51 @@ export default function AdminInvitesPage() {
   // React Query 훅 사용
   const { data: invitations = [], isLoading, error } = useInvitations();
   const [showInviteForm, setShowInviteForm] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    email: string;
+    role: "admin" | "manager" | "teacher" | "assistant";
+  }>({
     email: "",
-    role: "teacher" as const
+    role: "teacher",
   });
-  const [filterStatus, setFilterStatus] = useState<InviteStatus | 'all'>('all');
+  const [filterStatus, setFilterStatus] = useState<InviteStatus | "all">("all");
 
   // 역할 표시명 변환
   const getRoleDisplayName = (role: string) => {
     switch (role) {
-      case 'admin': return '관리자';
-      case 'manager': return '매니저';
-      case 'teacher': return '강사';
-      case 'assistant': return '조교';
-      default: return '사용자';
+      case "admin":
+        return "관리자";
+      case "manager":
+        return "매니저";
+      case "teacher":
+        return "강사";
+      case "assistant":
+        return "조교";
+      default:
+        return "사용자";
     }
   };
 
   // 상태별 스타일
   const getStatusStyle = (status: InviteStatus) => {
     switch (status) {
-      case 'pending':
-        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-      case 'accepted':
-        return 'bg-green-50 text-green-700 border-green-200';
-      case 'expired':
-        return 'bg-red-50 text-red-700 border-red-200';
+      case "pending":
+        return "bg-yellow-50 text-yellow-700 border-yellow-200";
+      case "accepted":
+        return "bg-green-50 text-green-700 border-green-200";
+      case "expired":
+        return "bg-red-50 text-red-700 border-red-200";
     }
   };
 
   // 상태별 아이콘
   const getStatusIcon = (status: InviteStatus) => {
     switch (status) {
-      case 'pending':
+      case "pending":
         return <Clock className="w-4 h-4" />;
-      case 'accepted':
+      case "accepted":
         return <CheckCircle className="w-4 h-4" />;
-      case 'expired':
+      case "expired":
         return <XCircle className="w-4 h-4" />;
     }
   };
@@ -83,27 +91,24 @@ export default function AdminInvitesPage() {
   // 초대 보내기
   const handleSendInvite = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.email || !formData.role) {
-      alert('이메일과 역할을 모두 입력해주세요.');
+      alert("이메일과 역할을 모두 입력해주세요.");
       return;
     }
 
     const inviteData: InviteUserRequest = {
       email: formData.email,
       role: formData.role,
-      name: formData.email.split('@')[0], // 이메일 앞부분을 이름으로 사용
+      name: formData.email.split("@")[0], // 이메일 앞부분을 이름으로 사용
     };
 
     inviteMutation.mutate(inviteData, {
       onSuccess: () => {
-        alert('초대 이메일이 발송되었습니다!');
+        alert("초대 이메일이 발송되었습니다!");
         setFormData({ email: "", role: "teacher" });
         setShowInviteForm(false);
         // React Query의 onSuccess에서 자동으로 캐시 무효화됨
-      },
-      onError: (error: any) => {
-        alert(`초대 실패: ${error.message || '알 수 없는 오류'}`);
       },
     });
   };
@@ -133,8 +138,8 @@ export default function AdminInvitesPage() {
   }
 
   // 필터링된 초대 목록
-  const filteredInvitations = invitations.filter(invite => 
-    filterStatus === 'all' || invite.status === filterStatus
+  const filteredInvitations = invitations.filter(
+    (invite) => filterStatus === "all" || invite.status === filterStatus
   );
 
   return (
@@ -144,7 +149,7 @@ export default function AdminInvitesPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
-              <Link 
+              <Link
                 href="/"
                 className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
               >
@@ -164,8 +169,7 @@ export default function AdminInvitesPage() {
                 onClick={() => setShowInviteForm(true)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
               >
-                <Plus className="w-4 h-4" />
-                새 초대
+                <Plus className="w-4 h-4" />새 초대
               </button>
             </div>
           </div>
@@ -183,7 +187,9 @@ export default function AdminInvitesPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">전체 초대</p>
-                <p className="text-2xl font-bold text-gray-900">{invitations.length}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {invitations.length}
+                </p>
               </div>
             </div>
           </div>
@@ -196,7 +202,7 @@ export default function AdminInvitesPage() {
               <div>
                 <p className="text-sm text-gray-600">대기 중</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {invitations.filter(i => i.status === 'pending').length}
+                  {invitations.filter((i) => i.status === "pending").length}
                 </p>
               </div>
             </div>
@@ -210,7 +216,7 @@ export default function AdminInvitesPage() {
               <div>
                 <p className="text-sm text-gray-600">완료</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {invitations.filter(i => i.status === 'accepted').length}
+                  {invitations.filter((i) => i.status === "accepted").length}
                 </p>
               </div>
             </div>
@@ -224,7 +230,7 @@ export default function AdminInvitesPage() {
               <div>
                 <p className="text-sm text-gray-600">만료</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {invitations.filter(i => i.status === 'expired').length}
+                  {invitations.filter((i) => i.status === "expired").length}
                 </p>
               </div>
             </div>
@@ -235,41 +241,41 @@ export default function AdminInvitesPage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => setFilterStatus('all')}
+              onClick={() => setFilterStatus("all")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                filterStatus === 'all'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                filterStatus === "all"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
               전체
             </button>
             <button
-              onClick={() => setFilterStatus('pending')}
+              onClick={() => setFilterStatus("pending")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                filterStatus === 'pending'
-                  ? 'bg-yellow-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                filterStatus === "pending"
+                  ? "bg-yellow-600 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
               대기 중
             </button>
             <button
-              onClick={() => setFilterStatus('accepted')}
+              onClick={() => setFilterStatus("accepted")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                filterStatus === 'accepted'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                filterStatus === "accepted"
+                  ? "bg-green-600 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
               완료
             </button>
             <button
-              onClick={() => setFilterStatus('expired')}
+              onClick={() => setFilterStatus("expired")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                filterStatus === 'expired'
-                  ? 'bg-red-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                filterStatus === "expired"
+                  ? "bg-red-600 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
               만료
@@ -282,7 +288,7 @@ export default function AdminInvitesPage() {
           <div className="p-6 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">초대 목록</h2>
           </div>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
@@ -313,35 +319,49 @@ export default function AdminInvitesPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-gray-900">{invite.email}</span>
+                        <span className="text-sm text-gray-900">
+                          {invite.email}
+                        </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        {invite.role === 'teacher' && <GraduationCap className="w-4 h-4 text-blue-500" />}
-                        {invite.role === 'assistant' && <UserCheck className="w-4 h-4 text-green-500" />}
-                        {invite.role === 'manager' && <Users className="w-4 h-4 text-purple-500" />}
-                        {invite.role === 'admin' && <Settings className="w-4 h-4 text-red-500" />}
+                        {invite.role === "teacher" && (
+                          <GraduationCap className="w-4 h-4 text-blue-500" />
+                        )}
+                        {invite.role === "assistant" && (
+                          <UserCheck className="w-4 h-4 text-green-500" />
+                        )}
+                        {invite.role === "manager" && (
+                          <Users className="w-4 h-4 text-purple-500" />
+                        )}
+                        {invite.role === "admin" && (
+                          <Settings className="w-4 h-4 text-red-500" />
+                        )}
                         <span className="text-sm text-gray-900">
                           {getRoleDisplayName(invite.role)}
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${getStatusStyle(invite.status)}`}>
+                      <div
+                        className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${getStatusStyle(
+                          invite.status
+                        )}`}
+                      >
                         {getStatusIcon(invite.status)}
                         <span>
-                          {invite.status === 'pending' && '대기 중'}
-                          {invite.status === 'accepted' && '완료'}
-                          {invite.status === 'expired' && '만료'}
+                          {invite.status === "pending" && "대기 중"}
+                          {invite.status === "accepted" && "완료"}
+                          {invite.status === "expired" && "만료"}
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {new Date(invite.invitedAt).toLocaleDateString('ko-KR')}
+                      {new Date(invite.invitedAt).toLocaleDateString("ko-KR")}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {new Date(invite.expiresAt).toLocaleDateString('ko-KR')}
+                      {new Date(invite.expiresAt).toLocaleDateString("ko-KR")}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {invite.invitedBy}
@@ -350,7 +370,7 @@ export default function AdminInvitesPage() {
                 ))}
               </tbody>
             </table>
-            
+
             {filteredInvitations.length === 0 && (
               <div className="text-center py-12">
                 <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
@@ -366,19 +386,26 @@ export default function AdminInvitesPage() {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full">
             <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">새 사용자 초대</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                새 사용자 초대
+              </h3>
             </div>
-            
+
             <form onSubmit={handleSendInvite} className="p-6">
               <div className="mb-4">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   이메일 주소
                 </label>
                 <input
                   type="email"
                   id="email"
                   value={formData.email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, email: e.target.value }))
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="user@example.com"
                   required
@@ -386,13 +413,21 @@ export default function AdminInvitesPage() {
               </div>
 
               <div className="mb-6">
-                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="role"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   역할
                 </label>
                 <select
                   id="role"
                   value={formData.role}
-                  onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as 'teacher' | 'assistant' | 'manager' | 'admin' }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      role: e.target.value as typeof formData.role,
+                    }))
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="teacher">강사</option>

@@ -1,7 +1,8 @@
 "use client";
 
 import { studentSchedules } from "@/lib/mock/studentSchedules";
-import { Student, StudentSchedule } from "@/types/schedule";
+import { Tables } from "@/types/supabase";
+import { StudentSchedule } from "@/types/schedule";
 import {
   ArrowLeft,
   Calendar,
@@ -16,7 +17,7 @@ import {
 import { useMemo, useState } from "react";
 
 interface StudentScheduleEditorProps {
-  student: Student;
+  student: Tables<"students">;
   onBack: () => void;
 }
 

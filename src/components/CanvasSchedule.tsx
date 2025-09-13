@@ -17,6 +17,9 @@ interface CanvasScheduleProps {
   editMode?: EditMode;
   config?: ScheduleConfig;
   showDensity?: boolean;
+  studentId?: number; // 학생 개별 시간표 모드
+  customBlocks?: ClassBlock[]; // 커스텀 블록 데이터
+  onBlocksChange?: (blocks: ClassBlock[]) => void; // 블록 변경 콜백
 }
 
 interface ClassModalProps {
@@ -259,6 +262,9 @@ export default function CanvasSchedule({
   editMode = "view",
   config = defaultScheduleConfig,
   showDensity = false,
+  studentId,
+  customBlocks,
+  onBlocksChange,
 }: CanvasScheduleProps) {
   const timeCanvasRef = useRef<HTMLCanvasElement>(null);
   const headerCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -267,8 +273,9 @@ export default function CanvasSchedule({
   const timeContainerRef = useRef<HTMLDivElement>(null);
   const headerContainerRef = useRef<HTMLDivElement>(null);
   const scheduleContainerRef = useRef<HTMLDivElement>(null);
-  const [classBlocks, setClassBlocks] =
-    useState<ClassBlock[]>(generateClassBlocks);
+  const [classBlocks, setClassBlocks] = useState<ClassBlock[]>(
+    customBlocks || generateClassBlocks
+  );
   const [modalBlock, setModalBlock] = useState<ClassBlock | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [containerWidth, setContainerWidth] = useState(1000);
@@ -780,18 +787,18 @@ export default function CanvasSchedule({
 
     if (newPosition) {
       // 블록 위치 업데이트
-      setClassBlocks((blocks) =>
-        blocks.map((block) =>
-          block.id === dragState.draggedBlock?.id
-            ? {
-                ...block,
-                dayOfWeek: newPosition.dayOfWeek,
-                startTime: newPosition.startTime,
-                endTime: newPosition.endTime,
-              }
-            : block
-        )
+      const updatedBlocks = classBlocks.map((block) =>
+        block.id === dragState.draggedBlock?.id
+          ? {
+              ...block,
+              dayOfWeek: newPosition.dayOfWeek,
+              startTime: newPosition.startTime,
+              endTime: newPosition.endTime,
+            }
+          : block
       );
+      setClassBlocks(updatedBlocks);
+      onBlocksChange?.(updatedBlocks);
     }
 
     setDragState({
@@ -893,11 +900,11 @@ export default function CanvasSchedule({
   };
 
   const handleSave = (blockId: string, updatedData: Partial<ClassBlock>) => {
-    setClassBlocks((blocks) =>
-      blocks.map((block) =>
-        block.id === blockId ? { ...block, ...updatedData } : block
-      )
+    const updatedBlocks = classBlocks.map((block) =>
+      block.id === blockId ? { ...block, ...updatedData } : block
     );
+    setClassBlocks(updatedBlocks);
+    onBlocksChange?.(updatedBlocks);
   };
 
   // 컨테이너 크기 감지
@@ -976,6 +983,13 @@ export default function CanvasSchedule({
       scheduleContainer.removeEventListener("scroll", handleScheduleScroll);
     };
   }, []);
+
+  // 커스텀 블록이 변경될 때 업데이트
+  useEffect(() => {
+    if (customBlocks) {
+      setClassBlocks(customBlocks);
+    }
+  }, [customBlocks]);
 
   // Canvas 다시 그리기
   useEffect(() => {
