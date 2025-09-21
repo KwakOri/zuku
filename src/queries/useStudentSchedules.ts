@@ -14,13 +14,13 @@ import { toast } from "react-hot-toast";
 export const studentScheduleKeys = {
   all: ['student-schedules'] as const,
   lists: () => [...studentScheduleKeys.all, 'list'] as const,
-  list: (studentId: number) => [...studentScheduleKeys.lists(), studentId] as const,
+  list: (studentId: string) => [...studentScheduleKeys.lists(), studentId] as const,
   details: () => [...studentScheduleKeys.all, 'detail'] as const,
-  detail: (studentId: number, scheduleId: string) => [...studentScheduleKeys.details(), studentId, scheduleId] as const,
+  detail: (studentId: string, scheduleId: string) => [...studentScheduleKeys.details(), studentId, scheduleId] as const,
 };
 
 // 학생 개인 일정 목록 조회
-export function useStudentSchedules(studentId: number) {
+export function useStudentSchedules(studentId: string) {
   return useQuery({
     queryKey: studentScheduleKeys.list(studentId),
     queryFn: () => getStudentSchedules(studentId),
@@ -29,7 +29,7 @@ export function useStudentSchedules(studentId: number) {
 }
 
 // 새 개인 일정 추가
-export function useCreateStudentSchedule(studentId: number) {
+export function useCreateStudentSchedule(studentId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -56,7 +56,7 @@ export function useCreateStudentSchedule(studentId: number) {
 }
 
 // 개인 일정 수정
-export function useUpdateStudentSchedule(studentId: number) {
+export function useUpdateStudentSchedule(studentId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -88,7 +88,7 @@ export function useUpdateStudentSchedule(studentId: number) {
 }
 
 // 개인 일정 삭제
-export function useDeleteStudentSchedule(studentId: number) {
+export function useDeleteStudentSchedule(studentId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({

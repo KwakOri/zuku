@@ -1,6 +1,6 @@
 // 학생 정보
 export interface Student {
-  id: number;
+  id: string;
   name: string;
   grade: number;
   phone?: string;
@@ -167,7 +167,7 @@ export interface HighSchoolHomeworkRecord {
 
 // 시간표 가용 시간 분석 결과
 export interface AvailabilityAnalysis {
-  studentId: number;
+  studentId: string;
   dayOfWeek: number;
   availableSlots: {
     startTime: string;
@@ -183,8 +183,8 @@ export interface ClassSchedulingSuggestion {
   dayOfWeek: number;
   startTime: string;
   endTime: string;
-  availableStudents: number[]; // 참여 가능한 학생 ID 목록
-  conflictStudents: number[]; // 시간 충돌이 있는 학생 ID 목록
+  availableStudents: string[]; // 참여 가능한 학생 ID 목록
+  conflictStudents: string[]; // 시간 충돌이 있는 학생 ID 목록
   score: number; // 추천 점수 (0-100)
 }
 

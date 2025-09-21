@@ -1,8 +1,14 @@
 "use client";
 
-import { middleSchoolRecords } from "@/lib/mock/middleSchoolRecords";
+import { getGrade } from "@/lib/utils";
+import {
+  useCreateMiddleRecord,
+  useDeleteMiddleRecord,
+  useUpdateMiddleRecord,
+  useWeeklyMiddleRecords,
+} from "@/queries/useMiddleRecords";
 import { useStudents } from "@/queries/useStudents";
-import { MiddleSchoolRecord } from "@/types/schedule";
+import { Tables, TablesInsert, TablesUpdate } from "@/types/supabase";
 
 import {
   BookOpen,
@@ -29,11 +35,8 @@ export default function MiddleSchoolRecordManager({
   teacherId = "teacher-1",
   classId = "class-1",
 }: MiddleSchoolRecordManagerProps) {
-  const [records, setRecords] =
-    useState<MiddleSchoolRecord[]>(middleSchoolRecords);
-  const [editingRecord, setEditingRecord] = useState<MiddleSchoolRecord | null>(
-    null
-  );
+  const [editingRecord, setEditingRecord] =
+    useState<Tables<"homework_records_middle"> | null>(null);
   const [isAddingRecord, setIsAddingRecord] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState<string>(() => {
     const today = new Date();
@@ -42,32 +45,35 @@ export default function MiddleSchoolRecordManager({
     return monday.toISOString().split("T")[0];
   });
 
-  // API에서 학생 데이터 가져오기
+  // API에서 데이터 가져오기
   const { data: students = [] } = useStudents();
+  const { data: records = [], isLoading: recordsLoading } =
+    useWeeklyMiddleRecords(teacherId, selectedWeek);
+
+  // Mutations
+  const createRecordMutation = useCreateMiddleRecord();
+  const updateRecordMutation = useUpdateMiddleRecord();
+  const deleteRecordMutation = useDeleteMiddleRecord();
 
   // 현재 강사가 담당하는 중등 학생들 (9학년 이하)
   const middleSchoolStudents = useMemo(() => {
     return students.filter((student) => student.grade <= 9);
   }, [students]);
 
-  // 선택된 주차의 기록들
-  const weekRecords = useMemo(() => {
-    return records.filter(
-      (record) =>
-        record.teacherId === teacherId && record.weekOf === selectedWeek
-    );
-  }, [records, teacherId, selectedWeek]);
-
   // 새 기록 템플릿
-  const [newRecord, setNewRecord] = useState<Partial<MiddleSchoolRecord>>({
-    teacherId,
-    classId,
-    weekOf: selectedWeek,
+  const [newRecord, setNewRecord] = useState<
+    Partial<TablesInsert<"homework_records_middle">>
+  >({
+    teacher_id: teacherId,
+    class_id: classId,
+    week_of: selectedWeek,
     attendance: "present",
     participation: 3,
     understanding: 3,
     homework: "good",
     notes: "",
+    created_date: new Date().toISOString().split("T")[0],
+    last_modified: new Date().toISOString().split("T")[0],
   });
 
   // 출석 상태 옵션
@@ -110,63 +116,83 @@ export default function MiddleSchoolRecordManager({
     const currentDate = new Date(selectedWeek);
     const newDate = new Date(currentDate);
     newDate.setDate(currentDate.getDate() + (direction === "next" ? 7 : -7));
-    setSelectedWeek(newDate.toISOString().split("T")[0]);
+    const newWeekString = newDate.toISOString().split("T")[0];
+    setSelectedWeek(newWeekString);
+
+    // newRecord도 주차에 맞게 업데이트
+    setNewRecord((prev) => ({ ...prev, week_of: newWeekString }));
   };
 
   // 기록 추가
-  const handleAddRecord = () => {
-    if (!newRecord.studentId) return;
+  const handleAddRecord = async () => {
+    if (!newRecord.student_id) return;
 
-    const record: MiddleSchoolRecord = {
-      id: `ms-record-${Date.now()}`,
-      studentId: newRecord.studentId!,
-      teacherId,
-      classId,
-      weekOf: selectedWeek,
+    const recordData: TablesInsert<"homework_records_middle"> = {
+      student_id: newRecord.student_id!,
+      teacher_id: teacherId,
+      class_id: classId,
+      week_of: selectedWeek,
       attendance: newRecord.attendance!,
       participation: newRecord.participation!,
       understanding: newRecord.understanding!,
       homework: newRecord.homework!,
-      notes: newRecord.notes!,
-      createdDate: new Date().toISOString().split("T")[0],
-      lastModified: new Date().toISOString().split("T")[0],
+      notes: newRecord.notes || "",
+      created_date: new Date().toISOString().split("T")[0],
+      last_modified: new Date().toISOString().split("T")[0],
     };
 
-    setRecords([...records, record]);
-    setNewRecord({
-      teacherId,
-      classId,
-      weekOf: selectedWeek,
-      attendance: "present",
-      participation: 3,
-      understanding: 3,
-      homework: "good",
-      notes: "",
-    });
-    setIsAddingRecord(false);
+    try {
+      await createRecordMutation.mutateAsync(recordData);
+      setNewRecord({
+        teacher_id: teacherId,
+        class_id: classId,
+        week_of: selectedWeek,
+        attendance: "present",
+        participation: 3,
+        understanding: 3,
+        homework: "good",
+        notes: "",
+        created_date: new Date().toISOString().split("T")[0],
+        last_modified: new Date().toISOString().split("T")[0],
+      });
+      setIsAddingRecord(false);
+    } catch (error) {
+      console.error("Error creating record:", error);
+    }
   };
 
   // 기록 수정
-  const handleUpdateRecord = () => {
+  const handleUpdateRecord = async () => {
     if (!editingRecord) return;
 
-    setRecords(
-      records.map((record) =>
-        record.id === editingRecord.id
-          ? {
-              ...editingRecord,
-              lastModified: new Date().toISOString().split("T")[0],
-            }
-          : record
-      )
-    );
-    setEditingRecord(null);
+    const updateData: TablesUpdate<"homework_records_middle"> = {
+      attendance: editingRecord.attendance,
+      participation: editingRecord.participation,
+      understanding: editingRecord.understanding,
+      homework: editingRecord.homework,
+      notes: editingRecord.notes,
+      last_modified: new Date().toISOString().split("T")[0],
+    };
+
+    try {
+      await updateRecordMutation.mutateAsync({
+        id: editingRecord.id,
+        data: updateData,
+      });
+      setEditingRecord(null);
+    } catch (error) {
+      console.error("Error updating record:", error);
+    }
   };
 
   // 기록 삭제
-  const handleDeleteRecord = (recordId: string) => {
+  const handleDeleteRecord = async (recordId: string) => {
     if (confirm("정말로 이 기록을 삭제하시겠습니까?")) {
-      setRecords(records.filter((record) => record.id !== recordId));
+      try {
+        await deleteRecordMutation.mutateAsync(recordId);
+      } catch (error) {
+        console.error("Error deleting record:", error);
+      }
     }
   };
 
@@ -180,7 +206,7 @@ export default function MiddleSchoolRecordManager({
     }월 ${endDate.getDate()}일`;
   };
 
-  const getStudent = (studentId: number) => {
+  const getStudent = (studentId: string) => {
     return students.find((s) => s.id === studentId);
   };
 
@@ -210,7 +236,14 @@ export default function MiddleSchoolRecordManager({
     ));
   };
 
-  console.log("weekRecords", weekRecords);
+  // 로딩 상태
+  const isLoading =
+    recordsLoading ||
+    createRecordMutation.isPending ||
+    updateRecordMutation.isPending ||
+    deleteRecordMutation.isPending;
+
+  console.log("records", records);
 
   return (
     <div className="w-full space-y-6">
@@ -269,12 +302,12 @@ export default function MiddleSchoolRecordManager({
           <div className="flex items-center gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span>기록 완료: {weekRecords.length}명</span>
+              <span>기록 완료: {records.length}명</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
               <span>
-                미기록: {middleSchoolStudents.length - weekRecords.length}명
+                미기록: {middleSchoolStudents.length - records.length}명
               </span>
             </div>
           </div>
@@ -283,7 +316,12 @@ export default function MiddleSchoolRecordManager({
 
       {/* 기록 목록 */}
       <div className="grid gap-6">
-        {weekRecords.length === 0 ? (
+        {isLoading ? (
+          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">데이터를 불러오는 중...</p>
+          </div>
+        ) : records.length === 0 ? (
           <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
             <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -300,8 +338,8 @@ export default function MiddleSchoolRecordManager({
             </button>
           </div>
         ) : (
-          weekRecords.map((record) => {
-            const student = getStudent(record.studentId);
+          records.map((record) => {
+            const student = getStudent(record.student_id);
             if (!student) return null;
 
             const attendanceOpt = getAttendanceOption(record.attendance);
@@ -432,7 +470,7 @@ export default function MiddleSchoolRecordManager({
                 )}
 
                 <div className="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-500">
-                  최종 수정: {record.lastModified}
+                  최종 수정: {record.last_modified}
                 </div>
               </div>
             );
@@ -466,11 +504,11 @@ export default function MiddleSchoolRecordManager({
                   학생 선택
                 </label>
                 <select
-                  value={newRecord.studentId || ""}
+                  value={newRecord.student_id || ""}
                   onChange={(e) =>
                     setNewRecord({
                       ...newRecord,
-                      studentId: parseInt(e.target.value),
+                      student_id: e.target.value,
                     })
                   }
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -478,7 +516,7 @@ export default function MiddleSchoolRecordManager({
                   <option value="">학생을 선택하세요</option>
                   {middleSchoolStudents.map((student) => (
                     <option key={student.id} value={student.id}>
-                      {student.name} ({student.grade}학년)
+                      {student.name} ({getGrade(student.grade, "half")})
                     </option>
                   ))}
                 </select>
@@ -497,7 +535,7 @@ export default function MiddleSchoolRecordManager({
                         setNewRecord({
                           ...newRecord,
                           attendance:
-                            option.value as MiddleSchoolRecord["attendance"],
+                            option.value as Tables<"homework_records_middle">["attendance"],
                         })
                       }
                       className={`p-3 rounded-lg border text-sm transition-colors ${
@@ -529,7 +567,7 @@ export default function MiddleSchoolRecordManager({
                         ...newRecord,
                         participation: parseInt(
                           e.target.value
-                        ) as MiddleSchoolRecord["participation"],
+                        ) as Tables<"homework_records_middle">["participation"],
                       })
                     }
                     className="flex-1"
@@ -556,7 +594,7 @@ export default function MiddleSchoolRecordManager({
                         ...newRecord,
                         understanding: parseInt(
                           e.target.value
-                        ) as MiddleSchoolRecord["understanding"],
+                        ) as Tables<"homework_records_middle">["understanding"],
                       })
                     }
                     className="flex-1"
@@ -580,7 +618,7 @@ export default function MiddleSchoolRecordManager({
                         setNewRecord({
                           ...newRecord,
                           homework:
-                            option.value as MiddleSchoolRecord["homework"],
+                            option.value as Tables<"homework_records_middle">["homework"],
                         })
                       }
                       className={`p-2 rounded-lg border text-sm transition-colors ${
@@ -621,10 +659,12 @@ export default function MiddleSchoolRecordManager({
               </button>
               <button
                 onClick={handleAddRecord}
-                disabled={!newRecord.studentId}
+                disabled={
+                  !newRecord.student_id || createRecordMutation.isPending
+                }
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 transition-colors"
               >
-                추가
+                {createRecordMutation.isPending ? "추가 중..." : "추가"}
               </button>
             </div>
           </div>
@@ -646,8 +686,8 @@ export default function MiddleSchoolRecordManager({
                 </button>
               </div>
               <p className="text-sm text-gray-600 mt-1">
-                {getStudent(editingRecord.studentId)?.name} |{" "}
-                {formatWeekRange(editingRecord.weekOf)}
+                {getStudent(editingRecord.student_id)?.name} |{" "}
+                {formatWeekRange(editingRecord.week_of)}
               </p>
             </div>
 
@@ -665,7 +705,7 @@ export default function MiddleSchoolRecordManager({
                         setEditingRecord({
                           ...editingRecord,
                           attendance:
-                            option.value as MiddleSchoolRecord["attendance"],
+                            option.value as Tables<"homework_records_middle">["attendance"],
                         })
                       }
                       className={`p-3 rounded-lg border text-sm transition-colors ${
@@ -697,7 +737,7 @@ export default function MiddleSchoolRecordManager({
                         ...editingRecord,
                         participation: parseInt(
                           e.target.value
-                        ) as MiddleSchoolRecord["participation"],
+                        ) as Tables<"homework_records_middle">["participation"],
                       })
                     }
                     className="flex-1"
@@ -724,7 +764,7 @@ export default function MiddleSchoolRecordManager({
                         ...editingRecord,
                         understanding: parseInt(
                           e.target.value
-                        ) as MiddleSchoolRecord["understanding"],
+                        ) as Tables<"homework_records_middle">["understanding"],
                       })
                     }
                     className="flex-1"
@@ -748,7 +788,7 @@ export default function MiddleSchoolRecordManager({
                         setEditingRecord({
                           ...editingRecord,
                           homework:
-                            option.value as MiddleSchoolRecord["homework"],
+                            option.value as Tables<"homework_records_middle">["homework"],
                         })
                       }
                       className={`p-2 rounded-lg border text-sm transition-colors ${
@@ -798,9 +838,10 @@ export default function MiddleSchoolRecordManager({
               </button>
               <button
                 onClick={handleUpdateRecord}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                disabled={updateRecordMutation.isPending}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 transition-colors"
               >
-                저장
+                {updateRecordMutation.isPending ? "저장 중..." : "저장"}
               </button>
             </div>
           </div>

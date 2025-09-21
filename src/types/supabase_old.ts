@@ -7,43 +7,42 @@ export type Json =
   | Json[];
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5";
+  };
   public: {
     Tables: {
       assistants: {
         Row: {
           assigned_grades: number[];
-          created_at: string;
           email: string | null;
           id: string;
           name: string;
           phone: string | null;
           subjects: string[];
           teacher_id: string | null;
-          updated_at: string;
           user_id: string | null;
         };
         Insert: {
-          assigned_grades?: number[];
-          created_at?: string;
+          assigned_grades: number[];
           email?: string | null;
-          id?: string;
+          id: string;
           name: string;
           phone?: string | null;
-          subjects?: string[];
+          subjects: string[];
           teacher_id?: string | null;
-          updated_at?: string;
           user_id?: string | null;
         };
         Update: {
           assigned_grades?: number[];
-          created_at?: string;
           email?: string | null;
           id?: string;
           name?: string;
           phone?: string | null;
           subjects?: string[];
           teacher_id?: string | null;
-          updated_at?: string;
           user_id?: string | null;
         };
         Relationships: [
@@ -66,7 +65,6 @@ export type Database = {
       class_exceptions: {
         Row: {
           class_id: string;
-          created_at: string;
           date: string;
           id: string;
           new_end_time: string | null;
@@ -75,24 +73,20 @@ export type Database = {
           reason: string | null;
           substitute_teacher_id: string | null;
           type: string;
-          updated_at: string;
         };
         Insert: {
           class_id: string;
-          created_at?: string;
           date: string;
-          id?: string;
+          id: string;
           new_end_time?: string | null;
           new_room?: string | null;
           new_start_time?: string | null;
           reason?: string | null;
           substitute_teacher_id?: string | null;
           type: string;
-          updated_at?: string;
         };
         Update: {
           class_id?: string;
-          created_at?: string;
           date?: string;
           id?: string;
           new_end_time?: string | null;
@@ -101,7 +95,6 @@ export type Database = {
           reason?: string | null;
           substitute_teacher_id?: string | null;
           type?: string;
-          updated_at?: string;
         };
         Relationships: [
           {
@@ -123,30 +116,24 @@ export type Database = {
       class_students: {
         Row: {
           class_id: string;
-          created_at: string;
           enrolled_date: string;
           id: string;
           status: string;
-          student_id: string;
-          updated_at: string;
+          student_id: number;
         };
         Insert: {
           class_id: string;
-          created_at?: string;
-          enrolled_date?: string;
-          id?: string;
-          status?: string;
-          student_id: string;
-          updated_at?: string;
+          enrolled_date: string;
+          id: string;
+          status: string;
+          student_id: number;
         };
         Update: {
           class_id?: string;
-          created_at?: string;
           enrolled_date?: string;
           id?: string;
           status?: string;
-          student_id?: string;
-          updated_at?: string;
+          student_id?: number;
         };
         Relationships: [
           {
@@ -168,7 +155,6 @@ export type Database = {
       classes: {
         Row: {
           color: string;
-          created_at: string;
           day_of_week: number;
           description: string | null;
           end_time: string;
@@ -181,15 +167,13 @@ export type Database = {
           teacher_id: string | null;
           teacher_name: string;
           title: string;
-          updated_at: string;
         };
         Insert: {
-          color?: string;
-          created_at?: string;
+          color: string;
           day_of_week: number;
           description?: string | null;
           end_time: string;
-          id?: string;
+          id: string;
           max_students?: number | null;
           room?: string | null;
           rrule?: string | null;
@@ -198,11 +182,9 @@ export type Database = {
           teacher_id?: string | null;
           teacher_name: string;
           title: string;
-          updated_at?: string;
         };
         Update: {
           color?: string;
-          created_at?: string;
           day_of_week?: number;
           description?: string | null;
           end_time?: string;
@@ -215,7 +197,6 @@ export type Database = {
           teacher_id?: string | null;
           teacher_name?: string;
           title?: string;
-          updated_at?: string;
         };
         Relationships: [
           {
@@ -227,21 +208,19 @@ export type Database = {
           }
         ];
       };
-      homework_records_high: {
+      high_school_homework_records: {
         Row: {
           accuracy: number;
           achievement: string;
           assistant_id: string;
           class_id: string;
           completion_rate: number;
-          created_at: string;
           created_date: string;
           date: string;
           homework_range: string;
           id: string;
           notes: string | null;
-          student_id: string;
-          updated_at: string;
+          student_id: number;
         };
         Insert: {
           accuracy: number;
@@ -249,14 +228,12 @@ export type Database = {
           assistant_id: string;
           class_id: string;
           completion_rate: number;
-          created_at?: string;
-          created_date?: string;
+          created_date: string;
           date: string;
           homework_range: string;
-          id?: string;
+          id: string;
           notes?: string | null;
-          student_id: string;
-          updated_at?: string;
+          student_id: number;
         };
         Update: {
           accuracy?: number;
@@ -264,32 +241,30 @@ export type Database = {
           assistant_id?: string;
           class_id?: string;
           completion_rate?: number;
-          created_at?: string;
           created_date?: string;
           date?: string;
           homework_range?: string;
           id?: string;
           notes?: string | null;
-          student_id?: string;
-          updated_at?: string;
+          student_id?: number;
         };
         Relationships: [
           {
-            foreignKeyName: "homework_records_high_assistant_id_fkey";
+            foreignKeyName: "high_school_homework_records_assistant_id_fkey";
             columns: ["assistant_id"];
             isOneToOne: false;
             referencedRelation: "assistants";
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "homework_records_high_class_id_fkey";
+            foreignKeyName: "high_school_homework_records_class_id_fkey";
             columns: ["class_id"];
             isOneToOne: false;
             referencedRelation: "classes";
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "homework_records_high_student_id_fkey";
+            foreignKeyName: "high_school_homework_records_student_id_fkey";
             columns: ["student_id"];
             isOneToOne: false;
             referencedRelation: "students";
@@ -297,72 +272,66 @@ export type Database = {
           }
         ];
       };
-      homework_records_middle: {
+      middle_school_records: {
         Row: {
           attendance: string;
           class_id: string;
-          created_at: string;
           created_date: string;
           homework: string;
           id: string;
           last_modified: string;
           notes: string;
           participation: number;
-          student_id: string;
+          student_id: number;
           teacher_id: string;
           understanding: number;
-          updated_at: string;
           week_of: string;
         };
         Insert: {
           attendance: string;
           class_id: string;
-          created_at?: string;
-          created_date?: string;
+          created_date: string;
           homework: string;
-          id?: string;
-          last_modified?: string;
-          notes?: string;
+          id: string;
+          last_modified: string;
+          notes: string;
           participation: number;
-          student_id: string;
+          student_id: number;
           teacher_id: string;
           understanding: number;
-          updated_at?: string;
           week_of: string;
         };
         Update: {
           attendance?: string;
           class_id?: string;
-          created_at?: string;
           created_date?: string;
           homework?: string;
           id?: string;
           last_modified?: string;
           notes?: string;
           participation?: number;
-          student_id?: string;
+          student_id?: number;
           teacher_id?: string;
           understanding?: number;
-          updated_at?: string;
           week_of?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "homework_records_middle_class_id_fkey";
+            foreignKeyName: "middle_school_records_class_id_fkey";
             columns: ["class_id"];
             isOneToOne: false;
             referencedRelation: "classes";
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "homework_records_middle_student_id_fkey";
+            foreignKeyName: "middle_school_records_student_id_fkey";
             columns: ["student_id"];
             isOneToOne: false;
             referencedRelation: "students";
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "homework_records_middle_teacher_id_fkey";
+            foreignKeyName: "middle_school_records_teacher_id_fkey";
             columns: ["teacher_id"];
             isOneToOne: false;
             referencedRelation: "teachers";
@@ -414,7 +383,6 @@ export type Database = {
       student_schedules: {
         Row: {
           color: string;
-          created_at: string;
           created_date: string;
           day_of_week: number;
           description: string | null;
@@ -425,32 +393,28 @@ export type Database = {
           rrule: string | null;
           start_time: string;
           status: string;
-          student_id: string;
+          student_id: number;
           title: string;
           type: string;
-          updated_at: string;
         };
         Insert: {
-          color?: string;
-          created_at?: string;
-          created_date?: string;
+          color: string;
+          created_date: string;
           day_of_week: number;
           description?: string | null;
           end_time: string;
-          id?: string;
+          id: string;
           location?: string | null;
           recurring?: boolean | null;
           rrule?: string | null;
           start_time: string;
-          status?: string;
-          student_id: string;
+          status: string;
+          student_id: number;
           title: string;
-          type?: string;
-          updated_at?: string;
+          type: string;
         };
         Update: {
           color?: string;
-          created_at?: string;
           created_date?: string;
           day_of_week?: number;
           description?: string | null;
@@ -461,10 +425,9 @@ export type Database = {
           rrule?: string | null;
           start_time?: string;
           status?: string;
-          student_id?: string;
+          student_id?: number;
           title?: string;
           type?: string;
-          updated_at?: string;
         };
         Relationships: [
           {
@@ -478,66 +441,54 @@ export type Database = {
       };
       students: {
         Row: {
-          created_at: string;
           email: string | null;
           grade: number;
-          id: string;
+          id: number;
           name: string;
           parent_phone: string | null;
           phone: string | null;
-          updated_at: string;
         };
         Insert: {
-          created_at?: string;
           email?: string | null;
           grade: number;
-          id?: string;
+          id?: number;
           name: string;
           parent_phone?: string | null;
           phone?: string | null;
-          updated_at?: string;
         };
         Update: {
-          created_at?: string;
           email?: string | null;
           grade?: number;
-          id?: string;
+          id?: number;
           name?: string;
           parent_phone?: string | null;
           phone?: string | null;
-          updated_at?: string;
         };
         Relationships: [];
       };
       teachers: {
         Row: {
-          created_at: string;
           email: string | null;
           id: string;
           name: string;
           phone: string | null;
           subjects: string[];
-          updated_at: string;
           user_id: string | null;
         };
         Insert: {
-          created_at?: string;
           email?: string | null;
-          id?: string;
+          id: string;
           name: string;
           phone?: string | null;
-          subjects?: string[];
-          updated_at?: string;
+          subjects: string[];
           user_id?: string | null;
         };
         Update: {
-          created_at?: string;
           email?: string | null;
           id?: string;
           name?: string;
           phone?: string | null;
           subjects?: string[];
-          updated_at?: string;
           user_id?: string | null;
         };
         Relationships: [
@@ -599,27 +550,36 @@ export type Database = {
   };
 };
 
-type PublicSchema = Database[Extract<keyof Database, "public">];
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<
+  keyof Database,
+  "public"
+>];
 
 export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R;
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-      PublicSchema["Views"])
-  ? (PublicSchema["Tables"] &
-      PublicSchema["Views"])[PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+      DefaultSchema["Views"])
+  ? (DefaultSchema["Tables"] &
+      DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
       Row: infer R;
     }
     ? R
@@ -627,20 +587,24 @@ export type Tables<
   : never;
 
 export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I;
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-  ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
       Insert: infer I;
     }
     ? I
@@ -648,20 +612,24 @@ export type TablesInsert<
   : never;
 
 export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U;
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-  ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
       Update: infer U;
     }
     ? U
@@ -669,14 +637,41 @@ export type TablesUpdate<
   : never;
 
 export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof PublicSchema["Enums"]
-    | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-  ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
   : never;
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : never;
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const;

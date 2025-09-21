@@ -8,7 +8,7 @@ export const scheduleKeys = {
   // 학생 개인 일정
   studentSchedules: ["studentSchedules"] as const,
   studentSchedulesList: () => [...scheduleKeys.studentSchedules, "list"] as const,
-  studentSchedulesByStudent: (studentId: number) => 
+  studentSchedulesByStudent: (studentId: string) => 
     [...scheduleKeys.studentSchedules, "byStudent", studentId] as const,
   studentScheduleDetail: (id: string) => 
     [...scheduleKeys.studentSchedules, "detail", id] as const,
@@ -18,11 +18,11 @@ export const scheduleKeys = {
   classStudentsList: () => [...scheduleKeys.classStudents, "list"] as const,
   classStudentsByClass: (classId: string) => 
     [...scheduleKeys.classStudents, "byClass", classId] as const,
-  classStudentsByStudent: (studentId: number) => 
+  classStudentsByStudent: (studentId: string) => 
     [...scheduleKeys.classStudents, "byStudent", studentId] as const,
   
   // 종합 스케줄
-  completeSchedule: (studentId: number) => 
+  completeSchedule: (studentId: string) => 
     ["completeSchedule", studentId] as const,
   densityData: ["densityData"] as const,
 };
@@ -63,7 +63,7 @@ export function useClassStudents(classId?: string, studentId?: number) {
 }
 
 // 종합 스케줄 Queries
-export function useStudentCompleteSchedule(studentId: number) {
+export function useStudentCompleteSchedule(studentId: string) {
   return useQuery({
     queryKey: scheduleKeys.completeSchedule(studentId),
     queryFn: () => scheduleApi.getStudentCompleteSchedule(studentId),
@@ -216,7 +216,7 @@ export function useUnenrollStudentFromClass() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ classId, studentId }: { classId: string; studentId: number }) =>
+    mutationFn: ({ classId, studentId }: { classId: string; studentId: string }) =>
       scheduleApi.unenrollStudentFromClass(classId, studentId),
     onSuccess: (_, variables) => {
       // 관련 쿼리들 무효화
@@ -245,7 +245,7 @@ export function useUnenrollStudentFromClass() {
 }
 
 // 유틸리티 훅들
-export function useStudentWeeklySchedule(studentId: number) {
+export function useStudentWeeklySchedule(studentId: string) {
   return useQuery({
     queryKey: [...scheduleKeys.completeSchedule(studentId), "weekly"],
     queryFn: async () => {

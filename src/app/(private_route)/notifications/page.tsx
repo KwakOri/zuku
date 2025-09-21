@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 
 interface StudentRecordStatus {
-  studentId: number;
+  studentId: string;
   studentName: string;
   parentPhone: string;
   records: {
@@ -89,7 +89,7 @@ export default function NotificationsPage() {
     setRecordStatuses(Array.from(studentRecordMap.values()).sort((a, b) => a.studentName.localeCompare(b.studentName)));
   }, []);
 
-  const handleStudentToggle = (studentId: number) => {
+  const handleStudentToggle = (studentId: string) => {
     const newSelected = new Set(selectedStudents);
     if (newSelected.has(studentId)) {
       newSelected.delete(studentId);

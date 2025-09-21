@@ -22,7 +22,7 @@ export interface UpdateStudentScheduleRequest extends Partial<CreateStudentSched
 }
 
 // 특정 학생의 개인 일정 목록 조회
-export async function getStudentSchedules(studentId: number): Promise<StudentScheduleRow[]> {
+export async function getStudentSchedules(studentId: string): Promise<StudentScheduleRow[]> {
   const response = await fetch(`/api/students/${studentId}/schedules`, {
     method: "GET",
     headers: {
@@ -41,7 +41,7 @@ export async function getStudentSchedules(studentId: number): Promise<StudentSch
 
 // 새로운 개인 일정 추가
 export async function createStudentSchedule(
-  studentId: number,
+  studentId: string,
   scheduleData: CreateStudentScheduleRequest
 ): Promise<StudentScheduleRow> {
   const response = await fetch(`/api/students/${studentId}/schedules`, {
@@ -63,7 +63,7 @@ export async function createStudentSchedule(
 
 // 개인 일정 수정
 export async function updateStudentSchedule(
-  studentId: number,
+  studentId: string,
   scheduleId: string,
   scheduleData: UpdateStudentScheduleRequest
 ): Promise<StudentScheduleRow> {
@@ -86,7 +86,7 @@ export async function updateStudentSchedule(
 
 // 개인 일정 삭제
 export async function deleteStudentSchedule(
-  studentId: number,
+  studentId: string,
   scheduleId: string
 ): Promise<StudentScheduleRow> {
   const response = await fetch(`/api/students/${studentId}/schedules/${scheduleId}`, {
