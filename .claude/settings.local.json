@@ -21,7 +21,10 @@
       "Bash(grep:*)",
       "Bash(find:*)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:solapi.github.io)"
+      "WebFetch(domain:solapi.github.io)",
+      "Bash(npm run storybook:*)",
+      "Bash(pkill:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Custom Color Palette - Same as globals.css */
+  --color-primary-50: #f4f6f4;
+  --color-primary-100: #e8eae7;
+  --color-primary-200: #d1d6cd;
+  --color-primary-300: #b3baa8;
+  --color-primary-400: #8f9780;
+  --color-primary-500: #6b7c5d;
+  --color-primary-600: #586548;
+  --color-primary-700: #46513a;
+  --color-primary-800: #384130;
+  --color-primary-900: #2d3428;
+
+  --color-secondary-50: #f8f7f5;
+  --color-secondary-100: #f0ede7;
+  --color-secondary-200: #e0dbd0;
+  --color-secondary-300: #cbc2b0;
+  --color-secondary-400: #b2a389;
+  --color-secondary-500: #9a8669;
+  --color-secondary-600: #826f55;
+  --color-secondary-700: #6b5a46;
+  --color-secondary-800: #564a3b;
+  --color-secondary-900: #473d32;
+
+  --color-neu-50: #fafbfa;
+  --color-neu-100: #f5f6f5;
+  --color-neu-200: #eff0ef;
+  --color-neu-300: #e4e6e4;
+  --color-neu-400: #d1d4d1;
+  --color-neu-500: #a8ada8;
+  --color-neu-600: #8a908a;
+  --color-neu-700: #6f756f;
+  --color-neu-800: #4a504a;
+  --color-neu-900: #353a35;
+
+  --color-success-50: #f3f6f3;
+  --color-success-100: #e6ede6;
+  --color-success-200: #c8d6c8;
+  --color-success-300: #a3b8a3;
+  --color-success-400: #7a947a;
+  --color-success-500: #5a7a5a;
+  --color-success-600: #4a644a;
+  --color-success-700: #3d523d;
+  --color-success-800: #334233;
+  --color-success-900: #2a362a;
+
+  --color-warning-50: #fdf8f3;
+  --color-warning-100: #faf0e6;
+  --color-warning-200: #f3dcc8;
+  --color-warning-300: #e8c2a3;
+  --color-warning-400: #d9a077;
+  --color-warning-500: #c8825a;
+  --color-warning-600: #b06d48;
+  --color-warning-700: #92583c;
+  --color-warning-800: #774833;
+  --color-warning-900: #623c2c;
+
+  --color-error-50: #fdf4f4;
+  --color-error-100: #fae8e8;
+  --color-error-200: #f2d0d0;
+  --color-error-300: #e6abab;
+  --color-error-400: #d67e7e;
+  --color-error-500: #c45a5a;
+  --color-error-600: #a84848;
+  --color-error-700: #8b3c3c;
+  --color-error-800: #733333;
+  --color-error-900: #602c2c;
+
+  /* Box Shadows */
+  --shadow-neu-sm: 4px 4px 8px rgba(168, 173, 168, 0.25), -4px -4px 8px rgba(255, 255, 255, 0.8);
+  --shadow-neu: 8px 8px 16px rgba(168, 173, 168, 0.3), -8px -8px 16px rgba(255, 255, 255, 0.85);
+  --shadow-neu-lg: 12px 12px 24px rgba(168, 173, 168, 0.35), -12px -12px 24px rgba(255, 255, 255, 0.9);
+  --shadow-neu-inset: inset 4px 4px 8px rgba(168, 173, 168, 0.3), inset -4px -4px 8px rgba(255, 255, 255, 0.7);
+  --shadow-neu-inset-lg: inset 8px 8px 16px rgba(168, 173, 168, 0.35), inset -8px -8px 16px rgba(255, 255, 255, 0.75);
+}
+
+@layer utilities {
+  /* Neumorphism Raised Effects */
+  .neu-raised {
+    background: #f5f6f5;
+    box-shadow: 8px 8px 16px rgba(168, 173, 168, 0.3), -8px -8px 16px rgba(255, 255, 255, 0.85);
+  }
+
+  .neu-raised-sm {
+    background: #f5f6f5;
+    box-shadow: 4px 4px 8px rgba(168, 173, 168, 0.25), -4px -4px 8px rgba(255, 255, 255, 0.8);
+  }
+
+  .neu-raised-lg {
+    background: #f5f6f5;
+    box-shadow: 12px 12px 24px rgba(168, 173, 168, 0.35), -12px -12px 24px rgba(255, 255, 255, 0.9);
+  }
+
+  /* Neumorphism Inset Effects */
+  .neu-inset {
+    background: #f5f6f5;
+    box-shadow: inset 4px 4px 8px rgba(168, 173, 168, 0.3), inset -4px -4px 8px rgba(255, 255, 255, 0.7);
+  }
+
+  .neu-inset-lg {
+    background: #f5f6f5;
+    box-shadow: inset 8px 8px 16px rgba(168, 173, 168, 0.35), inset -8px -8px 16px rgba(255, 255, 255, 0.75);
+  }
+
+  /* Neumorphism Pressed Effects */
+  .neu-pressed {
+    background: #eff0ef;
+    box-shadow: inset 2px 2px 4px rgba(168, 173, 168, 0.35), inset -2px -2px 4px rgba(255, 255, 255, 0.6);
+  }
+
+  /* Container Utilities */
+  .container-responsive {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Grid Utilities */
+  .grid-responsive {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+  }
+}
