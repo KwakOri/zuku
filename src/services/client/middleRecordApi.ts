@@ -21,13 +21,10 @@ interface HomeworkRecordMiddleWithDetails extends Tables<"homework_records_middl
   teacher?: {
     id: string;
     name: string;
-    subjects: string[];
   } | null;
   class?: {
     id: string;
     title: string;
-    subject: string;
-    teacher_name: string;
   } | null;
 }
 
@@ -37,7 +34,6 @@ export class MiddleRecordApi {
   // 중등 기록 목록 조회
   async getMiddleRecords(params?: {
     teacherId?: string;
-    classId?: string;
     studentId?: string;
     weekOf?: string;
   }): Promise<HomeworkRecordMiddleWithDetails[]> {
@@ -45,9 +41,6 @@ export class MiddleRecordApi {
 
     if (params?.teacherId) {
       searchParams.set("teacher_id", params.teacherId);
-    }
-    if (params?.classId) {
-      searchParams.set("class_id", params.classId);
     }
     if (params?.studentId) {
       searchParams.set("student_id", params.studentId);
@@ -154,10 +147,6 @@ export class MiddleRecordApi {
     return this.getMiddleRecords({ studentId, teacherId });
   }
 
-  // 특정 수업의 기록들 조회 (편의 메서드)
-  async getClassRecords(classId: string, weekOf?: string): Promise<HomeworkRecordMiddleWithDetails[]> {
-    return this.getMiddleRecords({ classId, weekOf });
-  }
 }
 
 // 싱글톤 인스턴스

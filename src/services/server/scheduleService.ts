@@ -3,7 +3,7 @@ import { Tables, TablesInsert, TablesUpdate } from "@/types/supabase";
 
 interface StudentScheduleWithStudent extends Tables<"student_schedules"> {
   student?: {
-    id: number;
+    id: string;
     name: string;
     grade: number;
   } | null;
@@ -11,7 +11,7 @@ interface StudentScheduleWithStudent extends Tables<"student_schedules"> {
 
 interface ClassStudentWithDetails extends Tables<"class_students"> {
   student?: {
-    id: number;
+    id: string;
     name: string;
     grade: number;
     phone: string | null;
@@ -21,7 +21,6 @@ interface ClassStudentWithDetails extends Tables<"class_students"> {
   class?: {
     id: string;
     title: string;
-    subject: string;
     teacher_name: string;
     start_time: string;
     end_time: string;
@@ -33,7 +32,7 @@ export class ScheduleService {
   private supabase = createAdminSupabaseClient();
 
   // 학생 개인 일정 관리
-  async getStudentSchedules(studentId?: number): Promise<StudentScheduleWithStudent[]> {
+  async getStudentSchedules(studentId?: string): Promise<StudentScheduleWithStudent[]> {
     let query = this.supabase
       .from("student_schedules")
       .select(`
@@ -124,13 +123,13 @@ export class ScheduleService {
   }
 
   // 수업-학생 관계 관리
-  async getClassStudents(classId?: string, studentId?: number): Promise<ClassStudentWithDetails[]> {
+  async getClassStudents(classId?: string, studentId?: string): Promise<ClassStudentWithDetails[]> {
     let query = this.supabase
       .from("class_students")
       .select(`
         *,
         student:students(id, name, grade, phone, parent_phone, email),
-        class:classes(id, title, subject, teacher_name, start_time, end_time, day_of_week)
+        class:classes(id, title, teacher_name, start_time, end_time, day_of_week)
       `)
       .eq("status", "active");
 
@@ -171,7 +170,7 @@ export class ScheduleService {
       .select(`
         *,
         student:students(id, name, grade, phone, parent_phone, email),
-        class:classes(id, title, subject, teacher_name, start_time, end_time, day_of_week)
+        class:classes(id, title, teacher_name, start_time, end_time, day_of_week)
       `)
       .single();
 
@@ -182,7 +181,7 @@ export class ScheduleService {
     return data;
   }
 
-  async unenrollStudentFromClass(classId: string, studentId: number): Promise<void> {
+  async unenrollStudentFromClass(classId: string, studentId: string): Promise<void> {
     const { error } = await this.supabase
       .from("class_students")
       .update({ status: "inactive" })
@@ -195,7 +194,7 @@ export class ScheduleService {
   }
 
   // 종합 스케줄 조회
-  async getStudentCompleteSchedule(studentId: number) {
+  async getStudentCompleteSchedule(studentId: string) {
     // 학생의 수업 일정 조회
     const classSchedules = await this.getClassStudents(undefined, studentId);
     

@@ -1,6 +1,6 @@
-import Link from "next/link";
 import EditableSchedule from "@/components/EditableSchedule";
-import { Home } from "lucide-react";
+import { Home, Shield } from "lucide-react";
+import Link from "next/link";
 
 export default function SchedulePage() {
   return (
@@ -10,16 +10,26 @@ export default function SchedulePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
-              <Link 
+              <Link
                 href="/"
                 className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 <Home className="w-5 h-5" />
               </Link>
 
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">시간표 관리</h1>
-                <p className="text-sm text-gray-600">드래그 앤 드롭으로 시간표를 편집하고 관리하세요</p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-gray-900">
+                    수업 시간표 관리
+                  </h1>
+                  <p className="text-sm text-gray-600">
+                    강사 및 관리자 전용 - 수업 일정을 추가, 편집, 삭제할 수
+                    있습니다
+                  </p>
+                </div>
               </div>
             </div>
 

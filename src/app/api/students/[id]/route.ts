@@ -3,27 +3,20 @@ import { createAdminSupabaseClient } from "@/lib/supabase-server";
 import { TablesUpdate } from "@/types/supabase";
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
+  const { id } = await params;
   try {
     const supabase = createAdminSupabaseClient();
-    const studentId = parseInt(params.id);
-
-    if (isNaN(studentId)) {
-      return NextResponse.json(
-        { error: "Invalid student ID" },
-        { status: 400 }
-      );
-    }
 
     const { data: student, error } = await supabase
       .from("students")
       .select("*")
-      .eq("id", studentId)
+      .eq("id", id)
       .single();
 
     if (error) {
@@ -51,17 +44,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 }
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
+  const { id } = await params;
   try {
     const body = await request.json();
     const supabase = createAdminSupabaseClient();
-    const studentId = parseInt(params.id);
-
-    if (isNaN(studentId)) {
-      return NextResponse.json(
-        { error: "Invalid student ID" },
-        { status: 400 }
-      );
-    }
 
     const updateData: TablesUpdate<"students"> = {
       name: body.name,
@@ -74,7 +60,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const { data: student, error } = await supabase
       .from("students")
       .update(updateData)
-      .eq("id", studentId)
+      .eq("id", id)
       .select()
       .single();
 

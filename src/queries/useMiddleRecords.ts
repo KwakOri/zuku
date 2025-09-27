@@ -5,7 +5,6 @@ import { toast } from "react-hot-toast";
 
 interface FiltersProps {
   teacherId?: string;
-  classId?: string;
   studentId?: string;
   weekOf?: string;
 }
@@ -22,9 +21,7 @@ export const middleRecordKeys = {
     [...middleRecordKeys.all, "byTeacher", teacherId] as const,
   byStudent: (studentId: string) =>
     [...middleRecordKeys.all, "byStudent", studentId] as const,
-  byClass: (classId: string) =>
-    [...middleRecordKeys.all, "byClass", classId] as const,
-  byWeek: (teacherId: string, weekOf: string) =>
+  byWeek: (teacherId?: string, weekOf?: string) =>
     [...middleRecordKeys.all, "byWeek", teacherId, weekOf] as const,
 };
 
@@ -48,7 +45,7 @@ export function useMiddleRecord(id: string) {
 }
 
 // 특정 주차의 기록들 조회
-export function useWeeklyMiddleRecords(teacherId: string, weekOf: string) {
+export function useWeeklyMiddleRecords(teacherId?: string, weekOf?: string) {
   return useQuery({
     queryKey: middleRecordKeys.byWeek(teacherId, weekOf),
     queryFn: () => middleRecordApi.getWeeklyRecords(teacherId, weekOf),
@@ -67,15 +64,6 @@ export function useStudentMiddleRecords(studentId: string, teacherId?: string) {
   });
 }
 
-// 특정 수업의 기록들 조회
-export function useClassMiddleRecords(classId: string, weekOf?: string) {
-  return useQuery({
-    queryKey: middleRecordKeys.byClass(classId),
-    queryFn: () => middleRecordApi.getClassRecords(classId, weekOf),
-    enabled: !!classId,
-    staleTime: 3 * 60 * 1000,
-  });
-}
 
 // 새 중등 기록 생성
 export function useCreateMiddleRecord() {
@@ -98,9 +86,6 @@ export function useCreateMiddleRecord() {
         queryKey: middleRecordKeys.byStudent(newRecord.student_id),
       });
 
-      queryClient.invalidateQueries({
-        queryKey: middleRecordKeys.byClass(newRecord.class_id),
-      });
 
       queryClient.invalidateQueries({
         queryKey: middleRecordKeys.byWeek(
@@ -149,9 +134,6 @@ export function useUpdateMiddleRecord() {
         queryKey: middleRecordKeys.byStudent(updatedRecord.student_id),
       });
 
-      queryClient.invalidateQueries({
-        queryKey: middleRecordKeys.byClass(updatedRecord.class_id),
-      });
 
       queryClient.invalidateQueries({
         queryKey: middleRecordKeys.byWeek(

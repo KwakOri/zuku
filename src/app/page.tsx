@@ -13,7 +13,10 @@ import {
   Loader2,
   LogOut,
   MessageSquare,
+  Plus,
+  Settings,
   Star,
+  UserCheck,
   UserPlus,
   Users,
 } from "lucide-react";
@@ -69,6 +72,54 @@ export default function HomePage() {
         "고정 타임라인",
         "세로 스크롤",
         "통합 관리",
+      ],
+    },
+    {
+      id: "teacher-schedule",
+      title: "강사 수업 관리",
+      description:
+        "강사가 담당 수업을 선택하고 학생 밀집도를 확인하며 수업 시간을 조정할 수 있습니다",
+      icon: UserCheck,
+      color: "bg-cyan-50 text-cyan-600 border-cyan-200",
+      href: "/teacher-schedule",
+      stats: "강사 전용",
+      features: [
+        "담당 수업 조회",
+        "학생 밀집도 표시",
+        "드래그 앤 드롭 편집",
+        "실시간 시간 조정",
+      ],
+    },
+    {
+      id: "create-class",
+      title: "수업 개설",
+      description:
+        "새로운 수업을 개설하고 강사를 배정하며 학생들을 등록할 수 있습니다",
+      icon: Plus,
+      color: "bg-emerald-50 text-emerald-600 border-emerald-200",
+      href: "/create-class",
+      stats: "관리자/매니저/강사",
+      features: [
+        "수업 정보 설정",
+        "강사 배정",
+        "학생 선택 등록",
+        "시간 중복 검사",
+      ],
+    },
+    {
+      id: "class-management",
+      title: "수업 관리",
+      description:
+        "개설된 수업들의 시간표를 설정하고 학생 밀집도를 확인하며 효율적으로 관리할 수 있습니다",
+      icon: Settings,
+      color: "bg-violet-50 text-violet-600 border-violet-200",
+      href: "/class-management",
+      stats: "관리자/매니저",
+      features: [
+        "수업 시간 설정",
+        "학생 밀집도 확인",
+        "드래그 앤 드롭 편집",
+        "확정/미확정 분류",
       ],
     },
     {
@@ -227,6 +278,15 @@ export default function HomePage() {
                     (user?.role === "admin" || user?.role === "manager")
                   );
                 }
+                // 수업 개설은 관리자, 매니저, 강사만 볼 수 있음
+                if (feature.id === "create-class") {
+                  return (
+                    isAuthenticated &&
+                    (user?.role === "admin" ||
+                      user?.role === "manager" ||
+                      user?.role === "teacher")
+                  );
+                }
                 return true;
               })
               .map((feature) => {
@@ -234,48 +294,50 @@ export default function HomePage() {
                 return (
                   <Link key={feature.id} href={feature.href} className="group">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 h-full hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-                    {/* 아이콘과 제목 */}
-                    <div className="flex items-center gap-4 mb-6">
-                      <div
-                        className={`w-12 h-12 rounded-lg border flex items-center justify-center ${feature.color}`}
-                      >
-                        <IconComponent className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900">
-                          {feature.title}
-                        </h3>
-                        <p className="text-sm text-gray-500">{feature.stats}</p>
-                      </div>
-                    </div>
-
-                    {/* 설명 */}
-                    <p className="text-gray-600 mb-6 leading-relaxed">
-                      {feature.description}
-                    </p>
-
-                    {/* 기능 목록 */}
-                    <div className="space-y-3 mb-6">
-                      {feature.features.map((item, index) => (
+                      {/* 아이콘과 제목 */}
+                      <div className="flex items-center gap-4 mb-6">
                         <div
-                          key={index}
-                          className="flex items-center gap-2 text-sm text-gray-600"
+                          className={`w-12 h-12 rounded-lg border flex items-center justify-center ${feature.color}`}
                         >
-                          <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
-                          <span>{item}</span>
+                          <IconComponent className="w-6 h-6" />
                         </div>
-                      ))}
-                    </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900">
+                            {feature.title}
+                          </h3>
+                          <p className="text-sm text-gray-500">
+                            {feature.stats}
+                          </p>
+                        </div>
+                      </div>
 
-                    {/* 이동 버튼 */}
-                    <div className="flex items-center gap-2 text-blue-600 font-medium group-hover:gap-3 transition-all">
-                      <span>자세히 보기</span>
-                      <ArrowRight className="w-4 h-4" />
+                      {/* 설명 */}
+                      <p className="text-gray-600 mb-6 leading-relaxed">
+                        {feature.description}
+                      </p>
+
+                      {/* 기능 목록 */}
+                      <div className="space-y-3 mb-6">
+                        {feature.features.map((item, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-2 text-sm text-gray-600"
+                          >
+                            <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
+                            <span>{item}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* 이동 버튼 */}
+                      <div className="flex items-center gap-2 text-blue-600 font-medium group-hover:gap-3 transition-all">
+                        <span>자세히 보기</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              );
-            })}
+                  </Link>
+                );
+              })}
           </div>
         </div>
 

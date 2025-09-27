@@ -1,75 +1,30 @@
 "use client";
 
-import { EditMode } from "@/types/schedule";
-import { BarChart3, Edit, Eye, Settings, Shield } from "lucide-react";
+import { BarChart3, Calendar, Shield } from "lucide-react";
 import { useState } from "react";
 import CanvasSchedule from "./CanvasSchedule";
 
 export default function EditableSchedule() {
-  const [editMode, setEditMode] = useState<EditMode>("view");
+  // 기본적으로 관리자 모드로 설정
+  const editMode = "admin";
   const [showDensity, setShowDensity] = useState(false);
-
-  const modeOptions = [
-    {
-      value: "view" as EditMode,
-      label: "조회 모드",
-      icon: Eye,
-      description: "시간표를 보기만 할 수 있습니다",
-    },
-    {
-      value: "edit" as EditMode,
-      label: "편집 모드",
-      icon: Edit,
-      description: "수업 정보를 수정할 수 있습니다",
-    },
-    {
-      value: "admin" as EditMode,
-      label: "관리자 모드",
-      icon: Shield,
-      description: "모든 기능을 사용할 수 있습니다",
-    },
-  ];
 
   return (
     <div className="w-full space-y-6">
-      {/* 모드 선택 */}
+      {/* 시간표 관리 정보 */}
       <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <div className="flex items-center gap-2 mb-4">
-          <Settings className="w-5 h-5 text-gray-600" />
-          <h3 className="text-lg font-semibold text-gray-800">시간표 모드</h3>
-        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-blue-600" />
+              <h3 className="text-lg font-semibold text-gray-800">수업 시간표 관리</h3>
+            </div>
+            <div className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full border border-blue-200">
+              관리자 모드
+            </div>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {modeOptions.map((option) => {
-            const IconComponent = option.icon;
-            return (
-              <button
-                key={option.value}
-                onClick={() => setEditMode(option.value)}
-                className={`p-4 border rounded-lg text-left transition-all duration-200 ${
-                  editMode === option.value
-                    ? "border-blue-500 bg-blue-50 text-blue-700"
-                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700"
-                }`}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <IconComponent
-                    className={`w-4 h-4 ${
-                      editMode === option.value
-                        ? "text-blue-600"
-                        : "text-gray-500"
-                    }`}
-                  />
-                  <span className="font-medium">{option.label}</span>
-                </div>
-                <p className="text-xs opacity-80">{option.description}</p>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* 학생 일정 밀집도 토글 */}
-        <div className="mt-4 pt-4 border-t border-gray-200">
+          {/* 학생 일정 밀집도 토글 */}
           <label className="flex items-center gap-3 cursor-pointer">
             <input
               type="checkbox"
@@ -84,31 +39,27 @@ export default function EditableSchedule() {
               </span>
             </div>
           </label>
-          <p className="text-xs text-gray-500 mt-1 ml-7">
-            시간대별 학생들의 개인 일정 수를 히트맵으로 표시합니다
-          </p>
         </div>
+
+        <p className="text-sm text-gray-600 mt-2">
+          드래그 앤 드롭으로 수업 시간을 변경하고, 수업을 추가/삭제할 수 있습니다.
+        </p>
       </div>
 
       {/* 시간표 */}
       <CanvasSchedule editMode={editMode} showDensity={showDensity} />
 
       {/* 사용법 안내 */}
-      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-        <h4 className="font-semibold text-gray-800 mb-2">사용법</h4>
-        <div className="text-sm text-gray-600 space-y-1">
-          <p>
-            <span className="font-medium">조회 모드:</span> 시간표를 확인할 수
-            있습니다.
-          </p>
-          <p>
-            <span className="font-medium">편집 모드:</span> 수업 블록을 클릭하여
-            수업 정보를 수정할 수 있습니다.
-          </p>
-          <p>
-            <span className="font-medium">관리자 모드:</span> 편집 기능에 더해
-            드래그 앤 드롭으로 수업 시간을 변경할 수 있습니다.
-          </p>
+      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+        <div className="flex items-center gap-2 mb-2">
+          <Calendar className="w-4 h-4 text-blue-600" />
+          <h4 className="font-semibold text-blue-800">시간표 관리 기능</h4>
+        </div>
+        <div className="text-sm text-blue-700 space-y-1">
+          <p>• <span className="font-medium">수업 추가:</span> 빈 시간대를 클릭하여 새 수업을 생성</p>
+          <p>• <span className="font-medium">수업 편집:</span> 수업 블록을 클릭하여 정보 수정</p>
+          <p>• <span className="font-medium">시간 변경:</span> 드래그 앤 드롭으로 수업 시간 이동</p>
+          <p>• <span className="font-medium">수업 삭제:</span> 수업 편집 시 삭제 버튼 사용</p>
         </div>
       </div>
     </div>

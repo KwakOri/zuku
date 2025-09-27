@@ -27,14 +27,7 @@ export async function GET(request: NextRequest) {
         ),
         teacher:teachers(
           id,
-          name,
-          subjects
-        ),
-        class:classes(
-          id,
-          title,
-          subject,
-          teacher_name
+          name
         )
       `)
       .order("created_date", { ascending: false });
@@ -79,7 +72,7 @@ export async function POST(request: NextRequest) {
     const body: TablesInsert<"homework_records_middle"> = await request.json();
 
     // 필수 필드 검증
-    if (!body.student_id || !body.teacher_id || !body.class_id || !body.week_of) {
+    if (!body.student_id || !body.teacher_id || !body.week_of) {
       return NextResponse.json(
         { error: "필수 필드가 누락되었습니다." },
         { status: 400 }
@@ -88,13 +81,12 @@ export async function POST(request: NextRequest) {
 
     const supabase = createAdminSupabaseClient();
 
-    // 중복 기록 체크 (같은 학생, 같은 주차, 같은 수업)
+    // 중복 기록 체크 (같은 학생, 같은 주차, 같은 강사)
     const { data: existingRecord } = await supabase
       .from("homework_records_middle")
       .select("id")
       .eq("student_id", body.student_id)
       .eq("teacher_id", body.teacher_id)
-      .eq("class_id", body.class_id)
       .eq("week_of", body.week_of)
       .single();
 
@@ -120,14 +112,7 @@ export async function POST(request: NextRequest) {
         ),
         teacher:teachers(
           id,
-          name,
-          subjects
-        ),
-        class:classes(
-          id,
-          title,
-          subject,
-          teacher_name
+          name
         )
       `)
       .single();

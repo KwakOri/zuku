@@ -1,16 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { middleSchoolRecords } from "@/lib/mock/middleSchoolRecords";
-import { students } from "@/lib/mock/students";
-import { teachers } from "@/lib/mock/teachers";
-import { classes } from "@/lib/mock/classes";
-import { 
-  Send, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  Users, 
+import { useStudents } from "@/queries/useStudents";
+import { useSendKakaoNotification } from "@/queries/useNotifications";
+import {
+  Send,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Users,
   MessageSquare,
   Phone,
   User,
@@ -18,76 +16,23 @@ import {
   AlertTriangle
 } from "lucide-react";
 
-interface StudentRecordStatus {
-  studentId: string;
-  studentName: string;
+interface StudentForNotification {
+  id: string;
+  name: string;
   parentPhone: string;
-  records: {
-    id: string;
-    teacherName: string;
-    subject: string;
-    classId: string;
-    weekOf: string;
-    homework: string;
-    hasRecord: boolean;
-  }[];
-  totalRecords: number;
-  completedRecords: number;
+  grade: number;
 }
 
 export default function NotificationsPage() {
-  const [recordStatuses, setRecordStatuses] = useState<StudentRecordStatus[]>([]);
-  const [selectedStudents, setSelectedStudents] = useState<Set<number>>(new Set());
+  const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
   const [isSending, setIsSending] = useState(false);
   const [sentCount, setSentCount] = useState(0);
 
-  useEffect(() => {
-    const studentRecordMap = new Map<number, StudentRecordStatus>();
+  const { data: students = [], isLoading, error } = useStudents();
+  const sendNotification = useSendKakaoNotification();
 
-    // 모든 학생에 대해 기본 상태 초기화
-    students.forEach(student => {
-      if (student.parentPhone) {
-        studentRecordMap.set(student.id, {
-          studentId: student.id,
-          studentName: student.name,
-          parentPhone: student.parentPhone,
-          records: [],
-          totalRecords: 0,
-          completedRecords: 0
-        });
-      }
-    });
-
-    // 기록이 있는 학생들 처리
-    middleSchoolRecords.forEach(record => {
-      const student = students.find(s => s.id === record.studentId);
-      const teacher = teachers.find(t => t.id === record.teacherId);
-      const classInfo = classes.find(c => c.id === record.classId);
-
-      if (student && teacher && classInfo && student.parentPhone) {
-        const status = studentRecordMap.get(student.id);
-        if (status) {
-          status.records.push({
-            id: record.id,
-            teacherName: teacher.name,
-            subject: classInfo.subject,
-            classId: record.classId,
-            weekOf: record.weekOf,
-            homework: record.homework,
-            hasRecord: true
-          });
-          status.completedRecords++;
-        }
-      }
-    });
-
-    // 총 기록 수 계산 (여기서는 실제 기록 수로 설정)
-    studentRecordMap.forEach(status => {
-      status.totalRecords = status.records.length;
-    });
-
-    setRecordStatuses(Array.from(studentRecordMap.values()).sort((a, b) => a.studentName.localeCompare(b.studentName)));
-  }, []);
+  // 학부모 연락처가 있는 학생들만 필터링
+  const studentsWithParentPhone = students.filter(student => student.parent_phone);
 
   const handleStudentToggle = (studentId: string) => {
     const newSelected = new Set(selectedStudents);
@@ -100,11 +45,10 @@ export default function NotificationsPage() {
   };
 
   const handleSelectAll = () => {
-    const studentsWithRecords = recordStatuses.filter(status => status.completedRecords > 0);
-    if (selectedStudents.size === studentsWithRecords.length) {
+    if (selectedStudents.size === studentsWithParentPhone.length) {
       setSelectedStudents(new Set());
     } else {
-      setSelectedStudents(new Set(studentsWithRecords.map(s => s.studentId)));
+      setSelectedStudents(new Set(studentsWithParentPhone.map(s => s.id)));
     }
   };
 
@@ -113,34 +57,37 @@ export default function NotificationsPage() {
     setSentCount(0);
 
     try {
-      const selectedStudentData = recordStatuses.filter(status => 
-        selectedStudents.has(status.studentId) && status.completedRecords > 0
+      const selectedStudentData = studentsWithParentPhone.filter(student =>
+        selectedStudents.has(student.id)
       );
 
-      for (const studentStatus of selectedStudentData) {
-        for (const record of studentStatus.records) {
-          await fetch('/api/send-notification', {
+      for (const student of selectedStudentData) {
+        try {
+          const response = await fetch('/api/notifications', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              to: studentStatus.parentPhone,
-              studentName: studentStatus.studentName,
-              recordId: record.id,
-              subject: record.subject,
-              teacherName: record.teacherName,
-              weekOf: record.weekOf
+              studentId: student.id
             }),
           });
-          
-          // 실제로는 API 응답을 기다려야 하지만, 여기서는 시뮬레이션
-          await new Promise(resolve => setTimeout(resolve, 500));
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || '알림톡 전송에 실패했습니다.');
+          }
+
           setSentCount(prev => prev + 1);
+          // 각 전송 사이에 잠시 대기 (API 과부하 방지)
+          await new Promise(resolve => setTimeout(resolve, 300));
+        } catch (error) {
+          console.error(`${student.name} 알림톡 전송 실패:`, error);
+          // 개별 실패는 계속 진행
         }
       }
 
-      alert('알림톡이 성공적으로 발송되었습니다!');
+      alert(`${sentCount}명의 학부모님께 알림톡이 발송되었습니다!`);
       setSelectedStudents(new Set());
     } catch (error) {
       console.error('알림톡 발송 실패:', error);
@@ -151,33 +98,33 @@ export default function NotificationsPage() {
     }
   };
 
-  const getHomeworkStatusColor = (homework: string) => {
-    switch (homework) {
-      case "excellent": return "text-green-600 bg-green-100";
-      case "good": return "text-blue-600 bg-blue-100";
-      case "fair": return "text-yellow-600 bg-yellow-100";
-      case "poor": return "text-orange-600 bg-orange-100";
-      case "not_submitted": return "text-red-600 bg-red-100";
-      default: return "text-gray-600 bg-gray-100";
-    }
+  const getGrade = (grade: number) => {
+    if (grade <= 6) return `초등 ${grade}학년`;
+    if (grade <= 9) return `중등 ${grade - 6}학년`;
+    return `고등 ${grade - 9}학년`;
   };
 
-  const getHomeworkStatusText = (homework: string) => {
-    switch (homework) {
-      case "excellent": return "우수";
-      case "good": return "양호";
-      case "fair": return "보통";
-      case "poor": return "미흡";
-      case "not_submitted": return "미제출";
-      default: return "미기록";
-    }
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">학생 데이터를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const studentsWithRecords = recordStatuses.filter(status => status.completedRecords > 0);
-  const totalMessages = Array.from(selectedStudents).reduce((total, studentId) => {
-    const student = recordStatuses.find(s => s.studentId === studentId);
-    return total + (student?.completedRecords || 0);
-  }, 0);
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600">학생 데이터를 불러오는데 실패했습니다.</p>
+          <p className="text-gray-600 mt-1">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -194,7 +141,7 @@ export default function NotificationsPage() {
                   학부모 알림톡 발송
                 </h1>
                 <p className="text-gray-600 mt-1">
-                  중등 학생들의 수업 기록을 확인하고 학부모님께 알림톡을 발송하세요.
+                  학생들을 선택하고 학부모님께 알림톡을 발송하세요.
                 </p>
               </div>
             </div>
@@ -204,8 +151,8 @@ export default function NotificationsPage() {
                 <p className="text-2xl font-bold text-blue-600">{selectedStudents.size}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-gray-600">발송될 메시지</p>
-                <p className="text-2xl font-bold text-green-600">{totalMessages}</p>
+                <p className="text-sm text-gray-600">전체 학생</p>
+                <p className="text-2xl font-bold text-green-600">{studentsWithParentPhone.length}</p>
               </div>
             </div>
           </div>
@@ -221,11 +168,11 @@ export default function NotificationsPage() {
               >
                 <Users className="h-4 w-4" />
                 <span>
-                  {selectedStudents.size === studentsWithRecords.length ? '전체 해제' : '전체 선택'}
+                  {selectedStudents.size === studentsWithParentPhone.length ? '전체 해제' : '전체 선택'}
                 </span>
               </button>
               <div className="text-sm text-gray-600">
-                기록이 있는 학생: {studentsWithRecords.length}명
+                연락처가 있는 학생: {studentsWithParentPhone.length}명
               </div>
             </div>
             <button
@@ -235,7 +182,7 @@ export default function NotificationsPage() {
             >
               <Send className="h-4 w-4" />
               <span>
-                {isSending ? `발송 중... (${sentCount}/${totalMessages})` : '알림톡 발송'}
+                {isSending ? `발송 중... (${sentCount}/${selectedStudents.size})` : '알림톡 발송'}
               </span>
             </button>
           </div>
@@ -243,17 +190,16 @@ export default function NotificationsPage() {
 
         {/* 학생 목록 */}
         <div className="space-y-4">
-          {recordStatuses.map((status) => (
-            <div key={status.studentId} className="bg-white rounded-lg shadow-sm border">
+          {studentsWithParentPhone.map((student) => (
+            <div key={student.id} className="bg-white rounded-lg shadow-sm border">
               <div className="p-4">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <input
                       type="checkbox"
-                      checked={selectedStudents.has(status.studentId)}
-                      onChange={() => handleStudentToggle(status.studentId)}
-                      disabled={status.completedRecords === 0}
-                      className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 disabled:text-gray-400"
+                      checked={selectedStudents.has(student.id)}
+                      onChange={() => handleStudentToggle(student.id)}
+                      className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                     />
                     <div className="flex items-center space-x-3">
                       <div className="p-2 bg-gray-100 rounded-lg">
@@ -261,83 +207,38 @@ export default function NotificationsPage() {
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">
-                          {status.studentName}
+                          {student.name}
                         </h3>
-                        <div className="flex items-center space-x-2 text-sm text-gray-600">
-                          <Phone className="h-4 w-4" />
-                          <span>{status.parentPhone}</span>
+                        <div className="flex items-center space-x-4 text-sm text-gray-600">
+                          <div className="flex items-center space-x-1">
+                            <BookOpen className="h-4 w-4" />
+                            <span>{getGrade(student.grade)}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Phone className="h-4 w-4" />
+                            <span>{student.parent_phone}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <p className="text-sm text-gray-600">완료된 기록</p>
-                      <p className="text-lg font-semibold">
-                        <span className="text-green-600">{status.completedRecords}</span>
-                        <span className="text-gray-400"> / {status.totalRecords}</span>
-                      </p>
-                    </div>
-                    {status.completedRecords > 0 ? (
-                      <CheckCircle className="h-6 w-6 text-green-500" />
-                    ) : status.totalRecords === 0 ? (
-                      <AlertTriangle className="h-6 w-6 text-yellow-500" />
-                    ) : (
-                      <Clock className="h-6 w-6 text-gray-400" />
-                    )}
+                  <div className="flex items-center">
+                    <CheckCircle className="h-6 w-6 text-green-500" />
                   </div>
                 </div>
-
-                {/* 기록 상세 */}
-                {status.records.length > 0 && (
-                  <div className="border-t pt-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">수업 기록</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {status.records.map((record) => (
-                        <div key={record.id} className="border border-gray-200 rounded-lg p-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center space-x-2">
-                              <BookOpen className="h-4 w-4 text-gray-500" />
-                              <span className="text-sm font-medium text-gray-900">
-                                {record.subject}
-                              </span>
-                            </div>
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${getHomeworkStatusColor(record.homework)}`}>
-                              {getHomeworkStatusText(record.homework)}
-                            </span>
-                          </div>
-                          <div className="text-xs text-gray-600 space-y-1">
-                            <p>담당: {record.teacherName}</p>
-                            <p>주간: {record.weekOf}</p>
-                            <p>기록 ID: {record.id}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {status.records.length === 0 && (
-                  <div className="border-t pt-4">
-                    <div className="text-center py-4 text-gray-500">
-                      <XCircle className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                      <p>아직 작성된 수업 기록이 없습니다.</p>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           ))}
         </div>
 
-        {recordStatuses.length === 0 && (
+        {studentsWithParentPhone.length === 0 && !isLoading && (
           <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
             <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-gray-400" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              학생 데이터를 불러오는 중입니다...
+              알림톡을 보낼 수 있는 학생이 없습니다
             </h3>
             <p className="text-gray-600">
-              잠시만 기다려주세요.
+              학부모 연락처가 등록된 학생이 없습니다.
             </p>
           </div>
         )}

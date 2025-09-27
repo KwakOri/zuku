@@ -1,5 +1,18 @@
 import { Tables, TablesInsert, TablesUpdate } from "@/types/supabase";
 
+export interface TeacherClassWithStudents extends Tables<"classes"> {
+  subject?: {
+    id: string;
+    subject_name: string;
+  } | null;
+  students: Array<{
+    id: string;
+    name: string;
+    grade: number;
+  }>;
+  student_count: number;
+}
+
 export interface ApiResponse<T> {
   data: T;
   error?: string;
@@ -111,6 +124,23 @@ export class TeacherApi {
     }
 
     const result: ApiResponse<Tables<"teachers">[]> = await response.json();
+    return result.data;
+  }
+
+  async getTeacherClasses(teacherId: string): Promise<TeacherClassWithStudents[]> {
+    const response = await fetch(`${this.baseUrl}/${teacherId}/classes`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const error: ApiError = await response.json();
+      throw new Error(error.error || "Failed to fetch teacher classes");
+    }
+
+    const result: ApiResponse<TeacherClassWithStudents[]> = await response.json();
     return result.data;
   }
 }

@@ -46,13 +46,14 @@ export function useCreateTeacher() {
 
   return useMutation({
     mutationFn: (data: TablesInsert<"teachers">) => teacherApi.createTeacher(data),
-    onSuccess: (newTeacher) => {
+    onSuccess: () => {
       // 강사 목록 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: teacherKeys.lists() });
       
       // 과목별 쿼리 무효화
-      queryClient.invalidateQueries({ 
-        queryKey: teacherKeys.bySubject(newTeacher.subject) 
+      queryClient.invalidateQueries({
+        queryKey: teacherKeys.all,
+        predicate: (query) => query.queryKey.includes("bySubject")
       });
 
       toast.success("강사가 성공적으로 등록되었습니다.");

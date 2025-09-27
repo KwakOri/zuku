@@ -15,15 +15,28 @@ import {
 } from "@/queries/useStudentSchedules";
 import {
   createStudentSchedule,
+  CreateStudentScheduleRequest,
   deleteStudentSchedule,
   updateStudentSchedule,
+  UpdateStudentScheduleRequest,
 } from "@/services/client/studentScheduleApi";
 import { ClassBlock } from "@/types/schedule";
+import { Tables } from "@/types/supabase";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Home, User } from "lucide-react";
+import {
+  ArrowLeft,
+  Clock,
+  Home,
+  MapPin,
+  MessageSquare,
+  Plus,
+  Search,
+  User,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { use, useRef } from "react";
+import { use, useEffect, useRef, useState } from "react";
+import { useSendKakaoNotification } from "@/queries/useNotifications";
 
 interface StudentDetailPageProps {
   params: Promise<{
@@ -36,12 +49,15 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   const queryClient = useQueryClient();
   const { data: students = [], isLoading, error } = useStudents();
 
+  // 알림톡 전송 mutation
+  const sendNotification = useSendKakaoNotification();
+
   // params를 unwrap
   const { id } = use(params);
-  const studentId = parseInt(id);
+  const studentId = id; // UUID 그대로 사용
 
   // URL의 id 파라미터로 학생 정보 찾기
-  const student = students.find((s) => s.id.toString() === id);
+  const student = students.find((s) => s.id === id);
 
   // 학생 개인 시간표 데이터 가져오기
   const {
@@ -53,27 +69,69 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   // 학생 시간표 데이터를 CanvasSchedule용 블록으로 변환
   const scheduleBlocks = convertStudentSchedulesToBlocks(studentSchedules);
 
+  // 디버깅을 위한 로그
+  useEffect(() => {
+    console.log("Student schedules raw data:", studentSchedules);
+    console.log("Converted schedule blocks:", scheduleBlocks);
+  }, [studentSchedules, scheduleBlocks]);
+
   // 원본 블록 데이터를 참조로 저장 (변경 감지용)
-  const originalBlocksRef = useRef<ClassBlock[]>(scheduleBlocks);
+  const originalBlocksRef = useRef<ClassBlock[]>([]);
 
   // scheduleBlocks가 변경될 때마다 원본 참조 업데이트
-  if (
-    originalBlocksRef.current.length !== scheduleBlocks.length ||
-    originalBlocksRef.current.some(
-      (block, index) => block.id !== scheduleBlocks[index]?.id
-    )
-  ) {
+  useEffect(() => {
+    console.log("ScheduleBlocks updated:", scheduleBlocks);
     originalBlocksRef.current = scheduleBlocks;
-  }
+  }, [scheduleBlocks]);
+
+  // 일정 관리 UI 상태
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState<"all" | "personal" | "class">(
+    "all"
+  );
+  const [selectedSchedule, setSelectedSchedule] = useState<ClassBlock | null>(
+    null
+  );
+
+  // 새로운 일정 추가 폼 상태
+  const [newSchedule, setNewSchedule] = useState<CreateStudentScheduleRequest>({
+    title: "",
+    description: null,
+    start_time: "09:00",
+    end_time: "10:00",
+    day_of_week: 1, // 월요일
+    type: "personal",
+    color: "#3b82f6",
+    location: null,
+    recurring: false,
+  });
 
   // 새 일정 생성 mutation
   const createScheduleMutation = useMutation({
-    mutationFn: (scheduleData: any) =>
+    mutationFn: (scheduleData: CreateStudentScheduleRequest) =>
       createStudentSchedule(studentId, scheduleData),
-    onSuccess: () => {
+    onSuccess: (newSchedule) => {
+      console.log("New schedule created:", newSchedule);
+
+      // 즉시 캐시 업데이트
+      queryClient.setQueryData(
+        studentScheduleKeys.list(studentId),
+        (oldData: Tables<"student_schedules">[] = []) => {
+          console.log("Old cache data:", oldData);
+          const updatedData = [...oldData, newSchedule];
+          console.log("Updated cache data:", updatedData);
+          return updatedData;
+        }
+      );
+
+      // 추가로 캐시 무효화 및 리페치
       queryClient.invalidateQueries({
         queryKey: studentScheduleKeys.list(studentId),
       });
+    },
+    onError: (error) => {
+      console.error("Failed to create schedule:", error);
     },
   });
 
@@ -84,10 +142,13 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
       scheduleData,
     }: {
       scheduleId: string;
-      scheduleData: any;
+      scheduleData: UpdateStudentScheduleRequest;
     }) => updateStudentSchedule(studentId, scheduleId, scheduleData),
     onSuccess: () => {
       queryClient.invalidateQueries({
+        queryKey: studentScheduleKeys.list(studentId),
+      });
+      queryClient.refetchQueries({
         queryKey: studentScheduleKeys.list(studentId),
       });
     },
@@ -97,10 +158,27 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   const deleteScheduleMutation = useMutation({
     mutationFn: (scheduleId: string) =>
       deleteStudentSchedule(studentId, scheduleId),
-    onSuccess: () => {
+    onSuccess: (deletedSchedule) => {
+      console.log("Schedule deleted:", deletedSchedule);
+
+      // 즉시 캐시 업데이트
+      queryClient.setQueryData(
+        studentScheduleKeys.list(studentId),
+        (oldData: Tables<"student_schedules">[] = []) => {
+          const updatedData = oldData.filter(
+            (s) => s.id !== deletedSchedule.id
+          );
+          console.log("Updated cache after deletion:", updatedData);
+          return updatedData;
+        }
+      );
+
       queryClient.invalidateQueries({
         queryKey: studentScheduleKeys.list(studentId),
       });
+    },
+    onError: (error) => {
+      console.error("Failed to delete schedule:", error);
     },
   });
 
@@ -116,7 +194,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
       console.log("Schedule changes detected:", changes);
 
       // 병렬로 모든 변경사항 처리
-      const promises: Promise<any>[] = [];
+      const promises: Promise<Tables<"student_schedules">>[] = [];
 
       // 1. 삭제된 블록들 처리
       changes.deleted.forEach((deletedBlock) => {
@@ -202,6 +280,71 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   // 뒤로 가기 핸들러
   const handleBack = () => {
     router.back();
+  };
+
+  // 알림톡 전송 핸들러
+  const handleSendNotification = () => {
+    if (student && confirm(`${student.name} 학생의 학부모에게 알림톡을 전송하시겠습니까?`)) {
+      sendNotification.mutate(student.id);
+    }
+  };
+
+  // 새 일정 추가 핸들러
+  const handleAddSchedule = async () => {
+    try {
+      await createScheduleMutation.mutateAsync(newSchedule);
+
+      setShowAddModal(false);
+      // 폼 초기화
+      setNewSchedule({
+        title: "",
+        description: null,
+        start_time: "09:00",
+        end_time: "10:00",
+        day_of_week: 1,
+        type: "personal",
+        color: "#3b82f6",
+        location: null,
+        recurring: false,
+      });
+    } catch (error) {
+      console.error("Failed to add schedule:", error);
+      alert("일정 추가에 실패했습니다. 다시 시도해주세요.");
+    }
+  };
+
+  // 일정 삭제 핸들러
+  const handleDeleteSchedule = async (scheduleId: string) => {
+    if (confirm("정말로 이 일정을 삭제하시겠습니까?")) {
+      try {
+        await deleteScheduleMutation.mutateAsync(scheduleId);
+      } catch (error) {
+        console.error("Failed to delete schedule:", error);
+      }
+    }
+  };
+
+  // 필터링된 일정 목록
+  const filteredSchedules = scheduleBlocks.filter((schedule) => {
+    const matchesSearch =
+      schedule.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (schedule.subject &&
+        schedule.subject.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesFilter =
+      filterType === "all" ||
+      (filterType === "personal" && schedule.subject === "personal") ||
+      (filterType === "class" && schedule.subject !== "personal");
+    return matchesSearch && matchesFilter;
+  });
+
+  // 요일별 일정 통계
+  const scheduleStats = {
+    total: scheduleBlocks.length,
+    byDay: [0, 1, 2, 3, 4, 5, 6].map(
+      (day) => scheduleBlocks.filter((s) => s.dayOfWeek === day).length
+    ),
+    personal: scheduleBlocks.filter((s) => s.subject === "personal").length,
+    class: scheduleBlocks.filter((s) => s.subject !== "personal").length,
   };
 
   // 로딩 상태
@@ -298,8 +441,30 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
               </div>
             </div>
 
-            {/* 학생 정보 카드 */}
+            {/* 학생 정보 카드 및 액션 버튼 */}
             <div className="flex items-center gap-4">
+              {/* 일정 추가 버튼 */}
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                일정 추가
+              </button>
+
+              {/* 알림톡 전송 버튼 */}
+              {student?.parent_phone && (
+                <button
+                  onClick={handleSendNotification}
+                  disabled={sendNotification.isPending}
+                  className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  {sendNotification.isPending ? "전송 중..." : "알림톡 전송"}
+                </button>
+              )}
+
+              {/* 학생 정보 카드 */}
               <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-3">
                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                   <User className="w-5 h-5 text-blue-600" />
@@ -318,15 +483,428 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
       {/* 메인 콘텐츠 */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* CanvasSchedule 컴포넌트 - 개별 학생 시간표 관리 */}
-        <CanvasSchedule
-          studentId={studentId}
-          customBlocks={scheduleBlocks}
-          onBlocksChange={handleBlocksChange}
-          editMode={"admin"}
-          showDensity={false}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* 좌측 패널 - 일정 관리 */}
+          <div className="lg:col-span-1">
+            {/* 일정 통계 */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                일정 통계
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">전체 일정</span>
+                  <span className="font-medium text-gray-900">
+                    {scheduleStats.total}개
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">개인 일정</span>
+                  <span className="font-medium text-blue-600">
+                    {scheduleStats.personal}개
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">수업 일정</span>
+                  <span className="font-medium text-green-600">
+                    {scheduleStats.class}개
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 검색 및 필터 */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                일정 검색
+              </h3>
+
+              {/* 검색 입력 */}
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="일정 검색..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* 필터 버튼 */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  필터
+                </label>
+                <div className="flex flex-col gap-2">
+                  {[
+                    { value: "all", label: "전체", count: scheduleStats.total },
+                    {
+                      value: "personal",
+                      label: "개인 일정",
+                      count: scheduleStats.personal,
+                    },
+                    {
+                      value: "class",
+                      label: "수업 일정",
+                      count: scheduleStats.class,
+                    },
+                  ].map((filter) => (
+                    <button
+                      key={filter.value}
+                      onClick={() =>
+                        setFilterType(
+                          filter.value as "all" | "personal" | "class"
+                        )
+                      }
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                        filterType === filter.value
+                          ? "bg-blue-100 text-blue-700 border border-blue-200"
+                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <span>{filter.label}</span>
+                        <span className="text-xs">{filter.count}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 일정 목록 */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                일정 목록
+              </h3>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {filteredSchedules.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    {searchTerm ? "검색 결과가 없습니다." : "일정이 없습니다."}
+                  </p>
+                ) : (
+                  filteredSchedules.map((schedule) => (
+                    <div
+                      key={schedule.id}
+                      className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                      onClick={() => setSelectedSchedule(schedule)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: schedule.color }}
+                            />
+                            <span className="font-medium text-sm text-gray-900">
+                              {schedule.title}
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-600 space-y-1">
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {schedule.startTime} - {schedule.endTime}
+                            </div>
+                            {schedule.room && (
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {schedule.room}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteSchedule(schedule.id);
+                          }}
+                          className="text-red-500 hover:text-red-700 p-1"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 우측 패널 - 시간표 */}
+          <div className="lg:col-span-3">
+            <CanvasSchedule
+              key={`schedule-${scheduleBlocks.length}-${scheduleBlocks
+                .map((b) => b.id)
+                .join("-")}`}
+              studentId={studentId}
+              customBlocks={scheduleBlocks}
+              onBlocksChange={handleBlocksChange}
+              editMode={"admin"}
+              showDensity={false}
+            />
+          </div>
+        </div>
       </main>
+
+      {/* 일정 추가 모달 */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">
+                  새 일정 추가
+                </h2>
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleAddSchedule();
+                }}
+                className="space-y-4"
+              >
+                {/* 제목 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    제목 *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newSchedule.title}
+                    onChange={(e) =>
+                      setNewSchedule((prev) => ({
+                        ...prev,
+                        title: e.target.value,
+                      }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="일정 제목을 입력하세요"
+                  />
+                </div>
+
+                {/* 설명 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    설명
+                  </label>
+                  <textarea
+                    value={newSchedule.description || ""}
+                    onChange={(e) =>
+                      setNewSchedule((prev) => ({
+                        ...prev,
+                        description: e.target.value || null,
+                      }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="일정 설명을 입력하세요"
+                    rows={3}
+                  />
+                </div>
+
+                {/* 요일 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    요일 *
+                  </label>
+                  <select
+                    required
+                    value={newSchedule.day_of_week}
+                    onChange={(e) =>
+                      setNewSchedule((prev) => ({
+                        ...prev,
+                        day_of_week: parseInt(e.target.value),
+                      }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value={0}>일요일</option>
+                    <option value={1}>월요일</option>
+                    <option value={2}>화요일</option>
+                    <option value={3}>수요일</option>
+                    <option value={4}>목요일</option>
+                    <option value={5}>금요일</option>
+                    <option value={6}>토요일</option>
+                  </select>
+                </div>
+
+                {/* 시간 */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      시작 시간 *
+                    </label>
+                    <input
+                      type="time"
+                      required
+                      value={newSchedule.start_time}
+                      onChange={(e) =>
+                        setNewSchedule((prev) => ({
+                          ...prev,
+                          start_time: e.target.value,
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      종료 시간 *
+                    </label>
+                    <input
+                      type="time"
+                      required
+                      value={newSchedule.end_time}
+                      onChange={(e) =>
+                        setNewSchedule((prev) => ({
+                          ...prev,
+                          end_time: e.target.value,
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                {/* 유형 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    유형
+                  </label>
+                  <select
+                    value={newSchedule.type}
+                    onChange={(e) =>
+                      setNewSchedule((prev) => ({
+                        ...prev,
+                        type: e.target.value,
+                      }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="personal">개인 일정</option>
+                    <option value="study">학습</option>
+                    <option value="homework">숙제</option>
+                    <option value="exam">시험</option>
+                    <option value="activity">활동</option>
+                  </select>
+                </div>
+
+                {/* 장소 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    장소
+                  </label>
+                  <input
+                    type="text"
+                    value={newSchedule.location || ""}
+                    onChange={(e) =>
+                      setNewSchedule((prev) => ({
+                        ...prev,
+                        location: e.target.value || null,
+                      }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="장소를 입력하세요"
+                  />
+                </div>
+
+                {/* 색상 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    색상
+                  </label>
+                  <div className="flex gap-2 flex-wrap">
+                    {[
+                      "#3b82f6",
+                      "#ef4444",
+                      "#10b981",
+                      "#f59e0b",
+                      "#8b5cf6",
+                      "#ec4899",
+                      "#06b6d4",
+                      "#84cc16",
+                    ].map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() =>
+                          setNewSchedule((prev) => ({ ...prev, color }))
+                        }
+                        className={`w-8 h-8 rounded-full border-2 ${
+                          newSchedule.color === color
+                            ? "border-gray-400"
+                            : "border-gray-200"
+                        }`}
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* 반복 일정 */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="recurring"
+                    checked={newSchedule.recurring || false}
+                    onChange={(e) =>
+                      setNewSchedule((prev) => ({
+                        ...prev,
+                        recurring: e.target.checked,
+                      }))
+                    }
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label
+                    htmlFor="recurring"
+                    className="ml-2 block text-sm text-gray-700"
+                  >
+                    반복 일정
+                  </label>
+                </div>
+
+                {/* 버튼 */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                    className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={createScheduleMutation.isPending}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
+                    {createScheduleMutation.isPending ? "추가 중..." : "추가"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -29,11 +29,13 @@ interface ClassStudentWithDetails extends Tables<"class_students"> {
   class?: {
     id: string;
     title: string;
-    subject: string;
-    teacher_name: string;
     start_time: string;
     end_time: string;
     day_of_week: number;
+    subject?: {
+      id: string;
+      subject_name: string;
+    } | null;
   } | null;
 }
 

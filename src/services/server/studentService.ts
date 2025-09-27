@@ -17,7 +17,7 @@ export class StudentService {
     return data || [];
   }
 
-  async getStudentById(id: number): Promise<Tables<"students">> {
+  async getStudentById(id: string): Promise<Tables<"students">> {
     const { data, error } = await this.supabase
       .from("students")
       .select("*")
@@ -48,7 +48,7 @@ export class StudentService {
     return data;
   }
 
-  async updateStudent(id: number, updateData: TablesUpdate<"students">): Promise<Tables<"students">> {
+  async updateStudent(id: string, updateData: TablesUpdate<"students">): Promise<Tables<"students">> {
     const { data, error } = await this.supabase
       .from("students")
       .update(updateData)
@@ -63,7 +63,7 @@ export class StudentService {
     return data;
   }
 
-  async deleteStudent(id: number): Promise<void> {
+  async deleteStudent(id: string): Promise<void> {
     const { error } = await this.supabase
       .from("students")
       .delete()

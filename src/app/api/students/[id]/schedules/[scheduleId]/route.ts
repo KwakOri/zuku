@@ -47,7 +47,7 @@ export async function PUT(
       .from("student_schedules")
       .update(updateData)
       .eq("id", scheduleId)
-      .eq("student_id", parseInt(id))
+      .eq("student_id", id)
       .select()
       .single();
 
@@ -83,7 +83,7 @@ export async function DELETE(
       .from("student_schedules")
       .delete()
       .eq("id", scheduleId)
-      .eq("student_id", parseInt(id))
+      .eq("student_id", id)
       .select()
       .single();
 

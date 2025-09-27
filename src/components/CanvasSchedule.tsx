@@ -2,6 +2,7 @@
 
 import {
   calculateStudentDensity,
+  calculateSelectedClassStudentDensity,
   defaultScheduleConfig,
   generateClassBlocks,
   getDensityColor,
@@ -18,9 +19,12 @@ interface CanvasScheduleProps {
   editMode?: EditMode;
   config?: ScheduleConfig;
   showDensity?: boolean;
-  studentId?: number; // 학생 개별 시간표 모드
+  studentId?: number | string; // 학생 개별 시간표 모드 (UUID 지원)
   customBlocks?: ClassBlock[]; // 커스텀 블록 데이터
   onBlocksChange?: (blocks: ClassBlock[]) => void; // 블록 변경 콜백
+  selectedClassId?: string; // 선택된 수업 ID (강사 모드용)
+  selectedClassStudents?: string[]; // 선택된 수업의 학생 ID 목록 (밀집도 계산용)
+  onTimeSlotClick?: (timeSlot: { dayOfWeek: number; startTime: string; endTime: string }) => void; // 시간대 클릭 콜백
 }
 
 interface ClassModalProps {
@@ -267,6 +271,9 @@ export default function CanvasSchedule({
   studentId,
   customBlocks,
   onBlocksChange,
+  selectedClassId,
+  selectedClassStudents,
+  onTimeSlotClick,
 }: CanvasScheduleProps) {
   const timeCanvasRef = useRef<HTMLCanvasElement>(null);
   const headerCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -275,9 +282,15 @@ export default function CanvasSchedule({
   const timeContainerRef = useRef<HTMLDivElement>(null);
   const headerContainerRef = useRef<HTMLDivElement>(null);
   const scheduleContainerRef = useRef<HTMLDivElement>(null);
-  const [classBlocks, setClassBlocks] = useState<ClassBlock[]>(
-    customBlocks || generateClassBlocks
-  );
+  // 강사 모드에서는 선택된 수업만 표시
+  const filteredBlocks = React.useMemo(() => {
+    if (selectedClassId && customBlocks) {
+      return customBlocks.filter(block => block.id === selectedClassId);
+    }
+    return customBlocks || generateClassBlocks();
+  }, [selectedClassId, customBlocks]);
+
+  const [classBlocks, setClassBlocks] = useState<ClassBlock[]>(() => filteredBlocks);
   const [modalBlock, setModalBlock] = useState<ClassBlock | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [containerWidth, setContainerWidth] = useState(1000);
@@ -349,11 +362,7 @@ export default function CanvasSchedule({
       .padStart(2, "0")}`;
   };
 
-  // HH:MM:SS 형식의 시간을 HH:MM 형식으로 변환
-  const formatDisplayTime = (timeString: string): string => {
-    if (!timeString) return "";
-    return timeString.slice(0, 5); // "18:00:00" → "18:00"
-  };
+  // formatDisplayTime은 이미 import되어 있으므로 제거
 
   // 모서리가 둥근 사각형을 그리는 함수
   const drawRoundedRect = (
@@ -506,8 +515,10 @@ export default function CanvasSchedule({
 
     // 학생 일정 밀집도 표시
     if (showDensity) {
-      const densityData = calculateStudentDensity(config);
-      const maxDensity = Math.max(...Object.values(densityData));
+      const densityData = selectedClassStudents
+        ? calculateSelectedClassStudentDensity(config, selectedClassStudents)
+        : calculateStudentDensity(config);
+      const maxDensity = Math.max(...Object.values(densityData).map(v => Number(v)));
 
       for (let day = 0; day < 7; day++) {
         for (let hour = config.startHour; hour <= config.endHour; hour++) {
@@ -687,7 +698,7 @@ export default function CanvasSchedule({
         ctx.globalAlpha = 1.0;
       }
     }
-  }, [classBlocks, dragState, config, editMode, showDensity, DAY_COLUMN_WIDTH]);
+  }, [classBlocks, dragState, config, editMode, showDensity, DAY_COLUMN_WIDTH, selectedClassStudents]);
 
   // 마우스 이벤트 핸들러
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -724,6 +735,26 @@ export default function CanvasSchedule({
         setModalBlock(clickedBlock);
         setIsModalOpen(true);
       }
+    } else if (onTimeSlotClick && editMode === "admin") {
+      // 빈 시간을 클릭했을 때 시간대 계산해서 콜백 호출
+      const dayIndex = Math.floor(x / DAY_COLUMN_WIDTH);
+      const slotIndex = Math.floor((y - 20) / SLOT_HEIGHT);
+
+      if (dayIndex >= 0 && dayIndex < 7 && slotIndex >= 0) {
+        const startHour = Math.floor((slotIndex * config.timeSlotMinutes) / 60) + config.startHour;
+        const startMinute = (slotIndex * config.timeSlotMinutes) % 60;
+        const endHour = Math.floor(((slotIndex + 2) * config.timeSlotMinutes) / 60) + config.startHour; // 2슬롯 = 1시간
+        const endMinute = ((slotIndex + 2) * config.timeSlotMinutes) % 60;
+
+        const startTime = `${startHour.toString().padStart(2, "0")}:${startMinute.toString().padStart(2, "0")}`;
+        const endTime = `${endHour.toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`;
+
+        onTimeSlotClick({
+          dayOfWeek: dayIndex,
+          startTime,
+          endTime,
+        });
+      }
     }
   };
 
@@ -749,7 +780,11 @@ export default function CanvasSchedule({
           .toString()
           .padStart(2, "0")}`;
 
-        const studentsAtTime = getStudentsAtTime(dayIndex, time);
+        const studentsAtTime = selectedClassStudents
+          ? getStudentsAtTime(dayIndex, time).filter(({ student }) =>
+              selectedClassStudents.includes(student.id)
+            )
+          : getStudentsAtTime(dayIndex, time);
 
         if (studentsAtTime.length > 0) {
           setTooltip({
@@ -996,10 +1031,14 @@ export default function CanvasSchedule({
 
   // 커스텀 블록이 변경될 때 업데이트
   useEffect(() => {
-    if (customBlocks) {
-      setClassBlocks(customBlocks);
-    }
-  }, [customBlocks]);
+    setClassBlocks(prev => {
+      // 깊은 비교를 통해 실제로 변경된 경우에만 업데이트
+      if (JSON.stringify(prev) !== JSON.stringify(filteredBlocks)) {
+        return filteredBlocks;
+      }
+      return prev;
+    });
+  }, [filteredBlocks]);
 
   // Canvas 다시 그리기
   useEffect(() => {
@@ -1111,20 +1150,32 @@ export default function CanvasSchedule({
             일정 있는 학생: {tooltip.studentCount}명
           </div>
           <div className="space-y-1">
-            {getStudentsAtTime(tooltip.dayOfWeek, tooltip.time)
-              .slice(0, 5)
-              .map(({ student, schedule }) => (
-                <div key={`${student.id}-${schedule.id}`} className="text-xs">
-                  <span className="text-white">{student.name}</span>
-                  <span className="text-gray-400 ml-1">- {schedule.title}</span>
-                </div>
-              ))}
-            {getStudentsAtTime(tooltip.dayOfWeek, tooltip.time).length > 5 && (
-              <div className="text-xs text-gray-400">
-                +{getStudentsAtTime(tooltip.dayOfWeek, tooltip.time).length - 5}
-                명 더...
-              </div>
-            )}
+            {(() => {
+              const filteredStudents = selectedClassStudents
+                ? getStudentsAtTime(tooltip.dayOfWeek, tooltip.time).filter(({ student }) =>
+                    selectedClassStudents.includes(student.id)
+                  )
+                : getStudentsAtTime(tooltip.dayOfWeek, tooltip.time);
+
+              return (
+                <>
+                  {filteredStudents
+                    .slice(0, 5)
+                    .map(({ student, schedule }) => (
+                      <div key={`${student.id}-${schedule.id}`} className="text-xs">
+                        <span className="text-white">{student.name}</span>
+                        <span className="text-gray-400 ml-1">- {schedule.title}</span>
+                      </div>
+                    ))}
+                  {filteredStudents.length > 5 && (
+                    <div className="text-xs text-gray-400">
+                      +{filteredStudents.length - 5}
+                      명 더...
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </div>
       )}

@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     // 특정 학생의 일정만 조회하는 경우
     if (studentId) {
-      query = query.eq("student_id", parseInt(studentId));
+      query = query.eq("student_id", studentId);
     }
 
     const { data, error } = await query;

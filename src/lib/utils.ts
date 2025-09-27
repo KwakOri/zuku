@@ -97,6 +97,59 @@ export function calculateStudentDensity(config: ScheduleConfig) {
   return timeSlots;
 }
 
+// 선택된 수업의 학생들에 대한 밀집도 계산 함수
+export function calculateSelectedClassStudentDensity(
+  config: ScheduleConfig,
+  selectedStudentIds: string[]
+) {
+  const timeSlots: { [key: string]: number } = {};
+
+  // 모든 시간 슬롯 초기화
+  for (let day = 0; day < 7; day++) {
+    for (let hour = config.startHour; hour <= config.endHour; hour++) {
+      for (let minute = 0; minute < 60; minute += config.timeSlotMinutes) {
+        const time = `${hour.toString().padStart(2, "0")}:${minute
+          .toString()
+          .padStart(2, "0")}`;
+        const key = `${day}-${time}`;
+        timeSlots[key] = 0;
+      }
+    }
+  }
+
+  // 선택된 학생들의 일정만 카운트
+  studentSchedules.forEach((schedule) => {
+    if (schedule.status !== "active") return;
+    if (!selectedStudentIds.includes(schedule.studentId)) return;
+
+    const startHour = parseInt(schedule.startTime.split(":")[0]);
+    const startMinute = parseInt(schedule.startTime.split(":")[1]);
+    const endHour = parseInt(schedule.endTime.split(":")[0]);
+    const endMinute = parseInt(schedule.endTime.split(":")[1]);
+    const startMinutes = startHour * 60 + startMinute;
+    const endMinutes = endHour * 60 + endMinute;
+
+    // 시작 시간부터 종료 시간까지 모든 슬롯에 카운트 추가
+    for (
+      let minutes = startMinutes;
+      minutes < endMinutes;
+      minutes += config.timeSlotMinutes
+    ) {
+      const hour = Math.floor(minutes / 60);
+      const minute = minutes % 60;
+      const time = `${hour.toString().padStart(2, "0")}:${minute
+        .toString()
+        .padStart(2, "0")}`;
+      const key = `${schedule.dayOfWeek}-${time}`;
+      if (timeSlots[key] !== undefined) {
+        timeSlots[key]++;
+      }
+    }
+  });
+
+  return timeSlots;
+}
+
 // 밀집도에 따른 색상 계산 함수
 export function getDensityColor(density: number, maxDensity: number): string {
   if (density === 0) return "transparent";

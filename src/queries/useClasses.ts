@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { classApi } from "@/services/client/classApi";
+import { classApi, CreateClassData } from "@/services/client/classApi";
 import { TablesInsert, TablesUpdate } from "@/types/supabase";
 import { toast } from "react-hot-toast";
 
@@ -65,26 +65,66 @@ export function useCreateClass() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: TablesInsert<"classes">) => classApi.createClass(data),
+    mutationFn: (data: CreateClassData) => classApi.createClassWithStudents(data),
     onSuccess: (newClass) => {
       // 수업 목록 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: classKeys.lists() });
-      
+
       // 강사별 쿼리 무효화
       if (newClass.teacher_id) {
-        queryClient.invalidateQueries({ 
-          queryKey: classKeys.byTeacher(newClass.teacher_id) 
+        queryClient.invalidateQueries({
+          queryKey: classKeys.byTeacher(newClass.teacher_id)
         });
       }
 
       // 과목별 쿼리 무효화
-      queryClient.invalidateQueries({ 
-        queryKey: classKeys.bySubject(newClass.subject) 
+      queryClient.invalidateQueries({
+        queryKey: classKeys.bySubject(newClass.subject)
       });
 
       // 요일별 쿼리 무효화
-      queryClient.invalidateQueries({ 
-        queryKey: classKeys.byDay(newClass.day_of_week) 
+      queryClient.invalidateQueries({
+        queryKey: classKeys.byDay(newClass.day_of_week)
+      });
+
+      // 강사 수업 목록도 무효화 (TeacherClassManager에서 사용)
+      queryClient.invalidateQueries({
+        queryKey: ["teacher-classes"]
+      });
+
+      toast.success("수업이 성공적으로 등록되었습니다.");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "수업 등록 중 오류가 발생했습니다.");
+    },
+  });
+}
+
+// 기존 방식의 수업 생성 (하위 호환성)
+export function useCreateClassLegacy() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: TablesInsert<"classes">) => classApi.createClass(data),
+    onSuccess: (newClass) => {
+      // 수업 목록 쿼리 무효화
+      queryClient.invalidateQueries({ queryKey: classKeys.lists() });
+
+      // 강사별 쿼리 무효화
+      if (newClass.teacher_id) {
+        queryClient.invalidateQueries({
+          queryKey: classKeys.byTeacher(newClass.teacher_id)
+        });
+      }
+
+      // 과목별 쿼리 무효화
+      queryClient.invalidateQueries({
+        queryKey: classKeys.bySubject(newClass.subject)
+      });
+
+      // 요일별 쿼리 무효화
+      queryClient.invalidateQueries({
+        queryKey: classKeys.byDay(newClass.day_of_week)
       });
 
       toast.success("수업이 성공적으로 등록되었습니다.");

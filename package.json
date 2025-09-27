@@ -30,6 +30,7 @@
     "nodemailer": "^7.0.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-hook-form": "^7.63.0",
     "react-hot-toast": "^2.6.0",
     "rrule": "^2.8.1",
     "solapi": "^5.5.2",

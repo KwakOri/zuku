@@ -38,7 +38,7 @@ export interface InviteResult {
 }
 
 /**
- * 사용자 로그인
+ * 사용자 로그인 - 역할별 테이블에서 조회
  */
 export async function loginUser(
   email: string,
@@ -48,31 +48,63 @@ export async function loginUser(
     console.log('=== 로그인 시도 ===');
     console.log('이메일:', email);
     console.log('비밀번호 길이:', password.length);
-    
-    const supabase = createAdminSupabaseClient();
 
-    // 사용자 조회
-    const { data: user, error: userError } = await supabase
+    const supabase = createAdminSupabaseClient();
+    const emailLower = email.toLowerCase();
+    let user: any = null;
+    let userRole: string = '';
+
+    // 1. 먼저 users 테이블에서 관리자/매니저 확인
+    const { data: adminUser, error: adminError } = await supabase
       .from("users")
       .select("*")
-      .eq("email", email.toLowerCase())
+      .eq("email", emailLower)
       .eq("is_active", true)
       .single();
 
-    console.log('DB 조회 결과:', { user: user ? '찾음' : '없음', error: userError });
+    if (adminUser && !adminError) {
+      user = adminUser;
+      userRole = adminUser.role;
+      console.log('관리자/매니저 사용자 찾음:', userRole);
+    } else {
+      // 2. students, teachers, assistants 테이블에서 순차 검색
+      const tables = [
+        { table: 'students', role: 'student' },
+        { table: 'teachers', role: 'teacher' },
+        { table: 'assistants', role: 'assistant' }
+      ];
+
+      for (const { table, role } of tables) {
+        const { data: roleUser, error: roleError } = await supabase
+          .from(table)
+          .select("*")
+          .eq("email", emailLower)
+          .eq("is_active", true)
+          .single();
+
+        if (roleUser && !roleError) {
+          user = roleUser;
+          userRole = role;
+          console.log(`${role} 사용자 찾음:`, table);
+          break;
+        }
+      }
+    }
+
+    console.log('DB 조회 결과:', { user: user ? '찾음' : '없음', role: userRole });
     if (user) {
       console.log('사용자 정보:', {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role,
+        role: userRole,
         is_active: user.is_active,
         hasPasswordHash: !!user.password_hash
       });
     }
 
-    if (userError || !user) {
-      console.log('사용자 조회 실패:', userError);
+    if (!user) {
+      console.log('사용자 조회 실패');
       return {
         success: false,
         error: "이메일 또는 비밀번호가 올바르지 않습니다.",
@@ -83,7 +115,7 @@ export async function loginUser(
     console.log('비밀번호 검증 시작...');
     const isValidPassword = await verifyPassword(password, user.password_hash);
     console.log('비밀번호 검증 결과:', isValidPassword);
-    
+
     if (!isValidPassword) {
       console.log('비밀번호 검증 실패');
       return {
@@ -97,14 +129,14 @@ export async function loginUser(
       userId: user.id,
       email: user.email,
       name: user.name,
-      role: user.role,
+      role: userRole,
     });
 
     const authUser: AuthUser = {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role,
+      role: userRole,
       isActive: user.is_active,
     };
 
@@ -124,7 +156,7 @@ export async function loginUser(
 }
 
 /**
- * 사용자 회원가입 (초대 토큰 필요)
+ * 사용자 회원가입 - 역할별 테이블에 저장
  */
 export async function signupUser(
   email: string,
@@ -134,13 +166,14 @@ export async function signupUser(
 ): Promise<SignupResult> {
   try {
     const supabase = createAdminSupabaseClient();
+    const emailLower = email.toLowerCase();
 
     // 초대 토큰으로 초대 정보 조회
     const { data: invitation, error: inviteError } = await supabase
       .from("signup_invitations")
       .select("*")
       .eq("token", inviteToken)
-      .eq("email", email.toLowerCase())
+      .eq("email", emailLower)
       .is("used_at", null)
       .gte("expires_at", new Date().toISOString())
       .single();
@@ -152,14 +185,26 @@ export async function signupUser(
       };
     }
 
-    // 이미 가입된 사용자인지 확인
-    const { data: existingUser } = await supabase
-      .from("users")
-      .select("id")
-      .eq("email", email.toLowerCase())
-      .single();
+    // 이미 가입된 사용자인지 모든 테이블에서 확인
+    const existingUserChecks = [];
 
-    if (existingUser) {
+    // users 테이블 확인
+    existingUserChecks.push(
+      supabase.from("users").select("id").eq("email", emailLower).single()
+    );
+
+    // 다른 역할 테이블들 확인
+    const roleTables = ['students', 'teachers', 'assistants'];
+    for (const table of roleTables) {
+      existingUserChecks.push(
+        supabase.from(table).select("id").eq("email", emailLower).single()
+      );
+    }
+
+    const existingResults = await Promise.all(existingUserChecks);
+    const hasExistingUser = existingResults.some(result => result.data && !result.error);
+
+    if (hasExistingUser) {
       return {
         success: false,
         error: "이미 가입된 이메일입니다.",
@@ -168,31 +213,74 @@ export async function signupUser(
 
     // 비밀번호 해시화
     const passwordHash = await hashPassword(password);
-
-    // 사용자 생성
     const userId = uuidv4();
-    const userData: UserInsert = {
-      id: userId,
-      email: email.toLowerCase(),
-      password_hash: passwordHash,
-      name: name.trim(),
-      role: invitation.role,
-      is_active: true,
-    };
+    const nameTrimmed = name.trim();
 
-    const { data: newUser, error: createError } = await supabase
-      .from("users")
+    let newUser: any;
+    let targetTable: string;
+    let userData: any;
+
+    // 역할에 따라 적절한 테이블에 저장
+    if (invitation.role === 'admin' || invitation.role === 'manager') {
+      // 관리자/매니저는 users 테이블에 저장
+      targetTable = 'users';
+      userData = {
+        id: userId,
+        email: emailLower,
+        password_hash: passwordHash,
+        name: nameTrimmed,
+        role: invitation.role,
+        is_active: true,
+      };
+    } else {
+      // student, teacher, assistant는 각각의 테이블에 저장
+      const roleTableMap: { [key: string]: string } = {
+        'student': 'students',
+        'teacher': 'teachers',
+        'assistant': 'assistants'
+      };
+
+      targetTable = roleTableMap[invitation.role];
+      if (!targetTable) {
+        return {
+          success: false,
+          error: "유효하지 않은 역할입니다.",
+        };
+      }
+
+      userData = {
+        id: userId,
+        email: emailLower,
+        password_hash: passwordHash,
+        name: nameTrimmed,
+        is_active: true,
+      };
+
+      // 학생의 경우 추가 필드들
+      if (invitation.role === 'student') {
+        userData.grade = 1; // 기본값, 나중에 수정 가능
+        userData.phone = null;
+        userData.parent_phone = null;
+      }
+    }
+
+    console.log(`${invitation.role} 사용자를 ${targetTable} 테이블에 생성:`, { userId, email: emailLower, name: nameTrimmed });
+
+    const { data: createdUser, error: createError } = await supabase
+      .from(targetTable)
       .insert([userData])
       .select()
       .single();
 
-    if (createError || !newUser) {
+    if (createError || !createdUser) {
       console.error("사용자 생성 실패:", createError);
       return {
         success: false,
         error: "회원가입 중 오류가 발생했습니다.",
       };
     }
+
+    newUser = createdUser;
 
     // 초대 토큰 사용 처리
     await supabase
@@ -204,7 +292,7 @@ export async function signupUser(
       id: newUser.id,
       email: newUser.email,
       name: newUser.name,
-      role: newUser.role,
+      role: invitation.role,
       isActive: newUser.is_active,
     };
 
@@ -222,20 +310,50 @@ export async function signupUser(
 }
 
 /**
- * 사용자 ID로 사용자 정보 조회
+ * 사용자 ID로 사용자 정보 조회 - 모든 테이블에서 검색
  */
 export async function getUserById(userId: string): Promise<AuthUser | null> {
   try {
     const supabase = createAdminSupabaseClient();
+    let user: any = null;
+    let userRole: string = '';
 
-    const { data: user, error } = await supabase
+    // 1. 먼저 users 테이블에서 관리자/매니저 확인
+    const { data: adminUser, error: adminError } = await supabase
       .from("users")
       .select("id, email, name, role, is_active")
       .eq("id", userId)
       .eq("is_active", true)
       .single();
 
-    if (error || !user) {
+    if (adminUser && !adminError) {
+      user = adminUser;
+      userRole = adminUser.role;
+    } else {
+      // 2. students, teachers, assistants 테이블에서 순차 검색
+      const tables = [
+        { table: 'students', role: 'student' },
+        { table: 'teachers', role: 'teacher' },
+        { table: 'assistants', role: 'assistant' }
+      ];
+
+      for (const { table, role } of tables) {
+        const { data: roleUser, error: roleError } = await supabase
+          .from(table)
+          .select("id, email, name, is_active")
+          .eq("id", userId)
+          .eq("is_active", true)
+          .single();
+
+        if (roleUser && !roleError) {
+          user = roleUser;
+          userRole = role;
+          break;
+        }
+      }
+    }
+
+    if (!user) {
       return null;
     }
 
@@ -243,7 +361,7 @@ export async function getUserById(userId: string): Promise<AuthUser | null> {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role,
+      role: userRole,
       isActive: user.is_active,
     };
   } catch (error) {
@@ -315,15 +433,28 @@ export async function createInvitation(
 ): Promise<InviteResult> {
   try {
     const supabase = createAdminSupabaseClient();
+    const emailLower = email.toLowerCase();
 
-    // 이미 가입된 사용자인지 확인
-    const { data: existingUser } = await supabase
-      .from("users")
-      .select("id")
-      .eq("email", email.toLowerCase())
-      .single();
+    // 이미 가입된 사용자인지 모든 테이블에서 확인
+    const existingUserChecks = [];
 
-    if (existingUser) {
+    // users 테이블 확인
+    existingUserChecks.push(
+      supabase.from("users").select("id").eq("email", emailLower).single()
+    );
+
+    // 다른 역할 테이블들 확인
+    const roleTables = ['students', 'teachers', 'assistants'];
+    for (const table of roleTables) {
+      existingUserChecks.push(
+        supabase.from(table).select("id").eq("email", emailLower).single()
+      );
+    }
+
+    const existingResults = await Promise.all(existingUserChecks);
+    const hasExistingUser = existingResults.some(result => result.data && !result.error);
+
+    if (hasExistingUser) {
       return {
         success: false,
         error: "이미 가입된 이메일입니다.",

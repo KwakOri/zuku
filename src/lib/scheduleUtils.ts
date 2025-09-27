@@ -24,13 +24,22 @@ export function convertStudentSchedulesToBlocks(
   }));
 }
 
-// ClassBlock을 학생 개인 일정 형태로 변환
+// ClassBlock을 학생 개인 일정 형태로 변환 (생성용)
 export function convertBlockToStudentSchedule(
   block: ClassBlock,
-  studentId: number
-): Omit<StudentScheduleRow, "id" | "created_date"> {
+  studentId: string
+): {
+  title: string;
+  description?: string | null;
+  start_time: string;
+  end_time: string;
+  day_of_week: number;
+  type: string;
+  color: string;
+  location?: string | null;
+  recurring?: boolean;
+} {
   return {
-    student_id: studentId,
     title: block.title,
     description: null,
     start_time: block.startTime,
@@ -40,8 +49,6 @@ export function convertBlockToStudentSchedule(
     color: block.color,
     location: block.room || null,
     recurring: false,
-    rrule: null,
-    status: "active",
   };
 }
 

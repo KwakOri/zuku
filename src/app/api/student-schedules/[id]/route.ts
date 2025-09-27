@@ -5,8 +5,9 @@ import { TablesUpdate } from "@/types/supabase";
 // GET /api/student-schedules/[id] - 특정 학생 개인 일정 조회
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const supabase = createAdminSupabaseClient();
 
@@ -20,7 +21,7 @@ export async function GET(
           grade
         )
       `)
-      .eq("id", params.id)
+      .eq("id", id)
       .single();
 
     if (error) {
@@ -51,8 +52,9 @@ export async function GET(
 // PUT /api/student-schedules/[id] - 학생 개인 일정 수정
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const body: TablesUpdate<"student_schedules"> = await request.json();
 
@@ -61,7 +63,7 @@ export async function PUT(
     const { data, error } = await supabase
       .from("student_schedules")
       .update(body)
-      .eq("id", params.id)
+      .eq("id", id)
       .select(`
         *,
         student:students(
@@ -100,15 +102,16 @@ export async function PUT(
 // DELETE /api/student-schedules/[id] - 학생 개인 일정 삭제
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const supabase = createAdminSupabaseClient();
 
     const { error } = await supabase
       .from("student_schedules")
       .delete()
-      .eq("id", params.id);
+      .eq("id", id);
 
     if (error) {
       console.error("Error deleting student schedule:", error);

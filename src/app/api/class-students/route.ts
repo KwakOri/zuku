@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       .select(`
         *,
         student:students(id, name, grade, phone, parent_phone, email),
-        class:classes(id, title, subject, teacher_name, start_time, end_time, day_of_week)
+        class:classes(id, title, start_time, end_time, day_of_week, subject:subjects(id, subject_name))
       `)
       .eq("status", "active");
 
@@ -25,14 +25,7 @@ export async function GET(request: NextRequest) {
 
     // 특정 학생의 수업들만 조회하는 경우
     if (studentId) {
-      const parsedStudentId = parseInt(studentId);
-      if (isNaN(parsedStudentId)) {
-        return NextResponse.json(
-          { error: "Invalid student ID" },
-          { status: 400 }
-        );
-      }
-      query = query.eq("student_id", parsedStudentId);
+      query = query.eq("student_id", studentId);
     }
 
     const { data: classStudents, error } = await query.order("enrolled_date", { ascending: false });
@@ -91,7 +84,7 @@ export async function POST(request: NextRequest) {
       .select(`
         *,
         student:students(id, name, grade, phone, parent_phone, email),
-        class:classes(id, title, subject, teacher_name, start_time, end_time, day_of_week)
+        class:classes(id, title, start_time, end_time, day_of_week, subject:subjects(id, subject_name))
       `)
       .single();
 

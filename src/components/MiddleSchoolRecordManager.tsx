@@ -8,6 +8,7 @@ import {
   useWeeklyMiddleRecords,
 } from "@/queries/useMiddleRecords";
 import { useStudents } from "@/queries/useStudents";
+import { useTeachers } from "@/queries/useTeachers";
 import { Tables, TablesInsert, TablesUpdate } from "@/types/supabase";
 
 import {
@@ -24,20 +25,24 @@ import {
   X,
   XCircle,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 interface MiddleSchoolRecordManagerProps {
   teacherId?: string;
-  classId?: string;
 }
 
 export default function MiddleSchoolRecordManager({
-  teacherId = "teacher-1",
-  classId = "class-1",
+  teacherId: propTeacherId,
 }: MiddleSchoolRecordManagerProps) {
   const [editingRecord, setEditingRecord] =
     useState<Tables<"homework_records_middle"> | null>(null);
   const [isAddingRecord, setIsAddingRecord] = useState(false);
+
+  // 디버깅: isAddingRecord 상태 변화 로깅
+  useEffect(() => {
+    console.log("isAddingRecord 상태 변경:", isAddingRecord);
+  }, [isAddingRecord]);
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string | undefined>(propTeacherId);
   const [selectedWeek, setSelectedWeek] = useState<string>(() => {
     const today = new Date();
     const monday = new Date(today);
@@ -45,8 +50,12 @@ export default function MiddleSchoolRecordManager({
     return monday.toISOString().split("T")[0];
   });
 
+  // Use prop teacherId if provided, otherwise use local state
+  const teacherId = propTeacherId || selectedTeacherId;
+
   // API에서 데이터 가져오기
   const { data: students = [] } = useStudents();
+  const { data: teachers = [] } = useTeachers();
   const { data: records = [], isLoading: recordsLoading } =
     useWeeklyMiddleRecords(teacherId, selectedWeek);
 
@@ -64,8 +73,7 @@ export default function MiddleSchoolRecordManager({
   const [newRecord, setNewRecord] = useState<
     Partial<TablesInsert<"homework_records_middle">>
   >({
-    teacher_id: teacherId,
-    class_id: classId,
+    teacher_id: teacherId || "",
     week_of: selectedWeek,
     attendance: "present",
     participation: 3,
@@ -125,12 +133,11 @@ export default function MiddleSchoolRecordManager({
 
   // 기록 추가
   const handleAddRecord = async () => {
-    if (!newRecord.student_id) return;
+    if (!newRecord.student_id || !teacherId) return;
 
     const recordData: TablesInsert<"homework_records_middle"> = {
       student_id: newRecord.student_id!,
       teacher_id: teacherId,
-      class_id: classId,
       week_of: selectedWeek,
       attendance: newRecord.attendance!,
       participation: newRecord.participation!,
@@ -144,8 +151,7 @@ export default function MiddleSchoolRecordManager({
     try {
       await createRecordMutation.mutateAsync(recordData);
       setNewRecord({
-        teacher_id: teacherId,
-        class_id: classId,
+        teacher_id: teacherId || "",
         week_of: selectedWeek,
         attendance: "present",
         participation: 3,
@@ -263,7 +269,10 @@ export default function MiddleSchoolRecordManager({
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setIsAddingRecord(true)}
+              onClick={() => {
+                console.log("기록 추가 버튼 클릭됨");
+                setIsAddingRecord(true);
+              }}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="w-4 h-4" />
@@ -314,6 +323,34 @@ export default function MiddleSchoolRecordManager({
         </div>
       </div>
 
+      {/* 강사 선택 */}
+      {!propTeacherId && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center gap-4">
+            <label className="text-sm font-medium text-gray-700">
+              담당 강사 선택:
+            </label>
+            <select
+              value={selectedTeacherId || ""}
+              onChange={(e) => setSelectedTeacherId(e.target.value || undefined)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">강사를 선택하세요</option>
+              {teachers.map((teacher) => (
+                <option key={teacher.id} value={teacher.id}>
+                  {teacher.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          {!teacherId && (
+            <p className="mt-2 text-sm text-gray-500">
+              강사를 선택하면 해당 강사의 기록을 조회할 수 있습니다.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* 기록 목록 */}
       <div className="grid gap-6">
         {isLoading ? (
@@ -331,7 +368,10 @@ export default function MiddleSchoolRecordManager({
               새로운 학생 기록을 추가해보세요.
             </p>
             <button
-              onClick={() => setIsAddingRecord(true)}
+              onClick={() => {
+                console.log("첫 기록 추가하기 버튼 클릭됨");
+                setIsAddingRecord(true);
+              }}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               첫 기록 추가하기
@@ -480,7 +520,9 @@ export default function MiddleSchoolRecordManager({
 
       {/* 기록 추가 모달 */}
       {isAddingRecord && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <>
+          {console.log("모달 렌더링 시작됨")}
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
@@ -669,6 +711,7 @@ export default function MiddleSchoolRecordManager({
             </div>
           </div>
         </div>
+        </>
       )}
 
       {/* 기록 수정 모달 */}

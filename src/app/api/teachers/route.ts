@@ -38,10 +38,8 @@ export async function POST(request: NextRequest) {
     const teacherData: TablesInsert<"teachers"> = {
       id: body.id,
       name: body.name,
-      subjects: body.subjects || [],
       phone: body.phone || null,
       email: body.email || null,
-      user_id: body.user_id || null,
     };
 
     const { data: teacher, error } = await supabase

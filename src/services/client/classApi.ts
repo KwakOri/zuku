@@ -16,6 +16,20 @@ interface ClassWithTeacher extends Tables<"classes"> {
   } | null;
 }
 
+// 수업 생성을 위한 새로운 인터페이스
+export interface CreateClassData {
+  title: string;
+  subjectId: string;
+  description?: string;
+  dayOfWeek?: number; // 선택사항으로 변경
+  startTime?: string; // 선택사항으로 변경
+  endTime?: string; // 선택사항으로 변경
+  teacherId: string;
+  room?: string;
+  maxStudents?: number;
+  studentIds: string[];
+}
+
 export class ClassApi {
   private baseUrl = "/api/classes";
 
@@ -54,6 +68,25 @@ export class ClassApi {
   }
 
   async createClass(classData: TablesInsert<"classes">): Promise<ClassWithTeacher> {
+    const response = await fetch(this.baseUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(classData),
+    });
+
+    if (!response.ok) {
+      const error: ApiError = await response.json();
+      throw new Error(error.error || "Failed to create class");
+    }
+
+    const result: ApiResponse<ClassWithTeacher> = await response.json();
+    return result.data;
+  }
+
+  // 새로운 수업 생성 메서드 (학생 등록 포함)
+  async createClassWithStudents(classData: CreateClassData): Promise<ClassWithTeacher> {
     const response = await fetch(this.baseUrl, {
       method: "POST",
       headers: {

@@ -4,17 +4,18 @@ export type StudentScheduleRow = Tables<"student_schedules">;
 
 export interface CreateStudentScheduleRequest {
   title: string;
-  description?: string;
+  description?: string | null;
   start_time: string;
   end_time: string;
   day_of_week: number;
   type: string;
   color: string;
-  location?: string;
+  location?: string | null;
   recurring?: boolean;
 }
 
-export interface UpdateStudentScheduleRequest extends Partial<CreateStudentScheduleRequest> {
+export interface UpdateStudentScheduleRequest
+  extends Partial<CreateStudentScheduleRequest> {
   title: string;
   start_time: string;
   end_time: string;
@@ -22,7 +23,9 @@ export interface UpdateStudentScheduleRequest extends Partial<CreateStudentSched
 }
 
 // 특정 학생의 개인 일정 목록 조회
-export async function getStudentSchedules(studentId: string): Promise<StudentScheduleRow[]> {
+export async function getStudentSchedules(
+  studentId: string
+): Promise<StudentScheduleRow[]> {
   const response = await fetch(`/api/students/${studentId}/schedules`, {
     method: "GET",
     headers: {
@@ -67,13 +70,16 @@ export async function updateStudentSchedule(
   scheduleId: string,
   scheduleData: UpdateStudentScheduleRequest
 ): Promise<StudentScheduleRow> {
-  const response = await fetch(`/api/students/${studentId}/schedules/${scheduleId}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(scheduleData),
-  });
+  const response = await fetch(
+    `/api/students/${studentId}/schedules/${scheduleId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(scheduleData),
+    }
+  );
 
   if (!response.ok) {
     const error = await response.json();
@@ -89,12 +95,15 @@ export async function deleteStudentSchedule(
   studentId: string,
   scheduleId: string
 ): Promise<StudentScheduleRow> {
-  const response = await fetch(`/api/students/${studentId}/schedules/${scheduleId}`, {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  const response = await fetch(
+    `/api/students/${studentId}/schedules/${scheduleId}`,
+    {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
 
   if (!response.ok) {
     const error = await response.json();

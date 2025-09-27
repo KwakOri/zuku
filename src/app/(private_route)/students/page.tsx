@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import StudentList from "@/components/StudentList";
-import { Home } from "lucide-react";
+import AddStudentModal from "@/components/AddStudentModal";
+import { Home, UserPlus } from "lucide-react";
+import { useState } from "react";
 
 export default function StudentsPage() {
-  // 학생 선택 핸들러는 이제 router.push로 처리됨
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -31,6 +33,13 @@ export default function StudentsPage() {
 
             {/* 추가 액션 버튼들 */}
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsAddModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 border border-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <UserPlus className="w-4 h-4" />
+                학생 추가
+              </button>
               <Link
                 href="/schedule"
                 className="px-4 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
@@ -46,6 +55,12 @@ export default function StudentsPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <StudentList />
       </main>
+
+      {/* 학생 추가 모달 */}
+      <AddStudentModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+      />
     </div>
   );
 }

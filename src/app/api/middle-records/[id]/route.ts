@@ -5,8 +5,9 @@ import { TablesUpdate } from "@/types/supabase";
 // GET /api/middle-records/[id] - 특정 중등 기록 조회
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const supabase = createAdminSupabaseClient();
 
@@ -24,17 +25,14 @@ export async function GET(
         ),
         teacher:teachers(
           id,
-          name,
-          subjects
+          name
         ),
         class:classes(
           id,
-          title,
-          subject,
-          teacher_name
+          title
         )
       `)
-      .eq("id", params.id)
+      .eq("id", id)
       .single();
 
     if (error) {
@@ -65,8 +63,9 @@ export async function GET(
 // PUT /api/middle-records/[id] - 중등 기록 수정
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const body: TablesUpdate<"homework_records_middle"> = await request.json();
 
@@ -81,7 +80,7 @@ export async function PUT(
     const { data, error } = await supabase
       .from("homework_records_middle")
       .update(updatedData)
-      .eq("id", params.id)
+      .eq("id", id)
       .select(`
         *,
         student:students(
@@ -94,14 +93,11 @@ export async function PUT(
         ),
         teacher:teachers(
           id,
-          name,
-          subjects
+          name
         ),
         class:classes(
           id,
-          title,
-          subject,
-          teacher_name
+          title
         )
       `)
       .single();
@@ -134,15 +130,16 @@ export async function PUT(
 // DELETE /api/middle-records/[id] - 중등 기록 삭제
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const supabase = createAdminSupabaseClient();
 
     const { error } = await supabase
       .from("homework_records_middle")
       .delete()
-      .eq("id", params.id);
+      .eq("id", id);
 
     if (error) {
       console.error("Error deleting middle school record:", error);

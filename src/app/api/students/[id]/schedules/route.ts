@@ -15,7 +15,7 @@ export async function GET(
     const { data: schedules, error } = await supabase
       .from("student_schedules")
       .select("*")
-      .eq("student_id", parseInt(id))
+      .eq("student_id", id)
       .eq("status", "active")
       .order("day_of_week", { ascending: true })
       .order("start_time", { ascending: true });
@@ -64,7 +64,7 @@ export async function POST(
 
     const scheduleData = {
       id: crypto.randomUUID(),
-      student_id: parseInt(id),
+      student_id: id,
       title,
       description: description || null,
       start_time,

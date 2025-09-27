@@ -59,40 +59,35 @@ export type Database = {
           created_at: string | null
           email: string | null
           id: string
+          is_active: boolean | null
           name: string
+          password_hash: string | null
           phone: string | null
           updated_at: string | null
-          user_id: string | null
         }
         Insert: {
           assigned_grades?: number[]
           created_at?: string | null
           email?: string | null
           id?: string
+          is_active?: boolean | null
           name: string
+          password_hash?: string | null
           phone?: string | null
           updated_at?: string | null
-          user_id?: string | null
         }
         Update: {
           assigned_grades?: number[]
           created_at?: string | null
           email?: string | null
           id?: string
+          is_active?: boolean | null
           name?: string
+          password_hash?: string | null
           phone?: string | null
           updated_at?: string | null
-          user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "assistants_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       class_exceptions: {
         Row: {
@@ -200,55 +195,59 @@ export type Database = {
         Row: {
           color: string
           created_at: string | null
-          day_of_week: number
+          day_of_week: number | null
           description: string | null
-          end_time: string
+          end_time: string | null
           id: string
           max_students: number | null
           room: string | null
           rrule: string | null
-          start_time: string
-          subject: string
+          start_time: string | null
+          subject_id: string | null
           teacher_id: string | null
-          teacher_name: string
           title: string
           updated_at: string | null
         }
         Insert: {
           color?: string
           created_at?: string | null
-          day_of_week: number
+          day_of_week?: number | null
           description?: string | null
-          end_time: string
+          end_time?: string | null
           id?: string
           max_students?: number | null
           room?: string | null
           rrule?: string | null
-          start_time: string
-          subject: string
+          start_time?: string | null
+          subject_id?: string | null
           teacher_id?: string | null
-          teacher_name: string
           title: string
           updated_at?: string | null
         }
         Update: {
           color?: string
           created_at?: string | null
-          day_of_week?: number
+          day_of_week?: number | null
           description?: string | null
-          end_time?: string
+          end_time?: string | null
           id?: string
           max_students?: number | null
           room?: string | null
           rrule?: string | null
-          start_time?: string
-          subject?: string
+          start_time?: string | null
+          subject_id?: string | null
           teacher_id?: string | null
-          teacher_name?: string
           title?: string
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "classes_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "classes_teacher_id_fkey"
             columns: ["teacher_id"]
@@ -331,7 +330,6 @@ export type Database = {
       homework_records_middle: {
         Row: {
           attendance: string
-          class_id: string
           created_at: string | null
           created_date: string
           homework: string
@@ -347,7 +345,6 @@ export type Database = {
         }
         Insert: {
           attendance: string
-          class_id: string
           created_at?: string | null
           created_date?: string
           homework: string
@@ -363,7 +360,6 @@ export type Database = {
         }
         Update: {
           attendance?: string
-          class_id?: string
           created_at?: string | null
           created_date?: string
           homework?: string
@@ -378,13 +374,6 @@ export type Database = {
           week_of?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "homework_records_middle_class_id_fkey"
-            columns: ["class_id"]
-            isOneToOne: false
-            referencedRelation: "classes"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "homework_records_middle_student_id_fkey"
             columns: ["student_id"]
@@ -513,8 +502,10 @@ export type Database = {
           email: string | null
           grade: number
           id: string
+          is_active: boolean | null
           name: string
           parent_phone: string | null
+          password_hash: string | null
           phone: string | null
           updated_at: string | null
         }
@@ -523,8 +514,10 @@ export type Database = {
           email?: string | null
           grade: number
           id?: string
+          is_active?: boolean | null
           name: string
           parent_phone?: string | null
+          password_hash?: string | null
           phone?: string | null
           updated_at?: string | null
         }
@@ -533,8 +526,10 @@ export type Database = {
           email?: string | null
           grade?: number
           id?: string
+          is_active?: boolean | null
           name?: string
           parent_phone?: string | null
+          password_hash?: string | null
           phone?: string | null
           updated_at?: string | null
         }
@@ -602,38 +597,33 @@ export type Database = {
           created_at: string | null
           email: string | null
           id: string
+          is_active: boolean | null
           name: string
+          password_hash: string | null
           phone: string | null
           updated_at: string | null
-          user_id: string | null
         }
         Insert: {
           created_at?: string | null
           email?: string | null
           id?: string
+          is_active?: boolean | null
           name: string
+          password_hash?: string | null
           phone?: string | null
           updated_at?: string | null
-          user_id?: string | null
         }
         Update: {
           created_at?: string | null
           email?: string | null
           id?: string
+          is_active?: boolean | null
           name?: string
+          password_hash?: string | null
           phone?: string | null
           updated_at?: string | null
-          user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "teachers_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       users: {
         Row: {
