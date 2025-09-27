@@ -20,6 +20,16 @@ import {
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import {
+  Card,
+  Button,
+  FormField,
+  Avatar,
+  Badge,
+  Chip,
+  Icon,
+  Modal
+} from "@/components/design-system";
 
 interface CreateClassFormData {
   title: string;
@@ -67,17 +77,17 @@ export default function TeacherClassManager() {
   if (!isAuthenticated) {
     return (
       <div className="w-full space-y-6">
-        <div className="bg-white rounded-lg border border-yellow-200 p-6">
+        <Card size="lg" variant="flat" className="border-warning-200">
           <div className="text-center">
-            <div className="text-yellow-600 mb-4">⚠️</div>
-            <h3 className="text-lg font-medium text-yellow-900 mb-2">
+            <Icon name="alert-triangle" size="3xl" color="warning" className="mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-warning-900 mb-2">
               로그인이 필요합니다
             </h3>
-            <p className="text-yellow-600 text-sm">
+            <p className="text-warning-600 text-sm">
               강사 전용 기능을 사용하려면 로그인해주세요.
             </p>
           </div>
-        </div>
+        </Card>
       </div>
     );
   }
@@ -135,16 +145,16 @@ export default function TeacherClassManager() {
   if (isLoading) {
     return (
       <div className="w-full space-y-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <Card size="lg">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+            <div className="h-8 bg-neu-200 rounded w-1/3 mb-4"></div>
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-20 bg-gray-200 rounded"></div>
+                <div key={i} className="h-20 bg-neu-200 rounded"></div>
               ))}
             </div>
           </div>
-        </div>
+        </Card>
       </div>
     );
   }
@@ -152,15 +162,15 @@ export default function TeacherClassManager() {
   if (error) {
     return (
       <div className="w-full space-y-6">
-        <div className="bg-white rounded-lg border border-red-200 p-6">
+        <Card size="lg" variant="flat" className="border-error-200">
           <div className="text-center">
-            <div className="text-red-600 mb-4">⚠️</div>
-            <h3 className="text-lg font-medium text-red-900 mb-2">
+            <Icon name="alert-triangle" size="3xl" color="error" className="mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-error-900 mb-2">
               담당 수업을 불러오는 중 오류가 발생했습니다
             </h3>
-            <p className="text-red-600 text-sm">{error.message}</p>
+            <p className="text-error-600 text-sm">{error.message}</p>
           </div>
-        </div>
+        </Card>
       </div>
     );
   }
@@ -168,16 +178,21 @@ export default function TeacherClassManager() {
   return (
     <div className="w-full space-y-6">
       {/* 강사 선택 섹션 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <Card size="lg">
         <div className="flex items-center gap-3 mb-4">
-          <Users className="w-6 h-6 text-purple-600" />
-          <h2 className="text-xl font-bold text-gray-900">강사 선택</h2>
+          <Avatar
+            size="md"
+            variant="flat"
+            className="bg-secondary-100"
+            fallback={<Icon name="users" size="sm" color="secondary" />}
+          />
+          <h2 className="text-xl font-bold text-neu-900">강사 선택</h2>
         </div>
 
         {teachersLoading ? (
           <div className="text-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600 mx-auto"></div>
-            <p className="mt-2 text-sm text-gray-500">강사 목록을 불러오는 중...</p>
+            <Icon name="loader" size="lg" color="secondary" className="mx-auto mb-4 animate-spin" />
+            <p className="mt-2 text-sm text-neu-500">강사 목록을 불러오는 중...</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -187,23 +202,23 @@ export default function TeacherClassManager() {
                 onClick={() => setSelectedTeacherId(teacher.id)}
                 className={`p-4 border rounded-lg text-left transition-all duration-200 hover:shadow-md ${
                   selectedTeacherId === teacher.id
-                    ? "border-purple-500 bg-purple-50 ring-2 ring-purple-200"
-                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                    ? "border-secondary-500 bg-secondary-50 ring-2 ring-secondary-200"
+                    : "border-neu-200 hover:border-neu-300 hover:bg-neu-50"
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-semibold text-gray-900">{teacher.name}</h3>
-                    <p className="text-sm text-gray-600">{teacher.email}</p>
+                    <h3 className="font-semibold text-neu-900">{teacher.name}</h3>
+                    <p className="text-sm text-neu-600">{teacher.email}</p>
                     {teacher.phone && (
-                      <p className="text-xs text-gray-500">{teacher.phone}</p>
+                      <p className="text-xs text-neu-500">{teacher.phone}</p>
                     )}
                   </div>
                   <ChevronRight
                     className={`w-4 h-4 transition-colors ${
                       selectedTeacherId === teacher.id
-                        ? "text-purple-600"
-                        : "text-gray-400"
+                        ? "text-secondary-600"
+                        : "text-neu-400"
                     }`}
                   />
                 </div>
@@ -213,44 +228,44 @@ export default function TeacherClassManager() {
         )}
 
         {selectedTeacherId && (
-          <div className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
-            <p className="text-sm text-purple-700">
+          <Card variant="flat" className="mt-4 bg-secondary-50 border-secondary-200">
+            <p className="text-sm text-secondary-700">
               ✓ 선택된 강사: <strong>{teachers.find(t => t.id === selectedTeacherId)?.name}</strong>
             </p>
-          </div>
+          </Card>
         )}
-      </div>
+      </Card>
 
       {/* 수업 개설 섹션 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <Card size="lg">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <Plus className="w-6 h-6 text-blue-600" />
-            <h2 className="text-xl font-bold text-gray-900">새 수업 개설</h2>
+            <Avatar
+              size="md"
+              variant="flat"
+              className="bg-primary-100"
+              fallback={<Icon name="plus" size="sm" color="primary" />}
+            />
+            <h2 className="text-xl font-bold text-neu-900">새 수업 개설</h2>
           </div>
-          <button
+          <Button
             onClick={() => setShowCreateForm(!showCreateForm)}
             disabled={!selectedTeacherId}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              !selectedTeacherId
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : showCreateForm
-                ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                : "bg-blue-600 text-white hover:bg-blue-700"
-            }`}
+            variant={showCreateForm ? "outline" : "primary"}
+            size="md"
           >
             {showCreateForm ? (
               <>
-                <X className="w-4 h-4 inline mr-2" />
+                <X className="w-4 h-4 mr-2" />
                 취소
               </>
             ) : (
               <>
-                <Plus className="w-4 h-4 inline mr-2" />
+                <Plus className="w-4 h-4 mr-2" />
                 수업 개설
               </>
             )}
-          </button>
+          </Button>
         </div>
 
         {showCreateForm && (
@@ -374,46 +389,48 @@ export default function TeacherClassManager() {
 
             {/* 수강 학생 선택 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                수강 학생 선택 <span className="text-red-500">*</span>
-                <span className="ml-2 text-sm text-gray-500">
-                  ({selectedStudents.length}명 선택됨)
-                </span>
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-neu-700">
+                  수강 학생 선택 <span className="text-error-500">*</span>
+                </label>
+                <Badge variant="secondary" size="md">
+                  {selectedStudents.length}명 선택됨
+                </Badge>
+              </div>
               {studentsLoading ? (
                 <div className="text-center py-4">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                  <Icon name="loader" size="lg" color="primary" className="mx-auto animate-spin" />
                 </div>
               ) : (
-                <div className="border border-gray-200 rounded-lg max-h-40 overflow-y-auto">
+                <Card variant="flat" className="max-h-40 overflow-y-auto">
                   {students.length === 0 ? (
-                    <div className="p-4 text-center text-gray-500">
+                    <div className="p-4 text-center text-neu-500">
                       등록된 학생이 없습니다.
                     </div>
                   ) : (
-                    <div className="divide-y divide-gray-200">
+                    <div className="divide-y divide-neu-200">
                       {students.map((student) => (
                         <label
                           key={student.id}
-                          className="flex items-center p-3 hover:bg-gray-50 cursor-pointer"
+                          className="flex items-center p-3 hover:bg-neu-50 cursor-pointer"
                         >
                           <input
                             type="checkbox"
                             checked={selectedStudents.includes(student.id)}
                             onChange={() => toggleStudent(student.id)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            className="w-4 h-4 text-primary-600 border-neu-300 rounded focus:ring-primary-500"
                           />
                           <div className="ml-3 flex-1">
                             <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium text-gray-900">
+                              <span className="text-sm font-medium text-neu-900">
                                 {student.name}
                               </span>
-                              <span className="text-xs text-gray-500">
+                              <Chip variant="outline" size="sm">
                                 {student.grade}학년
-                              </span>
+                              </Chip>
                             </div>
                             {student.phone && (
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-neu-500">
                                 {student.phone}
                               </span>
                             )}
@@ -422,67 +439,74 @@ export default function TeacherClassManager() {
                       ))}
                     </div>
                   )}
-                </div>
+                </Card>
               )}
             </div>
 
             {/* 제출 버튼 */}
-            <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowCreateForm(false);
-                  reset();
-                  setSelectedStudents([]);
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                취소
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>수업 개설 중...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    <span>수업 개설</span>
-                  </>
-                )}
-              </button>
-            </div>
+            <Card variant="flat" className="border-t border-neu-200">
+              <div className="flex items-center justify-end gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  onClick={() => {
+                    setShowCreateForm(false);
+                    reset();
+                    setSelectedStudents([]);
+                  }}
+                >
+                  취소
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="md"
+                  disabled={isSubmitting}
+                  loading={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    "수업 개설 중..."
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      수업 개설
+                    </>
+                  )}
+                </Button>
+              </div>
+            </Card>
           </form>
         )}
-      </div>
+      </Card>
 
       {/* 담당 수업 목록 */}
       {selectedTeacherId && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <Card size="lg">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <BookOpen className="w-6 h-6 text-green-600" />
-              <h2 className="text-xl font-bold text-gray-900">
+              <Avatar
+                size="md"
+                variant="flat"
+                className="bg-success-100"
+                fallback={<Icon name="book-open" size="sm" color="success" />}
+              />
+              <h2 className="text-xl font-bold text-neu-900">
                 {teachers.find(t => t.id === selectedTeacherId)?.name} 강사의 수업 목록
               </h2>
-              <span className="px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full">
+              <Badge variant="success" size="md">
                 {classes.length}개 수업
-              </span>
+              </Badge>
             </div>
           </div>
 
           {classes.length === 0 ? (
             <div className="text-center py-12">
-              <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <Icon name="calendar" size="3xl" color="neutral" className="mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-neu-900 mb-2">
                 담당 수업이 없습니다
               </h3>
-              <p className="text-gray-500">
+              <p className="text-neu-500">
                 관리자에게 수업 배정을 요청해주세요.
               </p>
             </div>
@@ -490,32 +514,33 @@ export default function TeacherClassManager() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {classes.map((classItem) => {
                 return (
-                  <div
+                  <Card
                     key={classItem.id}
-                    className="p-4 border border-gray-200 rounded-lg text-left transition-all duration-200 hover:shadow-md hover:border-gray-300 hover:bg-gray-50"
+                    variant="flat"
+                    className="p-4 text-left transition-all duration-200 hover:shadow-md hover:border-neu-300 hover:bg-neu-50"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 mb-1">
+                        <h3 className="font-semibold text-neu-900 mb-1">
                           {classItem.title}
                         </h3>
-                        <p className="text-sm text-gray-600 mb-2">
+                        <p className="text-sm text-neu-600 mb-2">
                           {classItem.subject?.subject_name || "과목 미정"}
                         </p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                      <ChevronRight className="w-4 h-4 text-neu-400" />
                     </div>
 
                     <div className="space-y-2">
                       {classItem.day_of_week !== null && classItem.start_time && classItem.end_time ? (
                         <>
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2 text-sm text-neu-600">
                             <Calendar className="w-4 h-4" />
                             <span>
                               {["일", "월", "화", "수", "목", "금", "토"][classItem.day_of_week]}요일
                             </span>
                           </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2 text-sm text-neu-600">
                             <Clock className="w-4 h-4" />
                             <span>
                               {classItem.start_time.substring(0, 5)} - {classItem.end_time.substring(0, 5)}
@@ -523,24 +548,24 @@ export default function TeacherClassManager() {
                           </div>
                         </>
                       ) : (
-                        <div className="flex items-center gap-2 text-sm text-orange-600">
+                        <div className="flex items-center gap-2 text-sm text-warning-600">
                           <Clock className="w-4 h-4" />
                           <span>시간표 미설정</span>
                         </div>
                       )}
 
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-2 text-sm text-neu-600">
                         <Users className="w-4 h-4" />
                         <span>학생 {classItem.student_count}명</span>
                         {classItem.max_students && (
-                          <span className="text-gray-400">
+                          <span className="text-neu-400">
                             / {classItem.max_students}명
                           </span>
                         )}
                       </div>
 
                       {classItem.room && (
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-neu-500">
                           📍 {classItem.room}
                         </div>
                       )}
@@ -548,30 +573,31 @@ export default function TeacherClassManager() {
 
                     {/* 수강 학생 미리보기 */}
                     {classItem.students.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-gray-200">
+                      <div className="mt-3 pt-3 border-t border-neu-200">
                         <div className="flex flex-wrap gap-1">
                           {classItem.students.slice(0, 3).map((student) => (
-                            <span
+                            <Chip
                               key={student.id}
-                              className="px-2 py-1 bg-gray-100 text-xs rounded-full text-gray-600"
+                              variant="outline"
+                              size="sm"
                             >
                               {student.name} ({getGrade(student.grade, "half")})
-                            </span>
+                            </Chip>
                           ))}
                           {classItem.students.length > 3 && (
-                            <span className="px-2 py-1 bg-gray-100 text-xs rounded-full text-gray-600">
+                            <Chip variant="outline" size="sm">
                               +{classItem.students.length - 3}명
-                            </span>
+                            </Chip>
                           )}
                         </div>
                       </div>
                     )}
-                  </div>
+                  </Card>
                 );
               })}
             </div>
           )}
-        </div>
+        </Card>
       )}
     </div>
   );

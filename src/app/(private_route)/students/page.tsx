@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import StudentList from "@/components/StudentList";
-import AddStudentModal from "@/components/AddStudentModal";
+import { StudentList, AddStudentModal, Card, Button, Icon } from "@/components/design-system";
 import { Home, UserPlus } from "lucide-react";
 import { useState } from "react";
 
@@ -10,22 +9,23 @@ export default function StudentsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-neu-100">
       {/* 헤더 */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-neu-50 shadow-sm border-b border-neu-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
-              <Link 
+              <Link
                 href="/"
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
               >
-                <Home className="w-5 h-5" />
+                <Button variant="ghost" size="sm">
+                  <Home className="w-5 h-5" />
+                </Button>
               </Link>
 
               <div>
-                <h1 className="text-xl font-bold text-gray-900">학생 관리</h1>
-                <p className="text-sm text-gray-600">
+                <h1 className="text-xl font-bold text-neu-900">학생 관리</h1>
+                <p className="text-sm text-neu-600">
                   학생 정보를 관리하고 개별 일정을 편집하세요
                 </p>
               </div>
@@ -33,18 +33,18 @@ export default function StudentsPage() {
 
             {/* 추가 액션 버튼들 */}
             <div className="flex items-center gap-3">
-              <button
+              <Button
+                variant="primary"
+                size="md"
                 onClick={() => setIsAddModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 border border-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
               >
-                <UserPlus className="w-4 h-4" />
+                <UserPlus className="w-4 h-4 mr-2" />
                 학생 추가
-              </button>
-              <Link
-                href="/schedule"
-                className="px-4 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                전체 시간표 보기
+              </Button>
+              <Link href="/schedule">
+                <Button variant="outline" size="md">
+                  전체 시간표 보기
+                </Button>
               </Link>
             </div>
           </div>

@@ -16,6 +16,16 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import {
+  Card,
+  Button,
+  FormField,
+  Avatar,
+  Badge,
+  Chip,
+  Icon,
+  SearchInput
+} from "@/components/design-system";
 
 interface ClassSchedulingSuggesterProps {
   classId?: string;

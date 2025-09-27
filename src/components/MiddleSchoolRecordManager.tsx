@@ -26,6 +26,17 @@ import {
   XCircle,
 } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
+import {
+  Card,
+  Button,
+  FormField,
+  Avatar,
+  Badge,
+  Chip,
+  Icon,
+  Modal,
+  Progress
+} from "@/components/design-system";
 
 interface MiddleSchoolRecordManagerProps {
   teacherId?: string;
@@ -254,129 +265,126 @@ export default function MiddleSchoolRecordManager({
   return (
     <div className="w-full space-y-6">
       {/* 헤더 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <Card size="lg">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <BookOpen className="w-6 h-6 text-blue-600" />
+            <Icon name="book-open" size="lg" color="primary" />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-neu-900">
                 중등 주간 기록 관리
               </h1>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-neu-600 mt-1">
                 학생별 출석, 참여도, 이해도 및 숙제 상태를 기록합니다
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button
+            <Button
+              variant="primary"
+              size="md"
               onClick={() => {
                 console.log("기록 추가 버튼 클릭됨");
                 setIsAddingRecord(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4 mr-2" />
               기록 추가
-            </button>
-            <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-              <Download className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="md">
+              <Download className="w-4 h-4 mr-2" />
               내보내기
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* 주차 선택 */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => changeWeek("prev")}
-              className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
               ←
-            </button>
+            </Button>
             <div className="text-center">
-              <h3 className="font-semibold text-gray-900">
+              <h3 className="font-semibold text-neu-900">
                 {formatWeekRange(selectedWeek)}
               </h3>
-              <p className="text-sm text-gray-600">주간 기록</p>
+              <p className="text-sm text-neu-600">주간 기록</p>
             </div>
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => changeWeek("next")}
-              className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
               →
-            </button>
+            </Button>
           </div>
 
-          <div className="flex items-center gap-4 text-sm text-gray-600">
+          <div className="flex items-center gap-4 text-sm text-neu-600">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <div className="w-3 h-3 bg-primary-500 rounded-full"></div>
               <span>기록 완료: {records.length}명</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+              <div className="w-3 h-3 bg-neu-300 rounded-full"></div>
               <span>
                 미기록: {middleSchoolStudents.length - records.length}명
               </span>
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* 강사 선택 */}
       {!propTeacherId && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700">
-              담당 강사 선택:
-            </label>
-            <select
-              value={selectedTeacherId || ""}
-              onChange={(e) => setSelectedTeacherId(e.target.value || undefined)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">강사를 선택하세요</option>
-              {teachers.map((teacher) => (
-                <option key={teacher.id} value={teacher.id}>
-                  {teacher.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          {!teacherId && (
-            <p className="mt-2 text-sm text-gray-500">
-              강사를 선택하면 해당 강사의 기록을 조회할 수 있습니다.
-            </p>
-          )}
-        </div>
+        <Card size="lg">
+          <FormField
+            label="담당 강사 선택"
+            type="select"
+            value={selectedTeacherId || ""}
+            onChange={(e) => setSelectedTeacherId(e.target.value || undefined)}
+            helperText={!teacherId ? "강사를 선택하면 해당 강사의 기록을 조회할 수 있습니다." : undefined}
+            options={[
+              { value: "", label: "강사를 선택하세요" },
+              ...teachers.map((teacher) => ({ value: teacher.id, label: teacher.name }))
+            ]}
+          />
+        </Card>
       )}
 
       {/* 기록 목록 */}
       <div className="grid gap-6">
         {isLoading ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">데이터를 불러오는 중...</p>
-          </div>
+          <Card size="lg">
+            <div className="p-12 text-center">
+              <Icon name="loader" size="3xl" color="primary" className="mx-auto mb-4 animate-spin" />
+              <p className="text-neu-600">데이터를 불러오는 중...</p>
+            </div>
+          </Card>
         ) : records.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              이번 주 기록이 없습니다
-            </h3>
-            <p className="text-gray-500 mb-4">
-              새로운 학생 기록을 추가해보세요.
-            </p>
-            <button
-              onClick={() => {
-                console.log("첫 기록 추가하기 버튼 클릭됨");
-                setIsAddingRecord(true);
-              }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              첫 기록 추가하기
-            </button>
-          </div>
+          <Card size="lg">
+            <div className="p-12 text-center">
+              <Icon name="calendar" size="3xl" color="neutral" className="mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-neu-900 mb-2">
+                이번 주 기록이 없습니다
+              </h3>
+              <p className="text-neu-500 mb-4">
+                새로운 학생 기록을 추가해보세요.
+              </p>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => {
+                  console.log("첫 기록 추가하기 버튼 클릭됨");
+                  setIsAddingRecord(true);
+                }}
+              >
+                첫 기록 추가하기
+              </Button>
+            </div>
+          </Card>
         ) : (
           records.map((record) => {
             const student = getStudent(record.student_id);

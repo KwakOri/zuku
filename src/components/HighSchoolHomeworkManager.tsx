@@ -18,6 +18,18 @@ import {
   User,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import {
+  Card,
+  Button,
+  FormField,
+  Avatar,
+  Badge,
+  Chip,
+  Icon,
+  Modal,
+  SearchInput,
+  Progress
+} from "@/components/design-system";
 
 interface HighSchoolHomeworkManagerProps {
   assistantId?: string;
@@ -235,32 +247,38 @@ export default function HighSchoolHomeworkManager({
   return (
     <div className="w-full space-y-6">
       {/* 헤더 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <Card size="lg">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <BookCheck className="w-6 h-6 text-purple-600" />
+            <Avatar
+              size="md"
+              variant="flat"
+              className="bg-secondary-100"
+              fallback={<Icon name="book-check" size="sm" color="secondary" />}
+            />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-neu-900">
                 고등 숙제 검사 기록
               </h1>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-neu-600 mt-1">
                 조교: {currentAssistant?.name} | 담당 과목:{" "}
                 {currentAssistant?.subjects.join(", ")}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button
+            <Button
               onClick={() => setIsAddingRecord(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              variant="secondary"
+              size="md"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4 mr-2" />
               검사 기록 추가
-            </button>
-            <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-              <Download className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="md">
+              <Download className="w-4 h-4 mr-2" />
               내보내기
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -359,7 +377,7 @@ export default function HighSchoolHomeworkManager({
             ))}
           </select>
         </div>
-      </div>
+      </Card>
 
       {/* 기록 목록 */}
       <div className="space-y-4">

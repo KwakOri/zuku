@@ -19,3 +19,5 @@ export { ScheduleCell, type ScheduleCellProps, type ClassInfo } from './Schedule
 // Organisms
 export { Modal, type ModalProps } from './Modal';
 export { ScheduleTable, type ScheduleTableProps, type Schedule, type Cell } from './ScheduleTable';
+export { default as StudentList } from './StudentList/StudentList';
+export { default as AddStudentModal } from './AddStudentModal/AddStudentModal';
