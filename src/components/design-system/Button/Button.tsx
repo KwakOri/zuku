@@ -10,24 +10,24 @@ const buttonVariants = cva(
       variant: {
         primary: [
           "bg-primary-500 text-white shadow-md hover:shadow-lg hover:bg-primary-600",
-          "disabled:bg-neu-300 disabled:text-neu-500 disabled:cursor-not-allowed disabled:shadow-none"
+          "disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed disabled:shadow-none"
         ],
         secondary: [
           "bg-secondary-500 text-white shadow-md hover:shadow-lg hover:bg-secondary-600",
-          "disabled:bg-neu-300 disabled:text-neu-500 disabled:cursor-not-allowed disabled:shadow-none"
+          "disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed disabled:shadow-none"
         ],
         outline: [
           "bg-transparent text-primary-600 border border-primary-500 hover:bg-primary-50",
-          "disabled:bg-transparent disabled:border-neu-300 disabled:text-neu-400 disabled:cursor-not-allowed"
+          "disabled:bg-transparent disabled:border-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed"
         ],
         ghost: [
           "bg-transparent text-primary-600 hover:bg-primary-50",
-          "disabled:bg-transparent disabled:text-neu-400 disabled:cursor-not-allowed"
+          "disabled:bg-transparent disabled:text-gray-400 disabled:cursor-not-allowed"
         ],
-        neumorphic: [
-          "neu-raised text-neu-700 hover:shadow-neu-lg hover:text-primary-600",
-          "active:neu-pressed",
-          "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-neu disabled:hover:text-neu-700"
+        flat: [
+          "flat-card text-gray-700 hover:border-gray-300 hover:text-primary-600",
+          "active:flat-pressed",
+          "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:text-gray-700"
         ],
       },
       size: {
@@ -37,7 +37,7 @@ const buttonVariants = cva(
       },
     },
     defaultVariants: {
-      variant: "neumorphic",
+      variant: "flat",
       size: "md",
     },
   }
@@ -50,6 +50,8 @@ export interface ButtonProps
   children: React.ReactNode;
   /** Additional CSS class */
   className?: string;
+  /** Loading state */
+  loading?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -58,12 +60,13 @@ export const Button: React.FC<ButtonProps> = ({
   className,
   children,
   disabled,
+  loading,
   ...props
 }) => {
   return (
     <button
       className={cn(buttonVariants({ variant, size }), className)}
-      disabled={disabled}
+      disabled={disabled || loading}
       {...props}
     >
       {children}

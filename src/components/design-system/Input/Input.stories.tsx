@@ -173,7 +173,7 @@ export const WithIcons: Story = {
 export const LoginForm: Story = {
   render: () => {
     return (
-      <div className="w-80 p-6 neu-raised rounded-2xl">
+      <div className="w-80 p-6 flat-card rounded-2xl">
         <h2 className="text-2xl font-bold text-primary-600 mb-6 text-center">Login</h2>
         <div className="space-y-4">
           <Input

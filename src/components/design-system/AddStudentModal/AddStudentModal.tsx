@@ -133,8 +133,8 @@ export default function AddStudentModal({ isOpen, onClose }: AddStudentModalProp
             fallback={<Icon name="user-plus" size="sm" color="primary" />}
           />
           <div>
-            <h2 className="text-lg font-semibold text-neu-900">새 학생 추가</h2>
-            <p className="text-sm text-neu-500">학생 정보를 입력해주세요</p>
+            <h2 className="text-lg font-semibold text-gray-900">새 학생 추가</h2>
+            <p className="text-sm text-gray-500">학생 정보를 입력해주세요</p>
           </div>
         </div>
       }

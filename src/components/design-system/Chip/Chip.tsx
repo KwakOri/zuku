@@ -9,14 +9,14 @@ const chipVariants = cva(
   {
     variants: {
       variant: {
-        default: "neu-raised-sm text-neu-700 hover:shadow-neu",
+        default: "flat-card-sm text-gray-700 hover:shadow-neu",
         primary: "bg-primary-500 text-white shadow-md hover:shadow-lg hover:bg-primary-600",
         secondary: "bg-secondary-500 text-white shadow-md hover:shadow-lg hover:bg-secondary-600",
         success: "bg-success-500 text-white shadow-md hover:shadow-lg hover:bg-success-600",
         warning: "bg-warning-500 text-white shadow-md hover:shadow-lg hover:bg-warning-600",
         error: "bg-error-500 text-white shadow-md hover:shadow-lg hover:bg-error-600",
         outline: "bg-transparent text-primary-600 border border-primary-500 hover:bg-primary-50",
-        neumorphic: "neu-raised-sm text-neu-700 hover:shadow-neu",
+        neumorphic: "flat-card-sm text-gray-700 hover:shadow-neu",
       },
       size: {
         sm: "px-2.5 py-1 text-xs h-6",

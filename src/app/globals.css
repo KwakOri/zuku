@@ -78,12 +78,12 @@
   --color-error-800: #733333;
   --color-error-900: #602c2c;
 
-  /* Box Shadows */
-  --shadow-neu-sm: 4px 4px 8px rgba(168, 173, 168, 0.25), -4px -4px 8px rgba(255, 255, 255, 0.8);
-  --shadow-neu: 8px 8px 16px rgba(168, 173, 168, 0.3), -8px -8px 16px rgba(255, 255, 255, 0.85);
-  --shadow-neu-lg: 12px 12px 24px rgba(168, 173, 168, 0.35), -12px -12px 24px rgba(255, 255, 255, 0.9);
-  --shadow-neu-inset: inset 4px 4px 8px rgba(168, 173, 168, 0.3), inset -4px -4px 8px rgba(255, 255, 255, 0.7);
-  --shadow-neu-inset-lg: inset 8px 8px 16px rgba(168, 173, 168, 0.35), inset -8px -8px 16px rgba(255, 255, 255, 0.75);
+  /* Flat Design Color Variables */
+  --flat-background: #ffffff;
+  --flat-surface: #f9fafb;
+  --flat-border: #e5e7eb;
+  --flat-border-strong: #d1d5db;
+  --flat-accent: #f3f4f6;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -113,7 +113,7 @@ html {
       "Helvetica Neue", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #f5f6f5;
+    background-color: #f9fafb;
   }
 
   code {
@@ -123,31 +123,62 @@ html {
 }
 
 @layer components {
-  /* Neumorphism utility classes */
-  .neu-raised {
-    @apply shadow-neu bg-neu-100 border-0;
+  /* Borderless Flat Design utility classes */
+  .flat-card {
+    @apply bg-white rounded-lg transition-colors duration-200;
   }
 
-  .neu-raised-sm {
-    @apply shadow-neu-sm bg-neu-100 border-0;
+  .flat-card-elevated {
+    @apply bg-gray-50 rounded-lg;
   }
 
-  .neu-raised-lg {
-    @apply shadow-neu-lg bg-neu-100 border-0;
+  .flat-surface {
+    background-color: var(--flat-surface);
+    @apply rounded-lg;
   }
 
-  .neu-inset {
-    @apply shadow-neu-inset bg-neu-200 border-0;
+  .flat-primary {
+    @apply bg-primary-50 rounded-lg;
   }
 
-  .neu-inset-lg {
-    @apply shadow-neu-inset-lg bg-neu-200 border-0;
+  .flat-secondary {
+    @apply bg-secondary-50 rounded-lg;
   }
 
-  .neu-pressed {
-    @apply bg-neu-200 border-0;
-    box-shadow: inset 4px 4px 8px rgba(168, 173, 168, 0.4),
-      inset -4px -4px 8px rgba(255, 255, 255, 0.6);
+  .flat-accent {
+    background-color: var(--flat-accent);
+    @apply rounded-lg;
+  }
+
+  .flat-interactive {
+    @apply transition-all duration-200 hover:bg-gray-50 cursor-pointer;
+  }
+
+  .flat-pressed {
+    @apply bg-gray-200;
+  }
+
+  /* Color-based separation */
+  .surface-contrast {
+    @apply bg-white rounded-lg;
+  }
+
+  .surface-subtle {
+    @apply bg-gray-50 rounded-lg;
+  }
+
+  .surface-muted {
+    @apply bg-gray-100 rounded-lg;
+  }
+
+  /* Scrollbar utilities */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Safari and Chrome */
   }
 
   /* Responsive grid utilities */

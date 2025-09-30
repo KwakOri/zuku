@@ -136,7 +136,7 @@ export const Modal: React.FC<ModalProps> = ({
             <div className="flex-1">
               {headerContent || (
                 title && (
-                  <h2 className="text-xl font-semibold text-neu-800">
+                  <h2 className="text-xl font-semibold text-gray-800">
                     {title}
                   </h2>
                 )
@@ -168,7 +168,7 @@ export const Modal: React.FC<ModalProps> = ({
 
         {/* Footer */}
         {footerContent && (
-          <div className="flex items-center justify-end gap-3 p-6 border-t border-neu-200 bg-neu-50">
+          <div className="flex items-center justify-end gap-3 p-6 border-t border-neu-200 bg-gray-50">
             {footerContent}
           </div>
         )}

@@ -48,32 +48,28 @@ export default function StudentList({
   // 알림톡 전송 mutation
   const sendNotification = useSendKakaoNotification();
 
-  // 학년별 필터링된 학생 목록
+  // 학년별 필터링된 학생 목록 (학년순으로 정렬)
   const filteredStudents = useMemo(() => {
-    return students.filter((student) => {
-      const matchesSearch =
-        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.phone?.includes(searchTerm);
+    return students
+      .filter((student) => {
+        const matchesSearch =
+          student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          student.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          student.phone?.includes(searchTerm);
 
-      const matchesGrade =
-        selectedGrade === "all" || student.grade === selectedGrade;
+        const matchesGrade =
+          selectedGrade === "all" || student.grade === selectedGrade;
 
-      return matchesSearch && matchesGrade;
-    });
+        return matchesSearch && matchesGrade;
+      })
+      .sort((a, b) => {
+        // 학년으로 먼저 정렬, 같은 학년이면 이름으로 정렬
+        if (a.grade !== b.grade) {
+          return a.grade - b.grade;
+        }
+        return a.name.localeCompare(b.name);
+      });
   }, [searchTerm, selectedGrade, students]);
-
-  // 학년별 그룹화
-  const studentsByGrade = useMemo(() => {
-    const groups: { [grade: number]: Tables<"students">[] } = {};
-    filteredStudents.forEach((student) => {
-      if (!groups[student.grade]) {
-        groups[student.grade] = [];
-      }
-      groups[student.grade].push(student);
-    });
-    return groups;
-  }, [filteredStudents]);
 
   // 전체 학년 목록
   const availableGrades = useMemo(() => {
@@ -82,12 +78,6 @@ export default function StudentList({
     );
     return grades;
   }, [students]);
-
-
-  const getGradeColor = (grade: number) => {
-    if (grade <= 9) return "bg-blue-50 text-blue-700 border-blue-200";
-    return "bg-purple-50 text-purple-700 border-purple-200";
-  };
 
   // 알림톡 전송 핸들러
   const handleSendNotification = (studentId: string, studentName: string) => {
@@ -135,7 +125,7 @@ export default function StudentList({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <Icon name="graduation-cap" size="lg" color="primary" />
-            <h1 className="text-2xl font-bold text-neu-900">학생 관리</h1>
+            <h1 className="text-2xl font-bold text-gray-900">학생 관리</h1>
           </div>
           <Badge variant="outline" size="lg">
             총 {filteredStudents.length}명의 학생
@@ -150,7 +140,7 @@ export default function StudentList({
             onChange={(e) => setSearchTerm(e.target.value)}
             onSearch={(query) => setSearchTerm(query)}
             placeholder="이름, 이메일, 전화번호로 검색..."
-            variant="neumorphic"
+            variant="flat"
           />
 
           {/* 필터 섹션 */}
@@ -171,7 +161,7 @@ export default function StudentList({
 
             {selectedGrade !== "all" && (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-neu-600">필터:</span>
+                <span className="text-sm text-gray-600">필터:</span>
                 <Chip
                   variant="primary"
                   size="sm"
@@ -186,9 +176,9 @@ export default function StudentList({
 
           {/* 필터 옵션 */}
           {showFilters && (
-            <Card variant="flat" className="bg-neu-50">
+            <Card variant="flat" className="bg-gray-50">
               <div className="space-y-3">
-                <label className="text-sm font-medium text-neu-700">
+                <label className="text-sm font-medium text-gray-700">
                   학년별 필터
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -219,139 +209,117 @@ export default function StudentList({
       </Card>
 
       {/* 학생 목록 */}
-      <div className="space-y-6">
-        {Object.keys(studentsByGrade).length === 0 ? (
+      <div>
+        {filteredStudents.length === 0 ? (
           <Card size="lg">
             <div className="p-12 text-center">
               <Icon name="user" size="3xl" color="neutral" className="mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-neu-900 mb-2">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
                 검색 결과가 없습니다
               </h3>
-              <p className="text-neu-500">다른 검색어나 필터를 시도해보세요.</p>
+              <p className="text-gray-500">다른 검색어나 필터를 시도해보세요.</p>
             </div>
           </Card>
         ) : (
-          Object.entries(studentsByGrade)
-            .sort(([a], [b]) => parseInt(a) - parseInt(b))
-            .map(([grade, studentsInGrade]) => (
-              <Card
-                key={grade}
-                size="lg"
-                className="overflow-hidden"
+          <div className="bg-white rounded-lg p-4 space-y-3">
+            {/* 학생 카드들 */}
+            {filteredStudents.map((student) => (
+              <div
+                key={student.id}
+                className="bg-gray-50 hover:bg-gray-100 rounded-lg p-4 cursor-pointer transition-colors duration-200"
+                onClick={() => {
+                  if (onStudentSelect) {
+                    onStudentSelect(student);
+                  } else {
+                    router.push(`/students/${student.id}`);
+                  }
+                }}
               >
-                {/* 학년 헤더 */}
-                <div className="px-6 py-3 border-b border-neu-200 bg-neu-50">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-neu-800">
-                      {getGrade(parseInt(grade))}
-                    </h3>
-                    <Badge variant="secondary" size="sm">
-                      {studentsInGrade.length}명
-                    </Badge>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    {/* 학생 아바타 */}
+                    <Avatar
+                      size="lg"
+                      variant="flat"
+                      fallback={student.name.substring(0, 2)}
+                      className="bg-primary-500 text-white"
+                    />
+
+                    {/* 학생 정보 */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-3">
+                        <h4 className="font-semibold text-gray-900">
+                          {student.name}
+                        </h4>
+                        <Chip variant="secondary" size="sm">
+                          {getGrade(student.grade, "half")}
+                        </Chip>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                        {student.phone && (
+                          <div className="flex items-center gap-1">
+                            <Phone className="w-3 h-3" />
+                            <span>{student.phone}</span>
+                          </div>
+                        )}
+                        {student.email && (
+                          <div className="flex items-center gap-1">
+                            <Mail className="w-3 h-3" />
+                            <span>{student.email}</span>
+                          </div>
+                        )}
+                      </div>
+                      {student.parent_phone && (
+                        <div className="text-xs text-gray-500">
+                          학부모: {student.parent_phone}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 액션 버튼들 */}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // TODO: 일정 보기 기능
+                      }}
+                      title="일정 보기"
+                    >
+                      <Calendar className="w-4 h-4" />
+                    </Button>
+                    {student.parent_phone && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSendNotification(student.id, student.name);
+                        }}
+                        disabled={sendNotification.isPending}
+                        title="알림톡 전송"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onStudentEdit?.(student);
+                      }}
+                      title="편집"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
-
-                {/* 학생 카드들 */}
-                <div className="divide-y divide-neu-200">
-                  {studentsInGrade.map((student) => (
-                    <div
-                      key={student.id}
-                      className="p-6 hover:bg-neu-50 transition-colors cursor-pointer"
-                      onClick={() => {
-                        if (onStudentSelect) {
-                          onStudentSelect(student);
-                        } else {
-                          router.push(`/students/${student.id}`);
-                        }
-                      }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          {/* 학생 아바타 */}
-                          <Avatar
-                            size="lg"
-                            variant="neumorphic"
-                            fallback={student.name.substring(0, 2)}
-                            className="bg-primary-500 text-white"
-                          />
-
-                          {/* 학생 정보 */}
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-3">
-                              <h4 className="font-semibold text-neu-900">
-                                {student.name}
-                              </h4>
-                              <Chip variant="secondary" size="sm">
-                                {getGrade(student.grade, "half")}
-                              </Chip>
-                            </div>
-                            <div className="flex items-center gap-4 text-sm text-neu-600">
-                              {student.phone && (
-                                <div className="flex items-center gap-1">
-                                  <Phone className="w-3 h-3" />
-                                  <span>{student.phone}</span>
-                                </div>
-                              )}
-                              {student.email && (
-                                <div className="flex items-center gap-1">
-                                  <Mail className="w-3 h-3" />
-                                  <span>{student.email}</span>
-                                </div>
-                              )}
-                            </div>
-                            {student.parent_phone && (
-                              <div className="text-xs text-neu-500">
-                                학부모: {student.parent_phone}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* 액션 버튼들 */}
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // TODO: 일정 보기 기능
-                            }}
-                            title="일정 보기"
-                          >
-                            <Calendar className="w-4 h-4" />
-                          </Button>
-                          {student.parent_phone && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSendNotification(student.id, student.name);
-                              }}
-                              disabled={sendNotification.isPending}
-                              title="알림톡 전송"
-                            >
-                              <MessageSquare className="w-4 h-4" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onStudentEdit?.(student);
-                            }}
-                            title="편집"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            ))
+              </div>
+              ))}
+          </div>
         )}
       </div>
     </div>

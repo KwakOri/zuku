@@ -1,4 +1,4 @@
-import PublicRoute from '@/components/auth/PublicRoute';
+import PublicRoute from '@/components/common/auth/PublicRoute';
 
 interface PublicLayoutProps {
   children: React.ReactNode;

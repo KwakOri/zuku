@@ -9,9 +9,9 @@ const scheduleCellVariants = cva(
   {
     variants: {
       variant: {
-        default: "neu-raised hover:shadow-neu-lg",
-        flat: "bg-white border border-neu-300 hover:border-neu-400 shadow-sm hover:shadow-md",
-        outline: "border-2 border-dashed border-neu-300 hover:border-primary-400 bg-transparent",
+        default: "flat-card hover:shadow-neu-lg",
+        flat: "bg-white border border-gray-300 hover:border-neu-400 shadow-sm hover:shadow-md",
+        outline: "border-2 border-dashed border-gray-300 hover:border-primary-400 bg-transparent",
       },
       state: {
         default: "",
@@ -29,7 +29,7 @@ const scheduleCellVariants = cva(
     compoundVariants: [
       {
         state: "disabled",
-        class: "hover:shadow-neu hover:border-neu-300",
+        class: "hover:shadow-neu hover:border-gray-300",
       },
     ],
     defaultVariants: {
@@ -116,7 +116,7 @@ export const ScheduleCell: React.FC<ScheduleCellProps> = ({
       <div
         className={cn(
           scheduleCellVariants({ variant: "outline", state: cellState, size }),
-          "min-h-[80px] flex items-center justify-center text-neu-500",
+          "min-h-[80px] flex items-center justify-center text-gray-500",
           className
         )}
         onClick={handleClick}
@@ -152,7 +152,7 @@ export const ScheduleCell: React.FC<ScheduleCellProps> = ({
     >
       <div className="space-y-1">
         <div className="flex items-start justify-between gap-2">
-          <h4 className="font-semibold text-neu-800 leading-tight flex-1">
+          <h4 className="font-semibold text-gray-800 leading-tight flex-1">
             {classInfo.title}
           </h4>
           {classInfo.maxStudents && (
@@ -165,20 +165,20 @@ export const ScheduleCell: React.FC<ScheduleCellProps> = ({
         </div>
 
         {classInfo.subject && (
-          <p className="text-sm text-neu-600">{classInfo.subject}</p>
+          <p className="text-sm text-gray-600">{classInfo.subject}</p>
         )}
 
-        <div className="flex items-center justify-between text-xs text-neu-500">
+        <div className="flex items-center justify-between text-xs text-gray-500">
           <span>{classInfo.startTime} - {classInfo.endTime}</span>
           {classInfo.room && <span>{classInfo.room}</span>}
         </div>
 
         {classInfo.teacherName && (
-          <p className="text-xs text-neu-500">{classInfo.teacherName}</p>
+          <p className="text-xs text-gray-500">{classInfo.teacherName}</p>
         )}
 
         {classInfo.maxStudents && (
-          <div className="text-xs text-neu-500">
+          <div className="text-xs text-gray-500">
             {classInfo.currentStudents || 0} / {classInfo.maxStudents} students
           </div>
         )}

@@ -4,24 +4,24 @@ import { cn } from '../utils';
 
 const inputVariants = cva(
   // Base styles
-  "w-full font-medium transition-all duration-200 ease-in-out placeholder:text-neu-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed",
+  "w-full font-medium transition-all duration-200 ease-in-out placeholder:text-gray-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed",
   {
     variants: {
       variant: {
         default: [
-          "neu-inset text-neu-800 placeholder:text-neu-500",
-          "focus:shadow-neu-inset-lg focus:text-primary-700",
-          "hover:shadow-neu-inset"
+          "bg-white border border-gray-200 text-gray-800 placeholder:text-gray-500",
+          "focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:text-primary-700",
+          "hover:border-gray-300"
         ],
         outline: [
-          "bg-transparent border border-neu-400 text-neu-800",
+          "bg-transparent border border-gray-300 text-gray-800",
           "focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20",
-          "hover:border-neu-500"
+          "hover:border-gray-400"
         ],
         filled: [
-          "bg-neu-200 border-0 text-neu-800",
-          "focus:bg-neu-100 focus:ring-2 focus:ring-primary-500/20",
-          "hover:bg-neu-150"
+          "bg-gray-100 border-0 text-gray-800",
+          "focus:bg-gray-50 focus:ring-2 focus:ring-primary-500/20",
+          "hover:bg-gray-200"
         ],
       },
       size: {
@@ -54,7 +54,7 @@ const labelVariants = cva(
         lg: "text-base",
       },
       state: {
-        default: "text-neu-700",
+        default: "text-gray-700",
         error: "text-error-600",
         success: "text-success-600",
         warning: "text-warning-600",
@@ -72,7 +72,7 @@ const helperTextVariants = cva(
   {
     variants: {
       state: {
-        default: "text-neu-600",
+        default: "text-gray-600",
         error: "text-error-600",
         success: "text-success-600",
         warning: "text-warning-600",
@@ -129,7 +129,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
         <div className="relative">
           {startIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-neu-500 pointer-events-none">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
               {startIcon}
             </div>
           )}
@@ -147,7 +147,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           />
 
           {endIcon && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-neu-500 pointer-events-none">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
               {endIcon}
             </div>
           )}

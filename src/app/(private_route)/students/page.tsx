@@ -1,51 +1,49 @@
 "use client";
 
 import Link from "next/link";
-import { StudentList, AddStudentModal, Card, Button, Icon } from "@/components/design-system";
-import { Home, UserPlus } from "lucide-react";
+import StudentList from "@/components/students/StudentList";
+import AddStudentModal from "@/components/common/modals/AddStudentModal";
+import { Home, UserPlus, Users, Calendar } from "lucide-react";
 import { useState } from "react";
 
 export default function StudentsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-neu-100">
+    <div className="min-h-screen bg-gray-50">
       {/* 헤더 */}
-      <header className="bg-neu-50 shadow-sm border-b border-neu-200">
+      <header className="flat-surface bg-gray-50 border-0 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <Link
                 href="/"
+                className="p-2 flat-card text-gray-500 hover:text-gray-700 rounded-2xl hover:flat-pressed transition-all duration-200"
               >
-                <Button variant="ghost" size="sm">
-                  <Home className="w-5 h-5" />
-                </Button>
+                <Home className="w-5 h-5" />
               </Link>
 
-              <div>
-                <h1 className="text-xl font-bold text-neu-900">학생 관리</h1>
-                <p className="text-sm text-neu-600">
-                  학생 정보를 관리하고 개별 일정을 편집하세요
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl shadow-md">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-gray-800">학생 관리</h1>
+                  <p className="text-sm text-gray-600">
+                    학생 정보를 관리하고 개별 일정을 편집하세요
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* 추가 액션 버튼들 */}
             <div className="flex items-center gap-3">
-              <Button
-                variant="primary"
-                size="md"
+              <button
                 onClick={() => setIsAddModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 flat-card bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-2xl hover:from-primary-600 hover:to-primary-700 transition-all duration-200"
               >
-                <UserPlus className="w-4 h-4 mr-2" />
+                <UserPlus className="w-4 h-4" />
                 학생 추가
-              </Button>
-              <Link href="/schedule">
-                <Button variant="outline" size="md">
-                  전체 시간표 보기
-                </Button>
-              </Link>
+              </button>
             </div>
           </div>
         </div>

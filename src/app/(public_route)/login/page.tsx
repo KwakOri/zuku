@@ -67,14 +67,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="flat-card rounded-3xl p-8 w-full max-w-md border-0">
         {/* 헤더 */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <GraduationCap className="w-8 h-8 text-white" />
+          <div className="w-20 h-20 flat-card rounded-3xl flex items-center justify-center mx-auto mb-6 bg-gradient-to-br from-primary-500 to-primary-600">
+            <GraduationCap className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">ZUKU 로그인</h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-3">ZUKU 로그인</h1>
           <p className="text-gray-600">학원 관리 시스템에 로그인하세요</p>
         </div>
 
@@ -84,12 +84,12 @@ export default function LoginPage() {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="block text-sm font-medium text-gray-700 mb-3"
             >
               이메일 주소
             </label>
             <div className="relative">
-              <Mail className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+              <Mail className="w-5 h-5 text-gray-500 absolute left-4 top-1/2 transform -translate-y-1/2" />
               <input
                 type="email"
                 id="email"
@@ -97,7 +97,7 @@ export default function LoginPage() {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, email: e.target.value }))
                 }
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-12 pr-4 py-4 flat-surface rounded-2xl text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
                 placeholder="이메일을 입력해주세요"
                 required
                 autoComplete="email"
@@ -109,12 +109,12 @@ export default function LoginPage() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="block text-sm font-medium text-gray-700 mb-3"
             >
               비밀번호
             </label>
             <div className="relative">
-              <Lock className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+              <Lock className="w-5 h-5 text-gray-500 absolute left-4 top-1/2 transform -translate-y-1/2" />
               <input
                 type={showPassword ? "text" : "password"}
                 id="password"
@@ -122,7 +122,7 @@ export default function LoginPage() {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, password: e.target.value }))
                 }
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-12 pr-14 py-4 flat-surface rounded-2xl text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
                 placeholder="비밀번호를 입력해주세요"
                 required
                 autoComplete="current-password"
@@ -130,12 +130,12 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 flat-card-sm p-1 rounded-lg transition-all duration-200"
               >
                 {showPassword ? (
-                  <EyeOff className="w-5 h-5" />
+                  <EyeOff className="w-4 h-4" />
                 ) : (
-                  <Eye className="w-5 h-5" />
+                  <Eye className="w-4 h-4" />
                 )}
               </button>
             </div>
@@ -149,11 +149,11 @@ export default function LoginPage() {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
               />
               <label
                 htmlFor="remember-me"
-                className="ml-2 text-sm text-gray-600"
+                className="ml-3 text-sm text-gray-600"
               >
                 로그인 상태 유지
               </label>
@@ -161,7 +161,7 @@ export default function LoginPage() {
 
             <Link
               href="/forgot-password"
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              className="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors"
             >
               비밀번호를 잊으셨나요?
             </Link>
@@ -169,10 +169,10 @@ export default function LoginPage() {
 
           {/* 오류 메시지 */}
           {loginMutation.error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-red-500" />
-                <span className="text-sm text-red-700">
+            <div className="flat-surface bg-error-50 rounded-2xl p-4">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-error-500" />
+                <span className="text-sm text-error-700 font-medium">
                   {loginMutation.error.message || "로그인에 실패했습니다."}
                 </span>
               </div>
@@ -183,16 +183,16 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loginMutation.isPending || !formData.email || !formData.password}
-            className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            className="w-full py-4 px-6 flat-card bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-2xl hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-3 font-medium"
           >
             {loginMutation.isPending ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-5 h-5 animate-spin" />
                 로그인 중...
               </>
             ) : (
               <>
-                <LogIn className="w-4 h-4" />
+                <LogIn className="w-5 h-5" />
                 로그인
               </>
             )}
@@ -200,33 +200,33 @@ export default function LoginPage() {
         </form>
 
         {/* 테스트 계정 안내 */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">
+        <div className="mt-8 flat-surface bg-neu-100 rounded-2xl p-5">
+          <h3 className="text-sm font-medium text-gray-800 mb-3">
             테스트 계정
           </h3>
-          <div className="text-xs text-gray-600 space-y-1">
-            <p>이메일: admin@example.com</p>
-            <p>비밀번호: password</p>
+          <div className="text-sm text-gray-600 space-y-2">
+            <p><span className="font-medium">이메일:</span> admin@example.com</p>
+            <p><span className="font-medium">비밀번호:</span> password</p>
           </div>
         </div>
 
         {/* 구분선 */}
-        <div className="my-6 flex items-center">
-          <div className="flex-1 border-t border-gray-200"></div>
-          <div className="px-4 text-sm text-gray-500">또는</div>
-          <div className="flex-1 border-t border-gray-200"></div>
+        <div className="my-8 flex items-center">
+          <div className="flex-1 border-t border-gray-300"></div>
+          <div className="px-4 text-sm text-gray-500 font-medium">또는</div>
+          <div className="flex-1 border-t border-gray-300"></div>
         </div>
 
         {/* 추가 옵션 */}
-        <div className="text-center space-y-3">
+        <div className="text-center space-y-4">
           <p className="text-sm text-gray-600">
             계정이 없으신가요? 관리자에게 초대를 요청하세요.
           </p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-4 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="inline-flex items-center gap-3 px-6 py-3 flat-card text-gray-700 rounded-2xl hover:flat-pressed transition-all duration-200 font-medium"
           >
-            <GraduationCap className="w-4 h-4" />
+            <GraduationCap className="w-5 h-5" />
             홈으로 돌아가기
           </Link>
         </div>

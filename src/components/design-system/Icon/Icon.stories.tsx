@@ -88,7 +88,7 @@ export const CommonIcons: Story = {
       ].map(iconName => (
         <div key={iconName} className="flex flex-col items-center gap-2 p-2">
           <Icon name={iconName as any} size="lg" />
-          <span className="text-xs text-neu-600">{iconName}</span>
+          <span className="text-xs text-gray-600">{iconName}</span>
         </div>
       ))}
     </div>

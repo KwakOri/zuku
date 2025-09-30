@@ -1,4 +1,4 @@
-import PrivateRoute from '@/components/auth/PrivateRoute';
+import PrivateRoute from '@/components/common/auth/PrivateRoute';
 
 interface PrivateLayoutProps {
   children: React.ReactNode;

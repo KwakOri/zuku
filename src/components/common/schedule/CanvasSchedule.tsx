@@ -79,14 +79,14 @@ function ClassModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+        className="flat-card rounded-2xl p-6 max-w-md w-full mx-4 border-0"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">수업 정보</h3>
+          <h3 className="text-lg font-semibold text-gray-800">수업 정보</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="flat-card p-2 rounded-xl hover:flat-pressed transition-all duration-200 text-gray-600 hover:text-gray-800"
           >
             <X className="w-5 h-5" />
           </button>
@@ -96,7 +96,7 @@ function ClassModal({
           {canEdit ? (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   수업명
                 </label>
                 <input
@@ -105,12 +105,12 @@ function ClassModal({
                   onChange={(e) =>
                     setEditData({ ...editData, title: e.target.value })
                   }
-                  className="w-full border rounded-md px-3 py-2"
+                  className="w-full flat-surface rounded-xl px-4 py-3 text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   과목
                 </label>
                 <input
@@ -119,12 +119,12 @@ function ClassModal({
                   onChange={(e) =>
                     setEditData({ ...editData, subject: e.target.value })
                   }
-                  className="w-full border rounded-md px-3 py-2"
+                  className="w-full flat-surface rounded-xl px-4 py-3 text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   강사명
                 </label>
                 <input
@@ -133,12 +133,12 @@ function ClassModal({
                   onChange={(e) =>
                     setEditData({ ...editData, teacherName: e.target.value })
                   }
-                  className="w-full border rounded-md px-3 py-2"
+                  className="w-full flat-surface rounded-xl px-4 py-3 text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   강의실
                 </label>
                 <input
@@ -147,13 +147,13 @@ function ClassModal({
                   onChange={(e) =>
                     setEditData({ ...editData, room: e.target.value })
                   }
-                  className="w-full border rounded-md px-3 py-2"
+                  className="w-full flat-surface rounded-xl px-4 py-3 text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     시작 시간
                   </label>
                   <input
@@ -162,11 +162,11 @@ function ClassModal({
                     onChange={(e) =>
                       setEditData({ ...editData, startTime: e.target.value })
                     }
-                    className="w-full border rounded-md px-3 py-2"
+                    className="w-full flat-surface rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     종료 시간
                   </label>
                   <input
@@ -175,7 +175,7 @@ function ClassModal({
                     onChange={(e) =>
                       setEditData({ ...editData, endTime: e.target.value })
                     }
-                    className="w-full border rounded-md px-3 py-2"
+                    className="w-full flat-surface rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
                   />
                 </div>
               </div>
@@ -186,28 +186,28 @@ function ClassModal({
                 <span className="block text-sm font-medium text-gray-700">
                   수업명
                 </span>
-                <p className="mt-1">{block.title}</p>
+                <p className="mt-2 text-gray-800 font-medium">{block.title}</p>
               </div>
 
               <div>
                 <span className="block text-sm font-medium text-gray-700">
                   과목
                 </span>
-                <p className="mt-1">{block.subject}</p>
+                <p className="mt-2 text-gray-800 font-medium">{block.subject}</p>
               </div>
 
               <div>
                 <span className="block text-sm font-medium text-gray-700">
                   강사명
                 </span>
-                <p className="mt-1">{block.teacherName}</p>
+                <p className="mt-2 text-gray-800 font-medium">{block.teacherName}</p>
               </div>
 
               <div>
                 <span className="block text-sm font-medium text-gray-700">
                   강의실
                 </span>
-                <p className="mt-1">{block.room || "미정"}</p>
+                <p className="mt-2 text-gray-800 font-medium">{block.room || "미정"}</p>
               </div>
             </>
           )}
@@ -217,9 +217,9 @@ function ClassModal({
               <span className="block text-sm font-medium text-gray-700">
                 시간
               </span>
-              <div className="flex items-center mt-1">
-                <Clock className="w-4 h-4 mr-2 text-gray-400" />
-                <span>
+              <div className="flex items-center mt-2">
+                <Clock className="w-4 h-4 mr-2 text-gray-500" />
+                <span className="text-gray-800 font-medium">
                   {formatDisplayTime(block.startTime)} ~{" "}
                   {formatDisplayTime(block.endTime)}
                 </span>
@@ -230,9 +230,9 @@ function ClassModal({
               <span className="block text-sm font-medium text-gray-700">
                 학생 수
               </span>
-              <div className="flex items-center mt-1">
-                <Users className="w-4 h-4 mr-2 text-gray-400" />
-                <span>
+              <div className="flex items-center mt-2">
+                <Users className="w-4 h-4 mr-2 text-gray-500" />
+                <span className="text-gray-800 font-medium">
                   {block.studentCount}
                   {block.maxStudents && `/${block.maxStudents}`}
                 </span>
@@ -241,17 +241,17 @@ function ClassModal({
           </div>
 
           {canEdit && (
-            <div className="flex gap-3 pt-4 border-t">
+            <div className="flex gap-3 pt-6 border-t border-gray-300">
               <button
                 onClick={handleSave}
-                className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 flex items-center justify-center gap-2"
+                className="flex-1 flat-card py-3 px-4 rounded-xl hover:flat-pressed text-primary-600 font-medium transition-all duration-200 flex items-center justify-center gap-2"
               >
                 <Check className="w-4 h-4" />
                 저장
               </button>
               <button
                 onClick={onClose}
-                className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 flex items-center justify-center gap-2"
+                className="flex-1 flat-card py-3 px-4 rounded-xl hover:flat-pressed text-gray-600 font-medium transition-all duration-200 flex items-center justify-center gap-2"
               >
                 <X className="w-4 h-4" />
                 취소
@@ -402,12 +402,12 @@ export default function CanvasSchedule({
     canvas.style.height = `${TIME_CANVAS_HEIGHT}px`;
     ctx.scale(dpr, dpr);
 
-    // 배경 클리어
-    ctx.fillStyle = "#f9fafb";
+    // 배경 클리어 (neumorphism background)
+    ctx.fillStyle = "#fafbfa"; // neu-50 (much lighter)
     ctx.fillRect(0, 0, TIME_CANVAS_WIDTH, TIME_CANVAS_HEIGHT);
 
     // 시간 레이블
-    ctx.fillStyle = "#6b7280";
+    ctx.fillStyle = "#6f756f"; // neu-700
     ctx.font = "12px sans-serif";
     ctx.textAlign = "right";
     for (let hour = config.startHour; hour <= config.endHour; hour++) {
@@ -435,12 +435,12 @@ export default function CanvasSchedule({
     canvas.style.height = `${HEADER_HEIGHT}px`;
     ctx.scale(dpr, dpr);
 
-    // 배경 클리어
-    ctx.fillStyle = "#f9fafb";
+    // 배경 클리어 (neumorphism background)
+    ctx.fillStyle = "#fafbfa"; // neu-50 (much lighter)
     ctx.fillRect(0, 0, HEADER_CANVAS_WIDTH, HEADER_HEIGHT);
 
     // 헤더 하단 경계선
-    ctx.strokeStyle = "#e5e7eb";
+    ctx.strokeStyle = "#e4e6e4"; // neu-300
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(0, HEADER_HEIGHT - 1);
@@ -448,7 +448,7 @@ export default function CanvasSchedule({
     ctx.stroke();
 
     // 요일 헤더
-    ctx.fillStyle = "#374151";
+    ctx.fillStyle = "#4a504a"; // neu-800
     ctx.font = "bold 14px sans-serif";
     ctx.textAlign = "center";
 
@@ -458,7 +458,7 @@ export default function CanvasSchedule({
 
       // 세로 구분선
       if (index > 0) {
-        ctx.strokeStyle = "#e5e7eb";
+        ctx.strokeStyle = "#e4e6e4"; // neu-300
         ctx.beginPath();
         ctx.moveTo(index * DAY_COLUMN_WIDTH, 0);
         ctx.lineTo(index * DAY_COLUMN_WIDTH, HEADER_HEIGHT);
@@ -483,12 +483,12 @@ export default function CanvasSchedule({
     canvas.style.height = `${SCHEDULE_CANVAS_HEIGHT}px`;
     ctx.scale(dpr, dpr);
 
-    // 배경 클리어
-    ctx.fillStyle = "#ffffff";
+    // 배경 클리어 (neumorphism background)
+    ctx.fillStyle = "#fafbfa"; // neu-50 (much lighter)
     ctx.fillRect(0, 0, SCHEDULE_CANVAS_WIDTH, SCHEDULE_CANVAS_HEIGHT);
 
     // 세로 구분선
-    ctx.strokeStyle = "#e5e7eb";
+    ctx.strokeStyle = "#e4e6e4"; // neu-300
     ctx.lineWidth = 1;
     days.forEach((day, index) => {
       if (index > 0) {
@@ -500,7 +500,7 @@ export default function CanvasSchedule({
     });
 
     // 그리드 (가로선)
-    ctx.strokeStyle = "#f3f4f6";
+    ctx.strokeStyle = "#d1d4d1"; // neu-400 (lighter grid lines)
     ctx.lineWidth = 1;
     for (let hour = config.startHour; hour <= config.endHour; hour++) {
       const y =
@@ -566,48 +566,116 @@ export default function CanvasSchedule({
       const height =
         ((endMinutes - startMinutes) / config.timeSlotMinutes) * SLOT_HEIGHT;
 
-      // 블록 배경 (둥근 모서리)
-      const radius = 8;
-      ctx.fillStyle = block.color;
+      // 블록 배경 (neumorphism effect)
+      const radius = 12;
+
+      // Neumorphism shadow effect
+      ctx.shadowColor = "rgba(168, 173, 168, 0.3)";
+      ctx.shadowOffsetX = 4;
+      ctx.shadowOffsetY = 4;
+      ctx.shadowBlur = 8;
+
+      ctx.fillStyle = "#f5f6f5"; // neu-100 base
       drawRoundedRect(ctx, x, y, width, height, radius);
       ctx.fill();
 
-      // 블록 테두리 (둥근 모서리)
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+      // Inner highlight shadow
+      ctx.shadowColor = "rgba(255, 255, 255, 0.8)";
+      ctx.shadowOffsetX = -2;
+      ctx.shadowOffsetY = -2;
+      ctx.shadowBlur = 4;
+
+      drawRoundedRect(ctx, x + 1, y + 1, width - 2, height - 2, radius - 1);
+      ctx.fill();
+
+      // Reset shadow
+      ctx.shadowColor = "transparent";
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.shadowBlur = 0;
+
+      // Color overlay with gradient
+      const gradient = ctx.createLinearGradient(x, y, x, y + height);
+      gradient.addColorStop(0, block.color + "E6"); // 90% opacity
+      gradient.addColorStop(1, block.color + "CC"); // 80% opacity
+
+      ctx.fillStyle = gradient;
+      drawRoundedRect(ctx, x + 2, y + 2, width - 4, height - 4, radius - 2);
+      ctx.fill();
+
+      // Subtle border
+      ctx.strokeStyle = "rgba(168, 173, 168, 0.2)";
       ctx.lineWidth = 1;
       drawRoundedRect(ctx, x, y, width, height, radius);
       ctx.stroke();
 
       // 텍스트
-      ctx.fillStyle = "white";
-      ctx.font = "bold 12px sans-serif";
+      ctx.fillStyle = "#ffffff"; // 흰색 텍스트
+      ctx.font = "bold 13px sans-serif";
       ctx.textAlign = "left";
 
+      // Text shadow for better readability
+      ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+      ctx.shadowOffsetX = 1;
+      ctx.shadowOffsetY = 1;
+      ctx.shadowBlur = 2;
+
       // 제목
-      const titleY = y + 16;
-      ctx.fillText(block.title, x + 8, titleY);
+      const titleY = y + 18;
+      ctx.fillText(block.title, x + 12, titleY);
 
       // 시간 (충분한 공간이 있을 때만)
-      if (height > 35) {
-        ctx.font = "10px sans-serif";
-        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+      if (height > 40) {
+        ctx.font = "11px sans-serif";
+        ctx.fillStyle = "#ffffff"; // 흰색 텍스트
         ctx.fillText(
           `${formatDisplayTime(block.startTime)} ~ ${formatDisplayTime(
             block.endTime
           )}`,
-          x + 8,
-          titleY + 15
+          x + 12,
+          titleY + 18
         );
       }
 
+      // Reset text shadow
+      ctx.shadowColor = "transparent";
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.shadowBlur = 0;
+
       // 수정 아이콘 (편집/관리자 모드일 때만)
       if (editMode === "edit" || editMode === "admin") {
-        const iconSize = 16;
-        const iconX = x + width - iconSize - 4;
-        const iconY = y + 4;
+        const iconSize = 20;
+        const iconX = x + width - iconSize - 8;
+        const iconY = y + 8;
+
+        // 아이콘 배경 (neumorphism button)
+        ctx.shadowColor = "rgba(168, 173, 168, 0.25)";
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        ctx.shadowBlur = 4;
+
+        ctx.fillStyle = "#f5f6f5"; // neu-100
+        drawRoundedRect(ctx, iconX, iconY, iconSize, iconSize, 6);
+        ctx.fill();
+
+        // Inner highlight
+        ctx.shadowColor = "rgba(255, 255, 255, 0.7)";
+        ctx.shadowOffsetX = -1;
+        ctx.shadowOffsetY = -1;
+        ctx.shadowBlur = 2;
+
+        drawRoundedRect(ctx, iconX + 1, iconY + 1, iconSize - 2, iconSize - 2, 5);
+        ctx.fill();
+
+        // Reset shadow
+        ctx.shadowColor = "transparent";
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.shadowBlur = 0;
 
         // 점 세 개 아이콘 (MoreHorizontal)
-        ctx.fillStyle = "white";
+        ctx.fillStyle = "#6f756f"; // neu-700
         const centerX = iconX + iconSize / 2;
         const centerY = iconY + iconSize / 2;
         const dotRadius = 1.5;
@@ -643,24 +711,59 @@ export default function CanvasSchedule({
       const x = dragState.startX + dragState.offsetX - width / 2;
       const y = dragState.startY + dragState.offsetY - height / 2;
 
-      // 반투명 블록 (둥근 모서리)
-      const radius = 8;
-      ctx.globalAlpha = 0.8;
-      ctx.fillStyle = block.color;
+      // 드래그 중인 블록 (neumorphism effect with enhanced shadow)
+      const radius = 12;
+      ctx.globalAlpha = 0.9;
+
+      // Enhanced shadow for dragging
+      ctx.shadowColor = "rgba(168, 173, 168, 0.4)";
+      ctx.shadowOffsetX = 8;
+      ctx.shadowOffsetY = 8;
+      ctx.shadowBlur = 16;
+
+      ctx.fillStyle = "#f5f6f5"; // neu-100 base
       drawRoundedRect(ctx, x, y, width, height, radius);
       ctx.fill();
 
-      ctx.strokeStyle = "white";
+      // Color overlay
+      const gradient = ctx.createLinearGradient(x, y, x, y + height);
+      gradient.addColorStop(0, block.color + "F0"); // Higher opacity for drag state
+      gradient.addColorStop(1, block.color + "E0");
+
+      ctx.fillStyle = gradient;
+      drawRoundedRect(ctx, x + 2, y + 2, width - 4, height - 4, radius - 2);
+      ctx.fill();
+
+      // Reset shadow
+      ctx.shadowColor = "transparent";
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.shadowBlur = 0;
+
+      // Border
+      ctx.strokeStyle = "rgba(168, 173, 168, 0.3)";
       ctx.lineWidth = 2;
       drawRoundedRect(ctx, x, y, width, height, radius);
       ctx.stroke();
 
       // 텍스트
-      ctx.fillStyle = "white";
-      ctx.font = "bold 12px sans-serif";
+      ctx.fillStyle = "#ffffff"; // 흰색 텍스트
+      ctx.font = "bold 13px sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText(block.title, x + 8, y + 16);
 
+      // Text shadow
+      ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+      ctx.shadowOffsetX = 1;
+      ctx.shadowOffsetY = 1;
+      ctx.shadowBlur = 2;
+
+      ctx.fillText(block.title, x + 12, y + 18);
+
+      // Reset effects
+      ctx.shadowColor = "transparent";
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.shadowBlur = 0;
       ctx.globalAlpha = 1.0;
 
       // 드롭 프리뷰 그리기
@@ -679,18 +782,32 @@ export default function CanvasSchedule({
         const pheight =
           ((endMinutes - startMinutes) / config.timeSlotMinutes) * SLOT_HEIGHT;
 
-        // 반투명 프리뷰 박스 (둥근 모서리)
-        const radius = 8;
-        ctx.globalAlpha = 0.3;
-        ctx.fillStyle = dragState.draggedBlock.color;
+        // 드롭 프리뷰 (neumorphism inset effect)
+        const radius = 12;
+        ctx.globalAlpha = 0.6;
+
+        // Inset shadow for drop preview
+        ctx.shadowColor = "rgba(168, 173, 168, 0.4)";
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.shadowBlur = 0;
+
+        // Create inset effect with darker background
+        ctx.fillStyle = "#e4e6e4"; // neu-300 for inset look
         drawRoundedRect(ctx, px, py, pwidth, pheight, radius);
         ctx.fill();
 
-        // 점선 테두리 (둥근 모서리)
+        // Color overlay for preview
+        ctx.globalAlpha = 0.4;
+        ctx.fillStyle = dragState.draggedBlock.color;
+        drawRoundedRect(ctx, px + 2, py + 2, pwidth - 4, pheight - 4, radius - 2);
+        ctx.fill();
+
+        // 점선 테두리
         ctx.globalAlpha = 0.8;
-        ctx.strokeStyle = dragState.draggedBlock.color;
+        ctx.strokeStyle = "#6b7c5d"; // primary-500
         ctx.lineWidth = 2;
-        ctx.setLineDash([5, 5]);
+        ctx.setLineDash([8, 4]);
         drawRoundedRect(ctx, px, py, pwidth, pheight, radius);
         ctx.stroke();
         ctx.setLineDash([]);
@@ -897,9 +1014,9 @@ export default function CanvasSchedule({
       20;
     const blockWidth = DAY_COLUMN_WIDTH - 4;
 
-    const iconSize = 16;
-    const iconX = blockX + blockWidth - iconSize - 4;
-    const iconY = blockY + 4;
+    const iconSize = 20; // Updated to match the canvas drawing
+    const iconX = blockX + blockWidth - iconSize - 8; // Updated to match the canvas drawing
+    const iconY = blockY + 8; // Updated to match the canvas drawing
 
     return (
       x >= iconX && x <= iconX + iconSize && y >= iconY && y <= iconY + iconSize
@@ -1049,27 +1166,27 @@ export default function CanvasSchedule({
 
   return (
     <div className="w-full max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">주간 시간표</h2>
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-blue-500"></div>
-            <span>수학</span>
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-3xl font-bold text-gray-800">주간 시간표</h2>
+        <div className="flex items-center gap-4 text-sm text-gray-600">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-lg flat-card-sm bg-gradient-to-r from-blue-400 to-blue-600"></div>
+            <span className="font-medium">수학</span>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-emerald-500"></div>
-            <span>영어</span>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-lg flat-card-sm bg-gradient-to-r from-emerald-400 to-emerald-600"></div>
+            <span className="font-medium">영어</span>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-amber-500"></div>
-            <span>과학</span>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-lg flat-card-sm bg-gradient-to-r from-amber-400 to-amber-600"></div>
+            <span className="font-medium">과학</span>
           </div>
         </div>
       </div>
 
       <div
         ref={containerRef}
-        className="bg-white rounded-xl shadow-lg border border-gray-200 max-h-[600px] overflow-hidden relative"
+        className="flat-card rounded-3xl max-h-[600px] overflow-hidden relative border-0"
       >
         <style
           dangerouslySetInnerHTML={{
@@ -1084,17 +1201,17 @@ export default function CanvasSchedule({
         {/* 그리드 레이아웃: 시간(고정) + 헤더(가로스크롤) */}
         <div className="flex">
           {/* 왼쪽 상단 모서리 - 시간 헤더 */}
-          <div className="w-[80px] h-[60px] flex-shrink-0 bg-gray-50 border-r border-b border-gray-200 flex items-center justify-center">
+          <div className="w-[80px] h-[60px] flex-shrink-0 bg-gray-50 flat-surface border-r border-b border-gray-300/50 flex items-center justify-center rounded-tl-3xl">
             <span className="text-sm font-semibold text-gray-700">시간</span>
           </div>
 
           {/* 상단 고정 요일 헤더 (가로 스크롤만) */}
           <div
             ref={headerContainerRef}
-            className="flex-1 h-[60px] border-b border-gray-200 overflow-x-auto overflow-y-hidden scroll-hide"
+            className="flex-1 h-[60px] bg-gray-50 border-b border-gray-300/50 overflow-x-auto overflow-y-hidden scroll-hide flat-surface rounded-tr-3xl"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            <canvas ref={headerCanvasRef} className="bg-gray-50" />
+            <canvas ref={headerCanvasRef} className="bg-gray-50 flat-surface rounded-tr-3xl" />
           </div>
         </div>
 
@@ -1103,21 +1220,21 @@ export default function CanvasSchedule({
           {/* 왼쪽 고정 시간 컬럼 (세로 스크롤만) */}
           <div
             ref={timeContainerRef}
-            className="w-[80px] flex-shrink-0 bg-gray-50 border-r border-gray-200 overflow-x-hidden overflow-y-auto scroll-hide"
+            className="w-[80px] flex-shrink-0 bg-gray-50 flat-surface border-r border-gray-300/50 overflow-x-hidden overflow-y-auto scroll-hide rounded-bl-3xl"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            <canvas ref={timeCanvasRef} className="bg-gray-50" />
+            <canvas ref={timeCanvasRef} className="bg-gray-50 flat-surface rounded-bl-3xl" />
           </div>
 
           {/* 오른쪽 스케줄 영역 (양방향 스크롤) */}
           <div
             ref={scheduleContainerRef}
-            className="flex-1 overflow-auto scroll-hide"
+            className="flex-1 bg-gray-50 overflow-auto scroll-hide flat-surface rounded-br-3xl"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             <canvas
               ref={scheduleCanvasRef}
-              className="cursor-pointer"
+              className="cursor-pointer bg-gray-50 flat-surface rounded-br-3xl"
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
@@ -1133,7 +1250,7 @@ export default function CanvasSchedule({
       {/* 밀집도 툴팁 */}
       {tooltip && showDensity && (
         <div
-          className="fixed z-50 bg-gray-800 text-white px-3 py-2 rounded-lg shadow-lg text-sm pointer-events-none max-w-xs"
+          className="fixed z-50 text-white px-4 py-3 rounded-2xl text-sm pointer-events-none max-w-xs shadow-2xl border-2"
           style={{
             left: tooltip.x + 10,
             top: tooltip.y - 40,
@@ -1141,12 +1258,15 @@ export default function CanvasSchedule({
               tooltip.x > window.innerWidth - 250
                 ? "translateX(-100%)"
                 : "none",
+            backgroundColor: '#111827', // gray-900
+            borderColor: '#4b5563', // gray-600
+            zIndex: 9999,
           }}
         >
-          <div className="font-medium mb-1">
+          <div className="font-medium mb-2 text-white">
             {days[tooltip.dayOfWeek]} {tooltip.time}
           </div>
-          <div className="text-xs text-gray-300 mb-2">
+          <div className="text-xs text-gray-300 mb-3">
             일정 있는 학생: {tooltip.studentCount}명
           </div>
           <div className="space-y-1">
@@ -1163,8 +1283,8 @@ export default function CanvasSchedule({
                     .slice(0, 5)
                     .map(({ student, schedule }) => (
                       <div key={`${student.id}-${schedule.id}`} className="text-xs">
-                        <span className="text-white">{student.name}</span>
-                        <span className="text-gray-400 ml-1">- {schedule.title}</span>
+                        <span className="text-white font-medium">{student.name}</span>
+                        <span className="text-gray-300 ml-1">- {schedule.title}</span>
                       </div>
                     ))}
                   {filteredStudents.length > 5 && (
@@ -1190,10 +1310,12 @@ export default function CanvasSchedule({
       />
 
       {editMode === "admin" && (
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-          <div className="flex items-center gap-2 text-sm text-blue-800">
-            <Plus className="w-4 h-4" />
-            <span>
+        <div className="mt-8 flat-surface p-6 rounded-2xl">
+          <div className="flex items-center gap-3 text-sm text-primary-700">
+            <div className="flat-card p-2 rounded-xl">
+              <Plus className="w-4 h-4" />
+            </div>
+            <span className="font-medium">
               관리자 모드: 수업 블록을 클릭하여 정보를 보거나 우측 핸들을
               드래그하여 이동할 수 있습니다.
             </span>

@@ -8,8 +8,8 @@ const avatarVariants = cva(
   {
     variants: {
       variant: {
-        neumorphic: "neu-raised hover:shadow-neu-lg",
         flat: "bg-primary-500",
+        surface: "flat-surface text-gray-700",
         outline: "border-2 border-primary-500 bg-transparent text-primary-500",
       },
       size: {
@@ -22,7 +22,7 @@ const avatarVariants = cva(
       },
     },
     defaultVariants: {
-      variant: "neumorphic",
+      variant: "flat",
       size: "md",
     },
   }
@@ -69,7 +69,7 @@ export const Avatar: React.FC<AvatarProps> = ({
         />
       ) : (
         <span className={cn(
-          variant === 'neumorphic' && 'text-neu-700',
+          variant === 'surface' && 'text-gray-700',
           variant === 'outline' && 'text-primary-500',
           variant === 'flat' && 'text-white'
         )}>

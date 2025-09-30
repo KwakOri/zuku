@@ -135,7 +135,7 @@ export default function StudentList({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <Icon name="graduation-cap" size="lg" color="primary" />
-            <h1 className="text-2xl font-bold text-neu-900">학생 관리</h1>
+            <h1 className="text-2xl font-bold text-gray-900">학생 관리</h1>
           </div>
           <Badge variant="outline" size="lg">
             총 {filteredStudents.length}명의 학생
@@ -150,7 +150,7 @@ export default function StudentList({
             onChange={(e) => setSearchTerm(e.target.value)}
             onSearch={(query) => setSearchTerm(query)}
             placeholder="이름, 이메일, 전화번호로 검색..."
-            variant="neumorphic"
+            variant="flat"
           />
 
           {/* 필터 섹션 */}
@@ -171,7 +171,7 @@ export default function StudentList({
 
             {selectedGrade !== "all" && (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-neu-600">필터:</span>
+                <span className="text-sm text-gray-600">필터:</span>
                 <Chip
                   variant="primary"
                   size="sm"
@@ -186,9 +186,9 @@ export default function StudentList({
 
           {/* 필터 옵션 */}
           {showFilters && (
-            <Card variant="flat" className="bg-neu-50">
+            <Card variant="flat" className="bg-gray-50">
               <div className="space-y-3">
-                <label className="text-sm font-medium text-neu-700">
+                <label className="text-sm font-medium text-gray-700">
                   학년별 필터
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -224,10 +224,10 @@ export default function StudentList({
           <Card size="lg">
             <div className="p-12 text-center">
               <Icon name="user" size="3xl" color="neutral" className="mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-neu-900 mb-2">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
                 검색 결과가 없습니다
               </h3>
-              <p className="text-neu-500">다른 검색어나 필터를 시도해보세요.</p>
+              <p className="text-gray-500">다른 검색어나 필터를 시도해보세요.</p>
             </div>
           </Card>
         ) : (
@@ -240,9 +240,9 @@ export default function StudentList({
                 className="overflow-hidden"
               >
                 {/* 학년 헤더 */}
-                <div className="px-6 py-3 border-b border-neu-200 bg-neu-50">
+                <div className="px-6 py-3 border-b border-neu-200 bg-gray-50">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-neu-800">
+                    <h3 className="font-semibold text-gray-800">
                       {getGrade(parseInt(grade))}
                     </h3>
                     <Badge variant="secondary" size="sm">
@@ -256,7 +256,7 @@ export default function StudentList({
                   {studentsInGrade.map((student) => (
                     <div
                       key={student.id}
-                      className="p-6 hover:bg-neu-50 transition-colors cursor-pointer"
+                      className="p-6 hover:bg-gray-50 transition-colors cursor-pointer"
                       onClick={() => {
                         if (onStudentSelect) {
                           onStudentSelect(student);
@@ -270,7 +270,7 @@ export default function StudentList({
                           {/* 학생 아바타 */}
                           <Avatar
                             size="lg"
-                            variant="neumorphic"
+                            variant="flat"
                             fallback={student.name.substring(0, 2)}
                             className="bg-primary-500 text-white"
                           />
@@ -278,14 +278,14 @@ export default function StudentList({
                           {/* 학생 정보 */}
                           <div className="space-y-1">
                             <div className="flex items-center gap-3">
-                              <h4 className="font-semibold text-neu-900">
+                              <h4 className="font-semibold text-gray-900">
                                 {student.name}
                               </h4>
                               <Chip variant="secondary" size="sm">
                                 {getGrade(student.grade, "half")}
                               </Chip>
                             </div>
-                            <div className="flex items-center gap-4 text-sm text-neu-600">
+                            <div className="flex items-center gap-4 text-sm text-gray-600">
                               {student.phone && (
                                 <div className="flex items-center gap-1">
                                   <Phone className="w-3 h-3" />
@@ -300,7 +300,7 @@ export default function StudentList({
                               )}
                             </div>
                             {student.parent_phone && (
-                              <div className="text-xs text-neu-500">
+                              <div className="text-xs text-gray-500">
                                 학부모: {student.parent_phone}
                               </div>
                             )}

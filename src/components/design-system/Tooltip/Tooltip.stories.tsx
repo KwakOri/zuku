@@ -67,7 +67,7 @@ export const Positions: Story = {
         </Tooltip>
 
         <div className="flex items-center justify-center">
-          <span className="text-neu-600">Hover buttons</span>
+          <span className="text-gray-600">Hover buttons</span>
         </div>
 
         <Tooltip content="Right tooltip" position="right">

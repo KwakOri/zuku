@@ -76,7 +76,7 @@ export const Variants: Story = {
       <Chip variant="warning">Warning</Chip>
       <Chip variant="error">Error</Chip>
       <Chip variant="outline">Outline</Chip>
-      <Chip variant="neumorphic">Neumorphic</Chip>
+      <Chip variant="flat">Neumorphic</Chip>
     </div>
   ),
 };
@@ -127,7 +127,7 @@ export const FilterExample: Story = {
     return (
       <div className="space-y-4">
         <div>
-          <h4 className="text-sm font-medium text-neu-700 mb-2">Available Filters:</h4>
+          <h4 className="text-sm font-medium text-gray-700 mb-2">Available Filters:</h4>
           <div className="flex flex-wrap gap-2">
             {allFilters.map(filter => (
               <Chip
@@ -144,7 +144,7 @@ export const FilterExample: Story = {
 
         {selectedFilters.length > 0 && (
           <div>
-            <h4 className="text-sm font-medium text-neu-700 mb-2">Selected Filters:</h4>
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Selected Filters:</h4>
             <div className="flex flex-wrap gap-2">
               {selectedFilters.map(filter => (
                 <Chip
@@ -168,7 +168,7 @@ export const States: Story = {
   render: () => (
     <div className="space-y-4">
       <div>
-        <h4 className="text-sm font-medium text-neu-700 mb-2">Normal States:</h4>
+        <h4 className="text-sm font-medium text-gray-700 mb-2">Normal States:</h4>
         <div className="flex flex-wrap gap-2">
           <Chip>Normal</Chip>
           <Chip interactive>Interactive</Chip>
@@ -177,7 +177,7 @@ export const States: Story = {
       </div>
 
       <div>
-        <h4 className="text-sm font-medium text-neu-700 mb-2">Disabled States:</h4>
+        <h4 className="text-sm font-medium text-gray-700 mb-2">Disabled States:</h4>
         <div className="flex flex-wrap gap-2">
           <Chip disabled>Disabled</Chip>
           <Chip disabled interactive>Disabled Interactive</Chip>

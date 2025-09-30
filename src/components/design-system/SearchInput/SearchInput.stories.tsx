@@ -101,11 +101,11 @@ export const Controlled: Story = {
         />
 
         {results.length > 0 && (
-          <div className="p-4 bg-neu-50 rounded-xl">
-            <h4 className="font-medium text-neu-700 mb-2">Results:</h4>
+          <div className="p-4 bg-gray-50 rounded-xl">
+            <h4 className="font-medium text-gray-700 mb-2">Results:</h4>
             <ul className="space-y-1">
               {results.map((result, index) => (
-                <li key={index} className="text-neu-600">
+                <li key={index} className="text-gray-600">
                   {result}
                 </li>
               ))}
@@ -149,7 +149,7 @@ export const CustomDelay: Story = {
   render: () => (
     <div className="space-y-4 max-w-md">
       <div>
-        <label className="block text-sm font-medium text-neu-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
           No delay (0ms)
         </label>
         <SearchInput
@@ -160,7 +160,7 @@ export const CustomDelay: Story = {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-neu-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
           Fast delay (200ms)
         </label>
         <SearchInput
@@ -171,7 +171,7 @@ export const CustomDelay: Story = {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-neu-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
           Slow delay (1000ms)
         </label>
         <SearchInput
@@ -195,14 +195,14 @@ export const Disabled: Story = {
 export const WithLabel: Story = {
   render: () => (
     <div className="max-w-md">
-      <label className="block text-sm font-medium text-neu-700 mb-2">
+      <label className="block text-sm font-medium text-gray-700 mb-2">
         Search Users
       </label>
       <SearchInput
         placeholder="Enter name, email, or ID..."
         onSearch={(query) => console.log('User search:', query)}
       />
-      <p className="text-xs text-neu-500 mt-1">
+      <p className="text-xs text-gray-500 mt-1">
         Search across all user profiles and accounts
       </p>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import CanvasSchedule from "@/components/CanvasSchedule";
+import CanvasSchedule from "@/components/common/schedule/CanvasSchedule";
 import {
   convertBlockToStudentSchedule,
   convertStudentSchedulesToBlocks,
@@ -24,7 +24,6 @@ import { ClassBlock } from "@/types/schedule";
 import { Tables } from "@/types/supabase";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowLeft,
   Clock,
   Home,
   MapPin,
@@ -413,31 +412,25 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 헤더 */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="flat-surface bg-gray-50 border-0 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <Link
                 href="/"
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                className="p-2 flat-card text-gray-500 hover:text-gray-700 rounded-2xl hover:flat-pressed transition-all duration-200"
               >
                 <Home className="w-5 h-5" />
               </Link>
 
-              <button
-                onClick={handleBack}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">
-                  {student.name} 시간표 관리
-                </h1>
-                <p className="text-sm text-gray-600">
-                  개별 학생의 시간표를 수정할 수 있습니다
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl shadow-md">
+                  <User className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-gray-800">{student.name} 시간표 관리</h1>
+                  <p className="text-sm text-gray-600">개별 학생의 시간표를 수정할 수 있습니다</p>
+                </div>
               </div>
             </div>
 

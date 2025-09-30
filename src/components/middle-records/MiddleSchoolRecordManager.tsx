@@ -270,10 +270,10 @@ export default function MiddleSchoolRecordManager({
           <div className="flex items-center gap-3">
             <Icon name="book-open" size="lg" color="primary" />
             <div>
-              <h1 className="text-2xl font-bold text-neu-900">
+              <h1 className="text-2xl font-bold text-gray-900">
                 중등 주간 기록 관리
               </h1>
-              <p className="text-sm text-neu-600 mt-1">
+              <p className="text-sm text-gray-600 mt-1">
                 학생별 출석, 참여도, 이해도 및 숙제 상태를 기록합니다
               </p>
             </div>
@@ -308,10 +308,10 @@ export default function MiddleSchoolRecordManager({
               ←
             </Button>
             <div className="text-center">
-              <h3 className="font-semibold text-neu-900">
+              <h3 className="font-semibold text-gray-900">
                 {formatWeekRange(selectedWeek)}
               </h3>
-              <p className="text-sm text-neu-600">주간 기록</p>
+              <p className="text-sm text-gray-600">주간 기록</p>
             </div>
             <Button
               variant="outline"
@@ -322,13 +322,13 @@ export default function MiddleSchoolRecordManager({
             </Button>
           </div>
 
-          <div className="flex items-center gap-4 text-sm text-neu-600">
+          <div className="flex items-center gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-primary-500 rounded-full"></div>
               <span>기록 완료: {records.length}명</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-neu-300 rounded-full"></div>
+              <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
               <span>
                 미기록: {middleSchoolStudents.length - records.length}명
               </span>
@@ -360,17 +360,17 @@ export default function MiddleSchoolRecordManager({
           <Card size="lg">
             <div className="p-12 text-center">
               <Icon name="loader" size="3xl" color="primary" className="mx-auto mb-4 animate-spin" />
-              <p className="text-neu-600">데이터를 불러오는 중...</p>
+              <p className="text-gray-600">데이터를 불러오는 중...</p>
             </div>
           </Card>
         ) : records.length === 0 ? (
           <Card size="lg">
             <div className="p-12 text-center">
               <Icon name="calendar" size="3xl" color="neutral" className="mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-neu-900 mb-2">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
                 이번 주 기록이 없습니다
               </h3>
-              <p className="text-neu-500 mb-4">
+              <p className="text-gray-500 mb-4">
                 새로운 학생 기록을 추가해보세요.
               </p>
               <Button

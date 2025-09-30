@@ -1,26 +1,33 @@
 import type { Meta, StoryObj } from "@storybook/react-webpack5";
-import { AlertTriangle, CheckCircle, Eye, Mail, Users, Search, User, Lock, Calendar, Clock } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle,
+  Eye,
+  Lock,
+  Mail,
+  User,
+  Users,
+} from "lucide-react";
 import React from "react";
-import "../components/design-system/globals.css";
 import {
   Avatar,
   Badge,
   Button,
   Card,
   Chip,
-  Input,
-  Progress,
-  Switch,
-  Label,
-  Icon,
-  Tooltip,
   FormField,
-  SearchInput,
+  Icon,
+  Label,
   Modal,
+  Progress,
   ScheduleCell,
   ScheduleTable,
+  SearchInput,
+  Switch,
+  Tooltip,
   type Schedule,
 } from "../components/design-system";
+import "../components/design-system/globals.css";
 
 const meta: Meta = {
   title: "Design System/Complete Showcase",
@@ -94,7 +101,7 @@ export const FullShowcase: Story = {
     }, []);
 
     return (
-      <div className="min-h-screen bg-neu-100 p-6">
+      <div className="min-h-screen p-6 bg-neu-100">
         <div className="container-responsive">
           {/* Header */}
           <header className="mb-12">
@@ -102,36 +109,50 @@ export const FullShowcase: Story = {
               <div className="flex items-center justify-center gap-4 mb-4">
                 <Avatar
                   size="xl"
-                  variant="neumorphic"
+                  variant="flat"
                   fallback="ZD"
-                  className="bg-primary-500 text-white"
+                  className="text-white bg-primary-500"
                 />
                 <div>
-                  <h1 className="text-4xl font-bold text-primary-600 mb-2">
+                  <h1 className="mb-2 text-4xl font-bold text-primary-600">
                     ZUKU Design System
                   </h1>
-                  <p className="text-lg text-neu-600">
+                  <p className="text-lg text-gray-600">
                     Complete neumorphic design system for modern applications
                   </p>
                 </div>
               </div>
 
               <div className="flex flex-wrap justify-center gap-2 mb-6">
-                <Chip variant="primary" size="sm">React</Chip>
-                <Chip variant="primary" size="sm">TypeScript</Chip>
-                <Chip variant="primary" size="sm">Tailwind CSS</Chip>
-                <Chip variant="primary" size="sm">Neumorphism</Chip>
-                <Chip variant="primary" size="sm">Atomic Design</Chip>
+                <Chip variant="primary" size="sm">
+                  React
+                </Chip>
+                <Chip variant="primary" size="sm">
+                  TypeScript
+                </Chip>
+                <Chip variant="primary" size="sm">
+                  Tailwind CSS
+                </Chip>
+                <Chip variant="primary" size="sm">
+                  Neumorphism
+                </Chip>
+                <Chip variant="primary" size="sm">
+                  Atomic Design
+                </Chip>
               </div>
 
               <div className="flex flex-wrap justify-center gap-4">
                 <Button variant="primary" size="lg">
                   Get Started
                 </Button>
-                <Button variant="neumorphic" size="lg">
+                <Button variant="flat" size="lg">
                   Documentation
                 </Button>
-                <Button variant="outline" size="lg" onClick={() => setModalOpen(true)}>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => setModalOpen(true)}
+                >
                   Open Modal
                 </Button>
               </div>
@@ -140,16 +161,24 @@ export const FullShowcase: Story = {
 
           {/* Atoms Section */}
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-primary-600 mb-6">Atoms</h2>
+            <h2 className="mb-6 text-2xl font-bold text-primary-600">Atoms</h2>
             <div className="grid-responsive">
               {/* Buttons */}
               <Card>
-                <h3 className="text-xl font-semibold text-primary-600 mb-4">Buttons</h3>
+                <h3 className="mb-4 text-xl font-semibold text-primary-600">
+                  Buttons
+                </h3>
                 <div className="space-y-4">
                   <div className="flex flex-wrap gap-2">
-                    <Button variant="neumorphic" size="sm">Small</Button>
-                    <Button variant="neumorphic" size="md">Medium</Button>
-                    <Button variant="neumorphic" size="lg">Large</Button>
+                    <Button variant="flat" size="sm">
+                      Small
+                    </Button>
+                    <Button variant="flat" size="md">
+                      Medium
+                    </Button>
+                    <Button variant="flat" size="lg">
+                      Large
+                    </Button>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button variant="primary">Primary</Button>
@@ -162,7 +191,9 @@ export const FullShowcase: Story = {
 
               {/* Icons & Labels */}
               <Card>
-                <h3 className="text-xl font-semibold text-primary-600 mb-4">Icons & Labels</h3>
+                <h3 className="mb-4 text-xl font-semibold text-primary-600">
+                  Icons & Labels
+                </h3>
                 <div className="space-y-4">
                   <div className="flex flex-wrap gap-3">
                     <Tooltip content="User profile">
@@ -180,7 +211,9 @@ export const FullShowcase: Story = {
                   </div>
                   <div className="space-y-2">
                     <Label state="default">Default Label</Label>
-                    <Label state="error" required>Required Error Label</Label>
+                    <Label state="error" required>
+                      Required Error Label
+                    </Label>
                     <Label state="success">Success Label</Label>
                   </div>
                 </div>
@@ -188,7 +221,9 @@ export const FullShowcase: Story = {
 
               {/* Avatars & Badges */}
               <Card>
-                <h3 className="text-xl font-semibold text-primary-600 mb-4">Avatars & Badges</h3>
+                <h3 className="mb-4 text-xl font-semibold text-primary-600">
+                  Avatars & Badges
+                </h3>
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <Avatar size="xs" fallback="XS" />
@@ -204,7 +239,11 @@ export const FullShowcase: Story = {
                     </div>
                     <div className="relative">
                       <Avatar size="lg" fallback="AS" variant="outline" />
-                      <Badge variant="error" position="top-right" count={notificationCount} />
+                      <Badge
+                        variant="error"
+                        position="top-right"
+                        count={notificationCount}
+                      />
                     </div>
                   </div>
                 </div>
@@ -212,7 +251,9 @@ export const FullShowcase: Story = {
 
               {/* Progress & Switch */}
               <Card>
-                <h3 className="text-xl font-semibold text-primary-600 mb-4">Progress & Controls</h3>
+                <h3 className="mb-4 text-xl font-semibold text-primary-600">
+                  Progress & Controls
+                </h3>
                 <div className="space-y-4">
                   <Progress
                     value={uploadProgress}
@@ -242,11 +283,15 @@ export const FullShowcase: Story = {
 
           {/* Molecules Section */}
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-primary-600 mb-6">Molecules</h2>
+            <h2 className="mb-6 text-2xl font-bold text-primary-600">
+              Molecules
+            </h2>
             <div className="grid-responsive">
               {/* Form Fields */}
               <Card>
-                <h3 className="text-xl font-semibold text-primary-600 mb-4">Form Fields</h3>
+                <h3 className="mb-4 text-xl font-semibold text-primary-600">
+                  Form Fields
+                </h3>
                 <div className="space-y-4">
                   <FormField
                     label="Email Address"
@@ -269,16 +314,18 @@ export const FullShowcase: Story = {
 
               {/* Search Input */}
               <Card>
-                <h3 className="text-xl font-semibold text-primary-600 mb-4">Search Input</h3>
+                <h3 className="mb-4 text-xl font-semibold text-primary-600">
+                  Search Input
+                </h3>
                 <div className="space-y-4">
                   <SearchInput
                     value={searchValue}
                     onChange={(e) => setSearchValue(e.target.value)}
-                    onSearch={(query) => console.log('Search:', query)}
+                    onSearch={(query) => console.log("Search:", query)}
                     placeholder="Search students, classes..."
                   />
                   {searchValue && (
-                    <div className="text-sm text-neu-600">
+                    <div className="text-sm text-gray-600">
                       Searching for: "{searchValue}"
                     </div>
                   )}
@@ -287,7 +334,9 @@ export const FullShowcase: Story = {
 
               {/* Schedule Cells */}
               <Card>
-                <h3 className="text-xl font-semibold text-primary-600 mb-4">Schedule Cells</h3>
+                <h3 className="mb-4 text-xl font-semibold text-primary-600">
+                  Schedule Cells
+                </h3>
                 <div className="space-y-4">
                   <ScheduleCell
                     classInfo={{
@@ -318,19 +367,37 @@ export const FullShowcase: Story = {
 
               {/* Chips */}
               <Card>
-                <h3 className="text-xl font-semibold text-primary-600 mb-4">Tags & Chips</h3>
+                <h3 className="mb-4 text-xl font-semibold text-primary-600">
+                  Tags & Chips
+                </h3>
                 <div className="space-y-4">
                   <div className="flex flex-wrap gap-2">
-                    <Chip variant="primary" deletable onDelete={() => {}}>React</Chip>
-                    <Chip variant="secondary" deletable onDelete={() => {}}>TypeScript</Chip>
-                    <Chip variant="success" deletable onDelete={() => {}}>Design Systems</Chip>
-                    <Chip variant="warning" deletable onDelete={() => {}}>UI/UX</Chip>
+                    <Chip variant="primary" deletable onDelete={() => {}}>
+                      React
+                    </Chip>
+                    <Chip variant="secondary" deletable onDelete={() => {}}>
+                      TypeScript
+                    </Chip>
+                    <Chip variant="success" deletable onDelete={() => {}}>
+                      Design Systems
+                    </Chip>
+                    <Chip variant="warning" deletable onDelete={() => {}}>
+                      UI/UX
+                    </Chip>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Chip variant="success" size="sm">Available</Chip>
-                    <Chip variant="warning" size="sm">Busy</Chip>
-                    <Chip variant="error" size="sm">Offline</Chip>
-                    <Chip variant="outline" size="sm">Away</Chip>
+                    <Chip variant="success" size="sm">
+                      Available
+                    </Chip>
+                    <Chip variant="warning" size="sm">
+                      Busy
+                    </Chip>
+                    <Chip variant="error" size="sm">
+                      Offline
+                    </Chip>
+                    <Chip variant="outline" size="sm">
+                      Away
+                    </Chip>
                   </div>
                 </div>
               </Card>
@@ -339,14 +406,20 @@ export const FullShowcase: Story = {
 
           {/* Organisms Section */}
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-primary-600 mb-6">Organisms</h2>
+            <h2 className="mb-6 text-2xl font-bold text-primary-600">
+              Organisms
+            </h2>
 
             {/* Schedule Table */}
             <Card size="lg" className="mb-8">
-              <h3 className="text-xl font-semibold text-primary-600 mb-4">Schedule Table</h3>
+              <h3 className="mb-4 text-xl font-semibold text-primary-600">
+                Schedule Table
+              </h3>
               <ScheduleTable
                 scheduleData={scheduleData}
-                onCellClick={(cellInfo) => console.log('Cell clicked:', cellInfo)}
+                onCellClick={(cellInfo) =>
+                  console.log("Cell clicked:", cellInfo)
+                }
                 isEditable={true}
                 showWeekend={false}
                 startHour={9}
@@ -357,18 +430,18 @@ export const FullShowcase: Story = {
 
             {/* Interactive Dashboard Demo */}
             <Card size="lg">
-              <h3 className="text-2xl font-bold text-primary-600 mb-6 text-center">
+              <h3 className="mb-6 text-2xl font-bold text-center text-primary-600">
                 Interactive Dashboard Demo
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-2 lg:grid-cols-4">
                 <Card variant="flat" className="text-center">
                   <div className="flex items-center justify-center mb-2">
                     <Avatar size="md" variant="flat" className="bg-success-500">
                       <CheckCircle className="w-5 h-5" />
                     </Avatar>
                   </div>
-                  <h4 className="font-semibold text-neu-700">Classes</h4>
+                  <h4 className="font-semibold text-gray-700">Classes</h4>
                   <p className="text-2xl font-bold text-success-600">24</p>
                 </Card>
 
@@ -378,7 +451,7 @@ export const FullShowcase: Story = {
                       <Eye className="w-5 h-5" />
                     </Avatar>
                   </div>
-                  <h4 className="font-semibold text-neu-700">Students</h4>
+                  <h4 className="font-semibold text-gray-700">Students</h4>
                   <p className="text-2xl font-bold text-warning-600">156</p>
                 </Card>
 
@@ -388,7 +461,7 @@ export const FullShowcase: Story = {
                       <Users className="w-5 h-5" />
                     </Avatar>
                   </div>
-                  <h4 className="font-semibold text-neu-700">Teachers</h4>
+                  <h4 className="font-semibold text-gray-700">Teachers</h4>
                   <p className="text-2xl font-bold text-primary-600">12</p>
                 </Card>
 
@@ -398,7 +471,7 @@ export const FullShowcase: Story = {
                       <AlertTriangle className="w-5 h-5" />
                     </Avatar>
                   </div>
-                  <h4 className="font-semibold text-neu-700">Alerts</h4>
+                  <h4 className="font-semibold text-gray-700">Alerts</h4>
                   <p className="text-2xl font-bold text-error-600">2</p>
                 </Card>
               </div>
@@ -423,7 +496,7 @@ export const FullShowcase: Story = {
             }
           >
             <div className="space-y-4">
-              <p className="text-neu-600">
+              <p className="text-gray-600">
                 This is a demo modal showcasing the complete design system.
               </p>
               <FormField
@@ -443,13 +516,20 @@ export const FullShowcase: Story = {
           {/* Footer */}
           <footer className="text-center">
             <Card>
-              <p className="text-neu-600 mb-4">
-                Built with ❤️ using React, TypeScript, Tailwind CSS, and Neumorphism design principles
+              <p className="mb-4 text-gray-600">
+                Built with ❤️ using React, TypeScript, Tailwind CSS, and
+                Neumorphism design principles
               </p>
               <div className="flex justify-center gap-4">
-                <Button variant="ghost" size="sm">Documentation</Button>
-                <Button variant="ghost" size="sm">GitHub</Button>
-                <Button variant="ghost" size="sm">Storybook</Button>
+                <Button variant="ghost" size="sm">
+                  Documentation
+                </Button>
+                <Button variant="ghost" size="sm">
+                  GitHub
+                </Button>
+                <Button variant="ghost" size="sm">
+                  Storybook
+                </Button>
               </div>
             </Card>
           </footer>

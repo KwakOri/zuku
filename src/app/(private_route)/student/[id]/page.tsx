@@ -1,6 +1,6 @@
 "use client";
 
-import StudentWeeklySchedule from "@/components/StudentWeeklySchedule";
+import StudentWeeklySchedule from "@/components/common/schedule/StudentWeeklySchedule";
 import { generateStudentWeeklyView } from "@/lib/utils";
 import { use } from "react";
 

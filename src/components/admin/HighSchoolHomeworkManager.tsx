@@ -257,10 +257,10 @@ export default function HighSchoolHomeworkManager({
               fallback={<Icon name="book-check" size="sm" color="secondary" />}
             />
             <div>
-              <h1 className="text-2xl font-bold text-neu-900">
+              <h1 className="text-2xl font-bold text-gray-900">
                 고등 숙제 검사 기록
               </h1>
-              <p className="text-sm text-neu-600 mt-1">
+              <p className="text-sm text-gray-600 mt-1">
                 조교: {currentAssistant?.name} | 담당 과목:{" "}
                 {currentAssistant?.subjects.join(", ")}
               </p>

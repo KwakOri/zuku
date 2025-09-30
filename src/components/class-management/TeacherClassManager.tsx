@@ -186,13 +186,13 @@ export default function TeacherClassManager() {
             className="bg-secondary-100"
             fallback={<Icon name="users" size="sm" color="secondary" />}
           />
-          <h2 className="text-xl font-bold text-neu-900">강사 선택</h2>
+          <h2 className="text-xl font-bold text-gray-900">강사 선택</h2>
         </div>
 
         {teachersLoading ? (
           <div className="text-center py-4">
             <Icon name="loader" size="lg" color="secondary" className="mx-auto mb-4 animate-spin" />
-            <p className="mt-2 text-sm text-neu-500">강사 목록을 불러오는 중...</p>
+            <p className="mt-2 text-sm text-gray-500">강사 목록을 불러오는 중...</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -203,22 +203,22 @@ export default function TeacherClassManager() {
                 className={`p-4 border rounded-lg text-left transition-all duration-200 hover:shadow-md ${
                   selectedTeacherId === teacher.id
                     ? "border-secondary-500 bg-secondary-50 ring-2 ring-secondary-200"
-                    : "border-neu-200 hover:border-neu-300 hover:bg-neu-50"
+                    : "border-neu-200 hover:border-gray-300 hover:bg-gray-50"
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-semibold text-neu-900">{teacher.name}</h3>
-                    <p className="text-sm text-neu-600">{teacher.email}</p>
+                    <h3 className="font-semibold text-gray-900">{teacher.name}</h3>
+                    <p className="text-sm text-gray-600">{teacher.email}</p>
                     {teacher.phone && (
-                      <p className="text-xs text-neu-500">{teacher.phone}</p>
+                      <p className="text-xs text-gray-500">{teacher.phone}</p>
                     )}
                   </div>
                   <ChevronRight
                     className={`w-4 h-4 transition-colors ${
                       selectedTeacherId === teacher.id
                         ? "text-secondary-600"
-                        : "text-neu-400"
+                        : "text-gray-400"
                     }`}
                   />
                 </div>
@@ -246,7 +246,7 @@ export default function TeacherClassManager() {
               className="bg-primary-100"
               fallback={<Icon name="plus" size="sm" color="primary" />}
             />
-            <h2 className="text-xl font-bold text-neu-900">새 수업 개설</h2>
+            <h2 className="text-xl font-bold text-gray-900">새 수업 개설</h2>
           </div>
           <Button
             onClick={() => setShowCreateForm(!showCreateForm)}
@@ -390,7 +390,7 @@ export default function TeacherClassManager() {
             {/* 수강 학생 선택 */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-neu-700">
+                <label className="text-sm font-medium text-gray-700">
                   수강 학생 선택 <span className="text-error-500">*</span>
                 </label>
                 <Badge variant="secondary" size="md">
@@ -404,7 +404,7 @@ export default function TeacherClassManager() {
               ) : (
                 <Card variant="flat" className="max-h-40 overflow-y-auto">
                   {students.length === 0 ? (
-                    <div className="p-4 text-center text-neu-500">
+                    <div className="p-4 text-center text-gray-500">
                       등록된 학생이 없습니다.
                     </div>
                   ) : (
@@ -412,17 +412,17 @@ export default function TeacherClassManager() {
                       {students.map((student) => (
                         <label
                           key={student.id}
-                          className="flex items-center p-3 hover:bg-neu-50 cursor-pointer"
+                          className="flex items-center p-3 hover:bg-gray-50 cursor-pointer"
                         >
                           <input
                             type="checkbox"
                             checked={selectedStudents.includes(student.id)}
                             onChange={() => toggleStudent(student.id)}
-                            className="w-4 h-4 text-primary-600 border-neu-300 rounded focus:ring-primary-500"
+                            className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                           />
                           <div className="ml-3 flex-1">
                             <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium text-neu-900">
+                              <span className="text-sm font-medium text-gray-900">
                                 {student.name}
                               </span>
                               <Chip variant="outline" size="sm">
@@ -430,7 +430,7 @@ export default function TeacherClassManager() {
                               </Chip>
                             </div>
                             {student.phone && (
-                              <span className="text-xs text-neu-500">
+                              <span className="text-xs text-gray-500">
                                 {student.phone}
                               </span>
                             )}
@@ -491,7 +491,7 @@ export default function TeacherClassManager() {
                 className="bg-success-100"
                 fallback={<Icon name="book-open" size="sm" color="success" />}
               />
-              <h2 className="text-xl font-bold text-neu-900">
+              <h2 className="text-xl font-bold text-gray-900">
                 {teachers.find(t => t.id === selectedTeacherId)?.name} 강사의 수업 목록
               </h2>
               <Badge variant="success" size="md">
@@ -503,10 +503,10 @@ export default function TeacherClassManager() {
           {classes.length === 0 ? (
             <div className="text-center py-12">
               <Icon name="calendar" size="3xl" color="neutral" className="mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-neu-900 mb-2">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
                 담당 수업이 없습니다
               </h3>
-              <p className="text-neu-500">
+              <p className="text-gray-500">
                 관리자에게 수업 배정을 요청해주세요.
               </p>
             </div>
@@ -517,30 +517,30 @@ export default function TeacherClassManager() {
                   <Card
                     key={classItem.id}
                     variant="flat"
-                    className="p-4 text-left transition-all duration-200 hover:shadow-md hover:border-neu-300 hover:bg-neu-50"
+                    className="p-4 text-left transition-all duration-200 hover:shadow-md hover:border-gray-300 hover:bg-gray-50"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-neu-900 mb-1">
+                        <h3 className="font-semibold text-gray-900 mb-1">
                           {classItem.title}
                         </h3>
-                        <p className="text-sm text-neu-600 mb-2">
+                        <p className="text-sm text-gray-600 mb-2">
                           {classItem.subject?.subject_name || "과목 미정"}
                         </p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-neu-400" />
+                      <ChevronRight className="w-4 h-4 text-gray-400" />
                     </div>
 
                     <div className="space-y-2">
                       {classItem.day_of_week !== null && classItem.start_time && classItem.end_time ? (
                         <>
-                          <div className="flex items-center gap-2 text-sm text-neu-600">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Calendar className="w-4 h-4" />
                             <span>
                               {["일", "월", "화", "수", "목", "금", "토"][classItem.day_of_week]}요일
                             </span>
                           </div>
-                          <div className="flex items-center gap-2 text-sm text-neu-600">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Clock className="w-4 h-4" />
                             <span>
                               {classItem.start_time.substring(0, 5)} - {classItem.end_time.substring(0, 5)}
@@ -554,18 +554,18 @@ export default function TeacherClassManager() {
                         </div>
                       )}
 
-                      <div className="flex items-center gap-2 text-sm text-neu-600">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Users className="w-4 h-4" />
                         <span>학생 {classItem.student_count}명</span>
                         {classItem.max_students && (
-                          <span className="text-neu-400">
+                          <span className="text-gray-400">
                             / {classItem.max_students}명
                           </span>
                         )}
                       </div>
 
                       {classItem.room && (
-                        <div className="text-sm text-neu-500">
+                        <div className="text-sm text-gray-500">
                           📍 {classItem.room}
                         </div>
                       )}

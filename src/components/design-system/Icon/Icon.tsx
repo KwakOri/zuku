@@ -56,7 +56,7 @@ const iconVariants = cva(
         success: "text-success-600",
         warning: "text-warning-600",
         error: "text-error-600",
-        muted: "text-neu-500",
+        muted: "text-gray-500",
         white: "text-white",
         black: "text-black",
       },

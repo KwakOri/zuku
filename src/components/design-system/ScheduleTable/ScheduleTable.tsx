@@ -9,8 +9,8 @@ const scheduleTableVariants = cva(
   {
     variants: {
       variant: {
-        default: "neu-raised shadow-neu-lg",
-        flat: "bg-white border border-neu-300 shadow-lg",
+        default: "flat-card shadow-neu-lg",
+        flat: "bg-white border border-gray-300 shadow-lg",
         minimal: "bg-transparent",
       },
       size: {
@@ -27,7 +27,7 @@ const scheduleTableVariants = cva(
 );
 
 const headerVariants = cva(
-  "sticky top-0 z-10 bg-neu-100 border-b border-neu-300",
+  "sticky top-0 z-10 bg-neu-100 border-b border-gray-300",
   {
     variants: {
       size: {
@@ -184,13 +184,13 @@ export const ScheduleTable: React.FC<ScheduleTableProps> = ({
       }}>
         {/* Time column header */}
         <div className={headerVariants({ size })}>
-          <div className="font-semibold text-neu-700">Time</div>
+          <div className="font-semibold text-gray-700">Time</div>
         </div>
 
         {/* Day headers */}
         {daysToShow.map(dayIndex => (
           <div key={dayIndex} className={headerVariants({ size })}>
-            <div className="font-semibold text-neu-700 text-center">
+            <div className="font-semibold text-gray-700 text-center">
               {dayLabels[showWeekend ? dayIndex : dayIndex - 1]}
             </div>
           </div>
@@ -208,8 +208,8 @@ export const ScheduleTable: React.FC<ScheduleTableProps> = ({
             }}
           >
             {/* Time label */}
-            <div className="p-3 bg-neu-50 border-r border-neu-200 flex items-center justify-center">
-              <div className="text-sm font-medium text-neu-600">
+            <div className="p-3 bg-gray-50 border-r border-neu-200 flex items-center justify-center">
+              <div className="text-sm font-medium text-gray-600">
                 {timeSlot.split('-')[0]}
               </div>
             </div>

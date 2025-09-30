@@ -8,9 +8,9 @@ const progressVariants = cva(
   {
     variants: {
       variant: {
-        default: "neu-inset bg-neu-200",
+        default: "flat-surface bg-neu-200",
         outline: "border border-neu-400 bg-transparent",
-        filled: "bg-neu-300",
+        filled: "bg-gray-300",
       },
       size: {
         sm: "h-2 rounded-full",
@@ -37,7 +37,7 @@ const progressBarVariants = cva(
         success: "bg-success-500 shadow-sm",
         warning: "bg-warning-500 shadow-sm",
         error: "bg-error-500 shadow-sm",
-        neumorphic: "neu-raised-sm bg-neu-100",
+        neumorphic: "flat-card-sm bg-neu-100",
       },
       size: {
         sm: "rounded-full",
@@ -84,10 +84,10 @@ export const Progress: React.FC<ProgressProps> = ({
     <div className="w-full">
       {(showLabel || label) && (
         <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-neu-700">
+          <span className="text-sm font-medium text-gray-700">
             {typeof label === 'string' ? label : 'Progress'}
           </span>
-          <span className="text-sm text-neu-600">
+          <span className="text-sm text-gray-600">
             {displayLabel}
           </span>
         </div>

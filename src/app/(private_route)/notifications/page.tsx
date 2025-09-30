@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useStudents } from "@/queries/useStudents";
 import { useSendKakaoNotification } from "@/queries/useNotifications";
+import Link from "next/link";
 import {
   Send,
   CheckCircle,
@@ -13,7 +14,8 @@ import {
   Phone,
   User,
   BookOpen,
-  AlertTriangle
+  AlertTriangle,
+  Home
 } from "lucide-react";
 
 interface StudentForNotification {
@@ -108,7 +110,7 @@ export default function NotificationsPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
           <p className="mt-2 text-gray-600">학생 데이터를 불러오는 중...</p>
         </div>
       </div>
@@ -119,7 +121,7 @@ export default function NotificationsPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600">학생 데이터를 불러오는데 실패했습니다.</p>
+          <p className="text-error-600">학생 데이터를 불러오는데 실패했습니다.</p>
           <p className="text-gray-600 mt-1">{error.message}</p>
         </div>
       </div>
@@ -127,44 +129,54 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* 헤더 */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <MessageSquare className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  학부모 알림톡 발송
-                </h1>
-                <p className="text-gray-600 mt-1">
-                  학생들을 선택하고 학부모님께 알림톡을 발송하세요.
-                </p>
+    <div className="min-h-screen bg-gray-50">
+      {/* 헤더 */}
+      <header className="flat-surface bg-gray-50 border-0 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-4">
+              <Link
+                href="/"
+                className="p-2 flat-card text-gray-500 hover:text-gray-700 rounded-2xl hover:flat-pressed transition-all duration-200"
+              >
+                <Home className="w-5 h-5" />
+              </Link>
+
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl shadow-md">
+                  <MessageSquare className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-gray-800">학부모 알림톡 발송</h1>
+                  <p className="text-sm text-gray-600">학생들을 선택하고 학부모님께 알림톡을 발송하세요</p>
+                </div>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm text-gray-600">선택된 학생</p>
-                <p className="text-2xl font-bold text-blue-600">{selectedStudents.size}</p>
+
+            <div className="flex items-center gap-6">
+              <div className="text-center">
+                <div className="text-lg font-bold text-primary-600">{selectedStudents.size}</div>
+                <div className="text-xs text-gray-500">선택된 학생</div>
               </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-600">전체 학생</p>
-                <p className="text-2xl font-bold text-green-600">{studentsWithParentPhone.length}</p>
+              <div className="text-center">
+                <div className="text-lg font-bold text-success-600">{studentsWithParentPhone.length}</div>
+                <div className="text-xs text-gray-500">전체 학생</div>
               </div>
             </div>
           </div>
         </div>
+      </header>
+
+      {/* 메인 콘텐츠 */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* 액션 버튼 */}
-        <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+        <div className="flat-card rounded-2xl border-0 p-4 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button
                 onClick={handleSelectAll}
-                className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 flat-card rounded-2xl bg-neu-100 hover:flat-pressed transition-all duration-200"
               >
                 <Users className="h-4 w-4" />
                 <span>
@@ -178,7 +190,7 @@ export default function NotificationsPage() {
             <button
               onClick={handleSendNotifications}
               disabled={selectedStudents.size === 0 || isSending}
-              className="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center space-x-2 px-6 py-2 flat-card bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-2xl hover:from-primary-600 hover:to-primary-700 disabled:from-neu-300 disabled:to-neu-400 disabled:cursor-not-allowed disabled:text-gray-500 transition-all duration-200"
             >
               <Send className="h-4 w-4" />
               <span>
@@ -191,7 +203,7 @@ export default function NotificationsPage() {
         {/* 학생 목록 */}
         <div className="space-y-4">
           {studentsWithParentPhone.map((student) => (
-            <div key={student.id} className="bg-white rounded-lg shadow-sm border">
+            <div key={student.id} className="flat-card rounded-2xl border-0">
               <div className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
@@ -199,14 +211,14 @@ export default function NotificationsPage() {
                       type="checkbox"
                       checked={selectedStudents.has(student.id)}
                       onChange={() => handleStudentToggle(student.id)}
-                      className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                      className="h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
                     />
                     <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-gray-100 rounded-lg">
+                      <div className="p-2 flat-surface bg-neu-100 rounded-2xl">
                         <User className="h-5 w-5 text-gray-600" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-semibold text-gray-800">
                           {student.name}
                         </h3>
                         <div className="flex items-center space-x-4 text-sm text-gray-600">
@@ -223,7 +235,7 @@ export default function NotificationsPage() {
                     </div>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="h-6 w-6 text-green-500" />
+                    <CheckCircle className="h-6 w-6 text-success-500" />
                   </div>
                 </div>
               </div>
@@ -232,9 +244,9 @@ export default function NotificationsPage() {
         </div>
 
         {studentsWithParentPhone.length === 0 && !isLoading && (
-          <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
+          <div className="flat-card rounded-2xl border-0 p-8 text-center">
             <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
               알림톡을 보낼 수 있는 학생이 없습니다
             </h3>
             <p className="text-gray-600">
@@ -242,7 +254,7 @@ export default function NotificationsPage() {
             </p>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

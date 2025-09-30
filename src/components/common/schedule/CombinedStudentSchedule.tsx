@@ -7,16 +7,18 @@ import { useStudentSchedules } from "@/queries/useSchedules";
 import { Tables } from "@/types/supabase";
 import { Calendar, Clock } from "lucide-react";
 import { Fragment, useMemo, useState, useEffect } from "react";
-import Tooltip from "./Tooltip";
+import Tooltip from "@/components/common/Tooltip";
 
 // Helper function to convert time string "HH:mm" to minutes from midnight
 const timeToMinutes = (time: string): number => {
+  if (!time) return 0; // Return 0 for empty strings
   const [hours, minutes] = time.split(":").map(Number);
   return hours * 60 + minutes;
 };
 
 // Helper function to format time as HH:MM (remove seconds if present)
 const formatTime = (time: string): string => {
+  if (!time) return "00:00"; // Return default time for empty strings
   const [hours, minutes] = time.split(":");
   return `${hours}:${minutes}`;
 };
@@ -25,8 +27,8 @@ const formatTime = (time: string): string => {
 interface TimelineEvent {
   id: string;
   title: string;
-  startTime: string;
-  endTime: string;
+  startTime: string; // Non-null since we filter out null times
+  endTime: string;   // Non-null since we filter out null times
   dayOfWeek: number; // 0 for Mon, 1 for Tue, ..., 6 for Sun
   color: string;
   type: "class" | "schedule";
@@ -85,24 +87,26 @@ export default function CombinedStudentSchedule() {
           .map((cs) => classes.find((c) => c.id === cs.class_id))
           .filter((c): c is Tables<"classes"> => !!c);
 
-        const classEvents: TimelineEvent[] = studentClasses.map((c) => ({
-          id: `class-${c.id}`,
-          title: c.title,
-          startTime: c.start_time,
-          endTime: c.end_time,
-          dayOfWeek: c.day_of_week === 0 ? 6 : c.day_of_week - 1, // Adjust dayOfWeek (Sun=0 -> Sun=6)
-          color: c.color,
-          type: "class",
-        }));
+        const classEvents: TimelineEvent[] = studentClasses
+          .filter((c) => c.start_time && c.end_time && c.day_of_week !== null)
+          .map((c) => ({
+            id: `class-${c.id}`,
+            title: c.title,
+            startTime: c.start_time!,
+            endTime: c.end_time!,
+            dayOfWeek: c.day_of_week === 0 ? 6 : c.day_of_week! - 1, // Adjust dayOfWeek (Sun=0 -> Sun=6)
+            color: c.color,
+            type: "class",
+          }));
 
         const personalEvents: TimelineEvent[] = studentSchedules
-          .filter((ss) => ss.student_id === student.id)
+          .filter((ss) => ss.student_id === student.id && ss.start_time && ss.end_time && ss.day_of_week !== null)
           .map((ss) => ({
             id: `schedule-${ss.id}`,
             title: ss.title,
-            startTime: ss.start_time,
-            endTime: ss.end_time,
-            dayOfWeek: ss.day_of_week, // Already 0-6 for Mon-Sun
+            startTime: ss.start_time!,
+            endTime: ss.end_time!,
+            dayOfWeek: ss.day_of_week!, // Already 0-6 for Mon-Sun
             color: ss.color || "#EF4444", // Default color if null
             type: "schedule",
           }));
@@ -265,7 +269,9 @@ export default function CombinedStudentSchedule() {
           const dayHeader = (
             <div
               key={`day-${dayIndex}`}
-              className="text-center text-xs py-1 bg-white font-semibold border-l-2 border-gray-500 sticky top-0 z-20"
+              className={`text-center text-xs py-1 font-semibold text-gray-800 sticky top-0 z-20 ${
+                dayIndex % 2 === 0 ? "bg-gray-100" : "bg-gray-200"
+              }`}
               style={{
                 gridColumn: `${currentSlot} / span ${timelineMetrics.daySlots[dayIndex]}`,
                 gridRow: "1",
@@ -288,8 +294,8 @@ export default function CombinedStudentSchedule() {
               return (
                 <div
                   key={`hour-${dayIndex}-${hourIndex}`}
-                  className={`text-center text-xs py-1 bg-white border-b border-gray-200 text-gray-500 sticky z-20 ${
-                    isFirstHour ? "border-l-2 border-l-gray-400" : ""
+                  className={`text-center text-xs py-1 text-gray-500 sticky z-20 ${
+                    dayIndex % 2 === 0 ? "bg-gray-50" : "bg-gray-100"
                   }`}
                   style={{
                     gridColumn: `${hourSlot} / span 24`, // 전체 1시간(24슬롯) 차지
@@ -315,9 +321,9 @@ export default function CombinedStudentSchedule() {
 
   if (isLoading) {
     return (
-      <div className="w-full grow overflow-auto bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center">
+      <div className="w-full grow overflow-auto bg-gray-50 rounded-lg flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-gray-600">스케줄 데이터를 불러오는 중...</p>
         </div>
       </div>
@@ -325,7 +331,7 @@ export default function CombinedStudentSchedule() {
   }
 
   return (
-    <div className="w-full grow overflow-auto bg-gray-50 rounded-lg border border-gray-200">
+    <div className="w-full grow overflow-auto bg-gray-50 rounded-lg scrollbar-hide">
       <div
         className="grid min-w-[4800px]"
         style={{
@@ -334,7 +340,7 @@ export default function CombinedStudentSchedule() {
       >
         {/* Timeline Header */}
         <div
-          className="bg-white border-b border-r border-gray-200 sticky left-0 top-0 z-30"
+          className="bg-gray-200 sticky left-0 top-0 z-30"
           style={{ gridRow: "1 / 3", gridColumn: "1" }}
         ></div>
         {renderTimelineHeader()}
@@ -352,8 +358,10 @@ export default function CombinedStudentSchedule() {
                 return (
                   <div
                     key={`grid-${student.id}-${dayIndex}-${hourIndex}`}
-                    className={`border-b border-gray-100 ${
-                      isFirstHour && "border-l-2 border-l-gray-400"
+                    className={`${
+                      dayIndex % 2 === 0
+                        ? "bg-white"
+                        : "bg-gray-50"
                     }`}
                     style={{
                       gridColumn: `${hourSlot} / span 24`,
@@ -378,11 +386,12 @@ export default function CombinedStudentSchedule() {
                 return (
                   <div
                     key={`hour-line-${student.id}-${dayIndex}-${hourIndex}`}
-                    className="border-l border-l-gray-200"
+                    className="bg-gray-200"
                     style={{
                       gridColumn: `${hourSlot}`,
                       gridRow: rowIndex + 3,
                       height: "100%",
+                      width: "1px",
                     }}
                   />
                 );
@@ -399,7 +408,7 @@ export default function CombinedStudentSchedule() {
           return (
             <Fragment key={student.id}>
               <div
-                className="sticky left-0 z-15 bg-white px-4 py-3 font-medium text-sm border-r border-b border-gray-200 border-b-gray-100 whitespace-nowrap"
+                className="sticky left-0 z-15 bg-gray-200 px-4 py-3 font-medium text-sm text-gray-800 whitespace-nowrap"
                 style={{ gridRow: rowIndex + 3, gridColumn: "1" }}
               >
                 {student.name}
@@ -441,27 +450,28 @@ export default function CombinedStudentSchedule() {
                           eventGroup.slice(1).map((event, stackIndex) => (
                             <div
                               key={`stack-${event.id}`}
-                              className="absolute rounded border-0 text-white px-1.5 py-0.5 overflow-hidden whitespace-nowrap text-ellipsis text-xs leading-tight opacity-60"
+                              className="absolute rounded-lg text-white px-1.5 py-0.5 overflow-hidden whitespace-nowrap text-ellipsis text-xs leading-tight opacity-70 border-2 border-white shadow-lg"
                               style={{
-                                backgroundColor: event.color,
+                                backgroundColor: "rgb(107, 124, 93)", // primary-600
                                 width: "100%",
                                 height: "100%",
                                 top: `${(stackIndex + 1) * 2}px`,
                                 left: `${(stackIndex + 1) * 2}px`,
                                 zIndex: -(stackIndex + 1),
+                                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
                               }}
                             />
                           ))}
 
                         {/* 메인 아이템 */}
                         <div
-                          className={`relative rounded border-0 my-0.5 text-white px-1.5 py-0.5 overflow-hidden whitespace-nowrap text-ellipsis text-xs leading-tight cursor-pointer transition-transform duration-100 ease-in-out hover:transform hover:-translate-y-px hover:shadow-sm ${
-                            isStacked ? "shadow-md" : ""
-                          }`}
+                          className="relative rounded-lg my-0.5 text-white px-1.5 py-0.5 overflow-hidden whitespace-nowrap text-ellipsis text-xs leading-tight cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:transform hover:-translate-y-px border-2 border-white shadow-md"
                           style={{
-                            backgroundColor: representativeEvent.color,
+                            backgroundColor: "rgb(88, 101, 72)", // primary-600
                             width: "100%",
                             height: "100%",
+                            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+                            textShadow: "0 1px 2px rgba(0, 0, 0, 0.3)",
                           }}
                         >
                           <span className="pointer-events-none">

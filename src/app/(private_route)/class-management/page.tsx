@@ -1,13 +1,12 @@
 "use client";
 
-import CanvasSchedule from "@/components/CanvasSchedule";
+import CanvasSchedule from "@/components/common/schedule/CanvasSchedule";
 import { useClasses } from "@/queries/useClasses";
 import { ClassBlock } from "@/types/schedule";
 import { Tables } from "@/types/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
-  ArrowLeft,
   Calendar,
   CheckCircle,
   Clock,
@@ -180,7 +179,7 @@ export default function ClassManagementPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
           <p className="mt-2 text-gray-600">수업 목록을 불러오는 중...</p>
         </div>
       </div>
@@ -192,11 +191,11 @@ export default function ClassManagementPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600">수업 목록을 불러오는데 실패했습니다.</p>
+          <p className="text-error-600">수업 목록을 불러오는데 실패했습니다.</p>
           <p className="text-gray-600 mt-1">{error.message}</p>
           <button
             onClick={handleBack}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="mt-4 px-4 py-2 flat-card bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-2xl hover:from-primary-600 hover:to-primary-700 transition-all duration-200"
           >
             돌아가기
           </button>
@@ -208,48 +207,45 @@ export default function ClassManagementPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 헤더 */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="flat-surface bg-gray-50 border-0 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <Link
                 href="/"
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                className="p-2 flat-card text-gray-500 hover:text-gray-700 rounded-2xl hover:flat-pressed transition-all duration-200"
               >
                 <Home className="w-5 h-5" />
               </Link>
 
-              <button
-                onClick={handleBack}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
 
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">수업 관리</h1>
-                <p className="text-sm text-gray-600">
-                  수업 시간표를 설정하고 관리할 수 있습니다
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl shadow-md">
+                  <Calendar className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-gray-800">수업 관리</h1>
+                  <p className="text-sm text-gray-600">수업 시간표를 설정하고 관리할 수 있습니다</p>
+                </div>
               </div>
             </div>
 
             {/* 통계 정보 */}
             <div className="flex items-center gap-6">
               <div className="text-center">
-                <div className="text-lg font-bold text-gray-900">
+                <div className="text-lg font-bold text-gray-800">
                   {allClasses.length}
                 </div>
                 <div className="text-xs text-gray-500">전체 수업</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-green-600">
+                <div className="text-lg font-bold text-success-600">
                   {scheduledClasses.length}
                 </div>
                 <div className="text-xs text-gray-500">시간 확정</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-orange-600">
+                <div className="text-lg font-bold text-warning-600">
                   {unscheduledClasses.length}
                 </div>
                 <div className="text-xs text-gray-500">시간 미확정</div>
@@ -265,8 +261,8 @@ export default function ClassManagementPage() {
           {/* 좌측 패널 - 수업 목록 */}
           <div className="lg:col-span-1">
             {/* 필터 */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="flat-card rounded-2xl border-0 p-4 mb-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 수업 필터
               </h3>
               <div className="space-y-2">
@@ -299,10 +295,10 @@ export default function ClassManagementPage() {
                           filter.value as "all" | "scheduled" | "unscheduled"
                         )
                       }
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                      className={`w-full text-left px-3 py-2 rounded-2xl text-sm transition-all duration-200 ${
                         filterType === filter.value
-                          ? "bg-blue-100 text-blue-700 border border-blue-200"
-                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          ? "flat-surface bg-primary-50 text-primary-700 border-0"
+                          : "flat-card bg-neu-100 text-gray-700 hover:flat-pressed"
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -319,8 +315,8 @@ export default function ClassManagementPage() {
             </div>
 
             {/* 수업 목록 */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="flat-card rounded-2xl border-0 p-4">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 수업 목록
               </h3>
               <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -340,10 +336,10 @@ export default function ClassManagementPage() {
                       <div
                         key={cls.id}
                         onClick={() => handleClassClick(cls)}
-                        className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                        className={`p-3 rounded-2xl cursor-pointer transition-all duration-200 ${
                           isSelected
-                            ? "bg-blue-100 border border-blue-200"
-                            : "bg-gray-50 hover:bg-gray-100"
+                            ? "flat-surface bg-primary-50 border-0"
+                            : "flat-card bg-neu-100 hover:flat-pressed"
                         }`}
                       >
                         <div className="flex items-start justify-between">
@@ -353,13 +349,13 @@ export default function ClassManagementPage() {
                                 className="w-3 h-3 rounded-full"
                                 style={{ backgroundColor: cls.color }}
                               />
-                              <span className="font-medium text-sm text-gray-900">
+                              <span className="font-medium text-sm text-gray-800">
                                 {cls.title}
                               </span>
                               {isScheduled ? (
-                                <CheckCircle className="w-4 h-4 text-green-500" />
+                                <CheckCircle className="w-4 h-4 text-success-500" />
                               ) : (
-                                <AlertCircle className="w-4 h-4 text-orange-500" />
+                                <AlertCircle className="w-4 h-4 text-warning-500" />
                               )}
                             </div>
 
@@ -407,10 +403,10 @@ export default function ClassManagementPage() {
             {selectedClass ? (
               <div>
                 {/* 선택된 수업 정보 */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+                <div className="flat-card rounded-2xl border-0 p-4 mb-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-gray-800">
                         {selectedClass.title}
                       </h3>
                       <p className="text-sm text-gray-600">
@@ -443,9 +439,9 @@ export default function ClassManagementPage() {
                 />
               </div>
             ) : (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+              <div className="flat-card rounded-2xl border-0 p-8 text-center">
                 <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-gray-800 mb-2">
                   수업을 선택해주세요
                 </h3>
                 <p className="text-gray-500">

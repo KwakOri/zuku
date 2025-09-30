@@ -10,7 +10,7 @@ const tooltipVariants = cva(
       variant: {
         default: "bg-neu-800 shadow-lg",
         dark: "bg-gray-900 shadow-lg",
-        light: "bg-white text-neu-800 shadow-neu border border-neu-300",
+        light: "bg-white text-gray-800 shadow-neu border border-gray-300",
       },
       position: {
         top: "bottom-full left-1/2 -translate-x-1/2 mb-2 before:content-[''] before:absolute before:top-full before:left-1/2 before:-translate-x-1/2 before:border-4 before:border-transparent before:border-t-neu-800",

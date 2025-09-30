@@ -66,7 +66,7 @@ export const Default: Story = {
           onClose={() => setIsOpen(false)}
           title="Default Modal"
         >
-          <p className="text-neu-600">
+          <p className="text-gray-600">
             This is a default modal with basic content. You can put any content here.
           </p>
         </Modal>
@@ -97,7 +97,7 @@ export const WithFooter: Story = {
             </>
           }
         >
-          <p className="text-neu-600">
+          <p className="text-gray-600">
             Are you sure you want to proceed with this action? This cannot be undone.
           </p>
         </Modal>
@@ -139,7 +139,7 @@ export const Sizes: Story = {
             title={`${size.charAt(0).toUpperCase() + size.slice(1)} Modal`}
             size={size as any}
           >
-            <p className="text-neu-600">
+            <p className="text-gray-600">
               This is a {size} modal. The content scales with the modal size.
             </p>
           </Modal>
@@ -181,7 +181,7 @@ export const Animations: Story = {
             title={`${animation.charAt(0).toUpperCase() + animation.slice(1)} Animation`}
             animation={animation as any}
           >
-            <p className="text-neu-600">
+            <p className="text-gray-600">
               This modal uses the {animation} animation.
             </p>
           </Modal>
@@ -283,19 +283,19 @@ export const CustomHeader: Story = {
                 <User className="w-6 h-6 text-primary-600" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-neu-800">User Profile</h2>
-                <p className="text-sm text-neu-500">Manage your account settings</p>
+                <h2 className="text-xl font-semibold text-gray-800">User Profile</h2>
+                <p className="text-sm text-gray-500">Manage your account settings</p>
               </div>
             </div>
           }
         >
           <div className="space-y-4">
-            <p className="text-neu-600">
+            <p className="text-gray-600">
               This modal has a custom header with an icon and description.
             </p>
-            <div className="p-4 bg-neu-50 rounded-lg">
-              <h4 className="font-medium text-neu-700 mb-2">Profile Information</h4>
-              <div className="space-y-2 text-sm text-neu-600">
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h4 className="font-medium text-gray-700 mb-2">Profile Information</h4>
+              <div className="space-y-2 text-sm text-gray-600">
                 <div>Name: John Doe</div>
                 <div>Email: john.doe@example.com</div>
                 <div>Role: Administrator</div>
@@ -329,7 +329,7 @@ export const NoCloseButton: Story = {
           }
         >
           <div className="space-y-4">
-            <p className="text-neu-600">
+            <p className="text-gray-600">
               This is an important notice that requires your attention. You must click
               the "I Understand" button to close this modal.
             </p>

@@ -108,75 +108,78 @@ export default function CreateClassForm({ userRole, userId }: CreateClassFormPro
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-      {/* 기본 정보 섹션 */}
-      <Card size="lg">
-        <div className="flex items-center gap-3 mb-6">
-          <Avatar
-            size="md"
-            variant="flat"
-            className="bg-primary-100"
-            fallback={<Icon name="book-open" size="sm" color="primary" />}
-          />
-          <h3 className="text-lg font-semibold text-neu-900">기본 정보</h3>
-        </div>
+    <div className="max-w-4xl mx-auto">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* 기본 정보 섹션 */}
+        <Card size="lg" className="p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Avatar
+              size="md"
+              variant="flat"
+              className="bg-primary-100"
+              fallback={<Icon name="book-open" size="sm" color="primary" />}
+            />
+            <h3 className="text-lg font-semibold text-gray-900">기본 정보</h3>
+          </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <FormField
-            label="수업명"
-            placeholder="예: 고등수학 기초반"
-            required
-            error={errors.title?.message}
-            {...register("title", { required: "수업명을 입력해주세요" })}
-          />
+          <div className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              <FormField
+                label="수업명"
+                placeholder="예: 고등수학 기초반"
+                required
+                error={errors.title?.message}
+                {...register("title", { required: "수업명을 입력해주세요" })}
+              />
 
-          <FormField
-            label="과목"
-            type="select"
-            required
-            error={errors.subject?.message}
-            {...register("subject", { required: "과목을 선택해주세요" })}
-            options={[
-              { value: "", label: "과목을 선택하세요" },
-              ...subjects.map(subject => ({ value: subject, label: subject }))
-            ]}
-          />
-        </div>
+              <FormField
+                label="과목"
+                type="select"
+                required
+                error={errors.subject?.message}
+                {...register("subject", { required: "과목을 선택해주세요" })}
+                options={[
+                  { value: "", label: "과목을 선택하세요" },
+                  ...subjects.map(subject => ({ value: subject, label: subject }))
+                ]}
+              />
+            </div>
 
-        <FormField
-          label="수업 설명"
-          type="textarea"
-          rows={3}
-          placeholder="수업에 대한 간단한 설명을 입력해주세요"
-          {...register("description")}
-        />
+            <FormField
+              label="수업 설명"
+              type="textarea"
+              rows={3}
+              placeholder="수업에 대한 간단한 설명을 입력해주세요"
+              {...register("description")}
+            />
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <FormField
-            label="강의실"
-            placeholder="예: A-101"
-            startIcon={<MapPin className="w-4 h-4" />}
-            {...register("room")}
-          />
+            <div className="grid md:grid-cols-2 gap-6">
+              <FormField
+                label="강의실"
+                placeholder="예: A-101"
+                startIcon={<MapPin className="w-4 h-4" />}
+                {...register("room")}
+              />
 
-          <FormField
-            label="최대 수강 인원"
-            type="number"
-            min="1"
-            max="50"
-            placeholder="예: 15"
-            startIcon={<Users className="w-4 h-4" />}
-            error={errors.maxStudents?.message}
-            {...register("maxStudents", {
-              min: { value: 1, message: "최소 1명 이상이어야 합니다" },
-              max: { value: 50, message: "최대 50명까지 가능합니다" }
-            })}
-          />
-        </div>
+              <FormField
+                label="최대 수강 인원"
+                type="number"
+                min="1"
+                max="50"
+                placeholder="예: 15"
+                startIcon={<Users className="w-4 h-4" />}
+                error={errors.maxStudents?.message}
+                {...register("maxStudents", {
+                  min: { value: 1, message: "최소 1명 이상이어야 합니다" },
+                  max: { value: 50, message: "최대 50명까지 가능합니다" }
+                })}
+              />
+            </div>
+          </div>
       </Card>
 
       {/* 시간 설정 섹션 */}
-      <Card size="lg">
+      <Card size="lg" className="p-6">
         <div className="flex items-center gap-3 mb-6">
           <Avatar
             size="md"
@@ -184,7 +187,7 @@ export default function CreateClassForm({ userRole, userId }: CreateClassFormPro
             className="bg-success-100"
             fallback={<Icon name="clock" size="sm" color="success" />}
           />
-          <h3 className="text-lg font-semibold text-neu-900">시간 설정</h3>
+          <h3 className="text-lg font-semibold text-gray-900">시간 설정</h3>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
@@ -225,7 +228,7 @@ export default function CreateClassForm({ userRole, userId }: CreateClassFormPro
       </Card>
 
       {/* 강사 배정 섹션 */}
-      <Card size="lg">
+      <Card size="lg" className="p-6">
         <div className="flex items-center gap-3 mb-6">
           <Avatar
             size="md"
@@ -233,7 +236,7 @@ export default function CreateClassForm({ userRole, userId }: CreateClassFormPro
             className="bg-secondary-100"
             fallback={<Icon name="user" size="sm" color="secondary" />}
           />
-          <h3 className="text-lg font-semibold text-neu-900">담당 강사</h3>
+          <h3 className="text-lg font-semibold text-gray-900">담당 강사</h3>
         </div>
 
         <FormField
@@ -256,7 +259,7 @@ export default function CreateClassForm({ userRole, userId }: CreateClassFormPro
       </Card>
 
       {/* 학생 선택 섹션 */}
-      <Card size="lg">
+      <Card size="lg" className="p-6">
         <div className="flex items-center gap-3 mb-6">
           <Avatar
             size="md"
@@ -264,7 +267,7 @@ export default function CreateClassForm({ userRole, userId }: CreateClassFormPro
             className="bg-warning-100"
             fallback={<Icon name="users" size="sm" color="warning" />}
           />
-          <h3 className="text-lg font-semibold text-neu-900">수강 학생</h3>
+          <h3 className="text-lg font-semibold text-gray-900">수강 학생</h3>
           <Badge variant="secondary" size="md">
             {selectedStudents.length}명 선택됨
           </Badge>
@@ -273,12 +276,12 @@ export default function CreateClassForm({ userRole, userId }: CreateClassFormPro
         {studentsLoading ? (
           <div className="text-center py-8">
             <Icon name="loader" size="lg" color="primary" className="mx-auto mb-4 animate-spin" />
-            <p className="text-neu-600">학생 목록을 불러오는 중...</p>
+            <p className="text-gray-600">학생 목록을 불러오는 중...</p>
           </div>
         ) : (
           <Card variant="flat" className="max-h-60 overflow-y-auto">
             {students.length === 0 ? (
-              <div className="p-4 text-center text-neu-500">
+              <div className="p-4 text-center text-gray-500">
                 등록된 학생이 없습니다.
               </div>
             ) : (
@@ -286,17 +289,17 @@ export default function CreateClassForm({ userRole, userId }: CreateClassFormPro
                 {students.map((student) => (
                   <label
                     key={student.id}
-                    className="flex items-center p-3 hover:bg-neu-50 cursor-pointer"
+                    className="flex items-center p-3 hover:bg-gray-50 cursor-pointer"
                   >
                     <input
                       type="checkbox"
                       checked={selectedStudents.includes(student.id)}
                       onChange={() => toggleStudent(student.id)}
-                      className="w-4 h-4 text-primary-600 border-neu-300 rounded focus:ring-primary-500"
+                      className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                     />
                     <div className="ml-3 flex-1">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-neu-900">
+                        <span className="text-sm font-medium text-gray-900">
                           {student.name}
                         </span>
                         <Chip variant="outline" size="sm">
@@ -304,7 +307,7 @@ export default function CreateClassForm({ userRole, userId }: CreateClassFormPro
                         </Chip>
                       </div>
                       {student.phone && (
-                        <span className="text-xs text-neu-500">{student.phone}</span>
+                        <span className="text-xs text-gray-500">{student.phone}</span>
                       )}
                     </div>
                   </label>
@@ -316,7 +319,7 @@ export default function CreateClassForm({ userRole, userId }: CreateClassFormPro
       </Card>
 
       {/* 제출 버튼 */}
-      <Card variant="flat" className="border-t border-neu-200">
+      <Card variant="flat" className="border-t border-neu-200 p-6">
         <div className="flex items-center justify-end gap-4">
           <Button
             type="button"
@@ -345,5 +348,6 @@ export default function CreateClassForm({ userRole, userId }: CreateClassFormPro
         </div>
       </Card>
     </form>
+    </div>
   );
 }

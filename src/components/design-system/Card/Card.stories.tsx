@@ -38,8 +38,8 @@ export const Default: Story = {
   args: {
     children: (
       <div>
-        <h3 className="text-lg font-semibold text-neu-800 mb-2">Card Title</h3>
-        <p className="text-neu-600">This is a neumorphic card component with default styling.</p>
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">Card Title</h3>
+        <p className="text-gray-600">This is a neumorphic card component with default styling.</p>
       </div>
     ),
   },
@@ -51,7 +51,7 @@ export const Interactive: Story = {
     children: (
       <div>
         <h3 className="text-lg font-semibold text-primary-600 mb-2">Interactive Card</h3>
-        <p className="text-neu-600">Click me! This card has hover and active states.</p>
+        <p className="text-gray-600">Click me! This card has hover and active states.</p>
       </div>
     ),
   },
@@ -61,16 +61,16 @@ export const Sizes: Story = {
   render: () => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <Card size="sm">
-        <h4 className="font-medium text-neu-800">Small Card</h4>
-        <p className="text-sm text-neu-600">Compact padding</p>
+        <h4 className="font-medium text-gray-800">Small Card</h4>
+        <p className="text-sm text-gray-600">Compact padding</p>
       </Card>
       <Card size="md">
-        <h4 className="font-medium text-neu-800">Medium Card</h4>
-        <p className="text-sm text-neu-600">Default padding</p>
+        <h4 className="font-medium text-gray-800">Medium Card</h4>
+        <p className="text-sm text-gray-600">Default padding</p>
       </Card>
       <Card size="lg">
-        <h4 className="font-medium text-neu-800">Large Card</h4>
-        <p className="text-sm text-neu-600">Spacious padding</p>
+        <h4 className="font-medium text-gray-800">Large Card</h4>
+        <p className="text-sm text-gray-600">Spacious padding</p>
       </Card>
     </div>
   ),
@@ -80,16 +80,16 @@ export const Variants: Story = {
   render: () => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <Card variant="raised">
-        <h4 className="font-medium text-neu-800 mb-2">Raised</h4>
-        <p className="text-sm text-neu-600">Neumorphic raised effect</p>
+        <h4 className="font-medium text-gray-800 mb-2">Raised</h4>
+        <p className="text-sm text-gray-600">Neumorphic raised effect</p>
       </Card>
       <Card variant="flat">
-        <h4 className="font-medium text-neu-800 mb-2">Flat</h4>
-        <p className="text-sm text-neu-600">Flat with subtle border</p>
+        <h4 className="font-medium text-gray-800 mb-2">Flat</h4>
+        <p className="text-sm text-gray-600">Flat with subtle border</p>
       </Card>
-      <Card variant="outlined">
-        <h4 className="font-medium text-neu-800 mb-2">Outlined</h4>
-        <p className="text-sm text-neu-600">Transparent with border</p>
+      <Card variant="elevated">
+        <h4 className="font-medium text-gray-800 mb-2">Outlined</h4>
+        <p className="text-sm text-gray-600">Transparent with border</p>
       </Card>
     </div>
   ),
@@ -107,9 +107,9 @@ export const ComplexContent: Story = {
           <span className="text-sm text-success-600 font-medium">In Stock</span>
         </div>
         <div className="w-full h-32 bg-neu-200 rounded-lg mb-4 flex items-center justify-center">
-          <span className="text-neu-500">Image Placeholder</span>
+          <span className="text-gray-500">Image Placeholder</span>
         </div>
-        <p className="text-neu-600 mb-4">
+        <p className="text-gray-600 mb-4">
           This is a more complex card example with multiple elements and interactive states.
         </p>
         <div className="flex items-center justify-between">

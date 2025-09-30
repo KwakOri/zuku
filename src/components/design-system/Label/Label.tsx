@@ -13,7 +13,7 @@ const labelVariants = cva(
         lg: "text-base",
       },
       state: {
-        default: "text-neu-700",
+        default: "text-gray-700",
         error: "text-error-600",
         success: "text-success-600",
         warning: "text-warning-600",

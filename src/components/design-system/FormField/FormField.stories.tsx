@@ -205,8 +205,8 @@ export const Disabled: Story = {
 
 export const LoginForm: Story = {
   render: () => (
-    <div className="space-y-6 max-w-md p-6 neu-raised rounded-xl">
-      <h2 className="text-xl font-semibold text-neu-800 mb-4">Login</h2>
+    <div className="space-y-6 max-w-md p-6 flat-card rounded-xl">
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">Login</h2>
 
       <FormField
         label="Email"

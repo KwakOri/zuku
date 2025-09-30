@@ -4,13 +4,19 @@ import { cn } from '../utils';
 
 const cardVariants = cva(
   // Base styles
-  "rounded-xl transition-all duration-200 ease-in-out",
+  "rounded-lg transition-all duration-200 ease-in-out",
   {
     variants: {
       variant: {
-        raised: "neu-raised hover:shadow-neu-lg",
-        flat: "bg-neu-100 border border-neu-300",
-        outlined: "bg-transparent border border-neu-400",
+        flat: "bg-white",
+        elevated: "bg-gray-50",
+        surface: "bg-gray-100",
+        primary: "bg-primary-50",
+        secondary: "bg-secondary-50",
+        outlined: "bg-transparent border border-gray-300",
+        bordered: "bg-white border border-gray-200 hover:border-gray-300",
+        borderless: "bg-white hover:bg-gray-50",
+        subtle: "bg-gray-50 hover:bg-gray-100",
       },
       size: {
         sm: "p-4",
@@ -18,12 +24,12 @@ const cardVariants = cva(
         lg: "p-8",
       },
       interactive: {
-        true: "cursor-pointer hover:scale-[1.02] active:scale-[0.98] active:neu-pressed",
+        true: "cursor-pointer transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]",
         false: "",
       },
     },
     defaultVariants: {
-      variant: "raised",
+      variant: "flat",
       size: "md",
       interactive: false,
     },

@@ -13,7 +13,7 @@ const badgeVariants = cva(
         success: "bg-success-500 shadow-md",
         warning: "bg-warning-500 shadow-md",
         error: "bg-error-500 shadow-md",
-        neumorphic: "neu-raised-sm text-neu-700",
+        neumorphic: "flat-card-sm text-gray-700",
         outline: "bg-transparent border border-primary-500 text-primary-500",
       },
       size: {

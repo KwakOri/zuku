@@ -1,8 +1,8 @@
 "use client";
 
-import CreateClassForm from "@/components/CreateClassForm";
+import CreateClassForm from "@/components/create-class/CreateClassForm";
 import { useAuthState } from "@/queries/useAuth";
-import { ArrowLeft, Calendar, Plus } from "lucide-react";
+import { Home, Calendar, Plus } from "lucide-react";
 import Link from "next/link";
 import { Card, Button, Icon, Badge, Avatar } from "@/components/design-system";
 
@@ -17,75 +17,80 @@ export default function CreateClassPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-neu-100 flex items-center justify-center p-4">
-        <Card size="lg" variant="flat" className="border-warning-200 max-w-md w-full">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="flat-card rounded-2xl border-0 p-8 max-w-md w-full">
           <div className="text-center">
-            <Icon name="alert-triangle" size="3xl" color="warning" className="mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-warning-900 mb-2">
+            <div className="p-3 bg-gradient-to-br from-warning-500 to-warning-600 rounded-xl mx-auto mb-4 w-fit shadow-md">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-800 mb-2">
               로그인이 필요합니다
             </h3>
-            <p className="text-warning-600 text-sm mb-4">
+            <p className="text-gray-600 text-sm mb-6">
               수업 개설 기능을 사용하려면 로그인해주세요.
             </p>
             <Link href="/login">
-              <Button variant="primary" size="md">
+              <button className="px-6 py-2 flat-card bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-2xl hover:from-primary-600 hover:to-primary-700 transition-all duration-200">
                 로그인하기
-              </Button>
+              </button>
             </Link>
           </div>
-        </Card>
+        </div>
       </div>
     );
   }
 
   if (!hasPermission) {
     return (
-      <div className="min-h-screen bg-neu-100 flex items-center justify-center p-4">
-        <Card size="lg" variant="flat" className="border-error-200 max-w-md w-full">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="flat-card rounded-2xl border-0 p-8 max-w-md w-full">
           <div className="text-center">
-            <Icon name="x-circle" size="3xl" color="error" className="mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-error-900 mb-2">
+            <div className="p-3 bg-gradient-to-br from-error-500 to-error-600 rounded-xl mx-auto mb-4 w-fit shadow-md">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-800 mb-2">
               접근 권한이 없습니다
             </h3>
-            <p className="text-error-600 text-sm mb-4">
+            <p className="text-gray-600 text-sm mb-6">
               수업 개설은 관리자, 매니저, 강사만 가능합니다.
             </p>
             <Link href="/">
-              <Button variant="secondary" size="md">
-                <ArrowLeft className="w-4 h-4 mr-2" />
+              <button className="flex items-center gap-2 px-6 py-2 flat-card text-gray-600 rounded-2xl hover:text-gray-700 hover:flat-pressed transition-all duration-200">
+                <Home className="w-4 h-4" />
                 홈으로 돌아가기
-              </Button>
+              </button>
             </Link>
           </div>
-        </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-neu-100">
+    <div className="min-h-screen bg-gray-50">
       {/* 헤더 */}
-      <div className="bg-neu-50 border-b border-neu-200">
+      <header className="flat-surface bg-gray-50 border-0 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
-              <Link href="/">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="w-5 h-5 mr-2" />
-                  홈으로
-                </Button>
+              <Link
+                href="/"
+                className="p-2 flat-card text-gray-500 hover:text-gray-700 rounded-2xl hover:flat-pressed transition-all duration-200"
+              >
+                <Home className="w-5 h-5" />
               </Link>
-              <div className="h-6 w-px bg-neu-300" />
+
               <div className="flex items-center gap-3">
-                <Avatar
-                  size="md"
-                  variant="flat"
-                  className="bg-success-100"
-                  fallback={<Icon name="plus" size="sm" color="success" />}
-                />
+                <div className="p-3 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl shadow-md">
+                  <Plus className="w-6 h-6 text-white" />
+                </div>
                 <div>
-                  <h1 className="text-xl font-bold text-neu-900">수업 개설</h1>
-                  <p className="text-sm text-neu-600">
+                  <h1 className="text-xl font-bold text-gray-800">수업 개설</h1>
+                  <p className="text-sm text-gray-600">
                     새로운 수업을 만들어보세요
                   </p>
                 </div>
@@ -93,35 +98,35 @@ export default function CreateClassPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              <Badge variant="primary" size="md">
+              <div className="px-3 py-1 flat-card bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-2xl text-sm font-medium">
                 {user?.role === "admin"
                   ? "관리자"
                   : user?.role === "manager"
                   ? "매니저"
                   : "강사"}
-              </Badge>
-              <span className="text-sm text-neu-600">{user?.name}</span>
+              </div>
+              <span className="text-sm text-gray-600">{user?.name}</span>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* 메인 콘텐츠 */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Card size="xl" className="overflow-hidden">
+        <div className="flat-card rounded-2xl border-0 overflow-hidden">
           {/* 페이지 헤더 */}
-          <div className="bg-gradient-to-r from-success-50 to-primary-50 px-8 py-6 border-b border-neu-200">
+          <div className="flat-surface bg-gradient-to-r from-success-50 to-primary-50 px-8 py-6 border-0">
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-neu-900 mb-2">
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
                   새 수업 개설
                 </h2>
-                <p className="text-neu-600 max-w-2xl">
+                <p className="text-gray-600 max-w-2xl">
                   수업 정보를 입력하고 담당 강사와 수강 학생을 설정하여 새로운
                   수업을 개설하세요.
                 </p>
               </div>
-              <div className="flex items-center gap-2 text-sm text-neu-500">
+              <div className="flex items-center gap-2 text-sm text-gray-500">
                 <Calendar className="w-4 h-4" />
                 <span>필수 정보를 모두 입력해주세요</span>
               </div>
@@ -129,57 +134,45 @@ export default function CreateClassPage() {
           </div>
 
           {/* 기능 안내 카드 */}
-          <div className="px-8 py-6 bg-neu-50 border-b border-neu-200">
-            <h3 className="text-lg font-semibold text-neu-900 mb-4">
+          <div className="px-8 py-6 bg-neu-100 border border-neu-200 mx-8 my-6 rounded-xl">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
               수업 개설 과정
             </h3>
             <div className="grid md:grid-cols-4 gap-4">
               <div className="flex items-center gap-3 text-sm">
-                <Avatar
-                  size="sm"
-                  variant="flat"
-                  className="bg-primary-100 text-primary-600 font-semibold"
-                  fallback="1"
-                />
+                <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 text-white rounded-lg flex items-center justify-center font-semibold shadow-sm">
+                  1
+                </div>
                 <div>
-                  <div className="font-medium text-neu-900">기본 정보</div>
-                  <div className="text-neu-600">수업명, 과목 설정</div>
+                  <div className="font-medium text-gray-800">기본 정보</div>
+                  <div className="text-gray-600">수업명, 과목 설정</div>
                 </div>
               </div>
               <div className="flex items-center gap-3 text-sm">
-                <Avatar
-                  size="sm"
-                  variant="flat"
-                  className="bg-success-100 text-success-600 font-semibold"
-                  fallback="2"
-                />
+                <div className="w-8 h-8 bg-gradient-to-br from-success-500 to-success-600 text-white rounded-lg flex items-center justify-center font-semibold shadow-sm">
+                  2
+                </div>
                 <div>
-                  <div className="font-medium text-neu-900">시간 설정</div>
-                  <div className="text-neu-600">요일, 시간 지정</div>
+                  <div className="font-medium text-gray-800">시간 설정</div>
+                  <div className="text-gray-600">요일, 시간 지정</div>
                 </div>
               </div>
               <div className="flex items-center gap-3 text-sm">
-                <Avatar
-                  size="sm"
-                  variant="flat"
-                  className="bg-secondary-100 text-secondary-600 font-semibold"
-                  fallback="3"
-                />
+                <div className="w-8 h-8 bg-gradient-to-br from-secondary-500 to-secondary-600 text-white rounded-lg flex items-center justify-center font-semibold shadow-sm">
+                  3
+                </div>
                 <div>
-                  <div className="font-medium text-neu-900">강사 배정</div>
-                  <div className="text-neu-600">담당 강사 선택</div>
+                  <div className="font-medium text-gray-800">강사 배정</div>
+                  <div className="text-gray-600">담당 강사 선택</div>
                 </div>
               </div>
               <div className="flex items-center gap-3 text-sm">
-                <Avatar
-                  size="sm"
-                  variant="flat"
-                  className="bg-warning-100 text-warning-600 font-semibold"
-                  fallback="4"
-                />
+                <div className="w-8 h-8 bg-gradient-to-br from-warning-500 to-warning-600 text-white rounded-lg flex items-center justify-center font-semibold shadow-sm">
+                  4
+                </div>
                 <div>
-                  <div className="font-medium text-neu-900">학생 등록</div>
-                  <div className="text-neu-600">수강 학생 선택</div>
+                  <div className="font-medium text-gray-800">학생 등록</div>
+                  <div className="text-gray-600">수강 학생 선택</div>
                 </div>
               </div>
             </div>
@@ -192,7 +185,7 @@ export default function CreateClassPage() {
               userId={user?.id || ""}
             />
           </div>
-        </Card>
+        </div>
       </div>
     </div>
   );

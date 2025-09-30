@@ -9,7 +9,7 @@ const switchVariants = cva(
     variants: {
       variant: {
         default: [
-          "bg-neu-300 neu-inset",
+          "bg-gray-300 flat-surface",
           "data-[checked=true]:bg-primary-500 data-[checked=true]:shadow-md"
         ],
         outline: [
@@ -32,7 +32,7 @@ const switchVariants = cva(
 
 const thumbVariants = cva(
   // Base styles - Thumb
-  "absolute bg-white transition-all duration-200 ease-in-out neu-raised-sm",
+  "absolute bg-white transition-all duration-200 ease-in-out flat-card-sm",
   {
     variants: {
       size: {
@@ -112,7 +112,7 @@ export const Switch: React.FC<SwitchProps> = ({
             <label
               className={cn(
                 "text-sm font-medium cursor-pointer",
-                disabled ? "text-neu-400" : "text-neu-700"
+                disabled ? "text-gray-400" : "text-gray-700"
               )}
               onClick={handleToggle}
             >
@@ -122,7 +122,7 @@ export const Switch: React.FC<SwitchProps> = ({
           {description && (
             <p className={cn(
               "text-xs mt-0.5",
-              disabled ? "text-neu-400" : "text-neu-500"
+              disabled ? "text-gray-400" : "text-gray-500"
             )}>
               {description}
             </p>
