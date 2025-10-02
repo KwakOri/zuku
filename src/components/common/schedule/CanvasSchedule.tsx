@@ -1,12 +1,8 @@
 "use client";
 
 import {
-  calculateStudentDensity,
-  calculateSelectedClassStudentDensity,
   defaultScheduleConfig,
-  generateClassBlocks,
   getDensityColor,
-  getStudentsAtTime,
 } from "@/lib/utils";
 import { formatDisplayTime } from "@/lib/utils/time";
 import { ClassBlock, EditMode, ScheduleConfig } from "@/types/schedule";
@@ -24,6 +20,8 @@ interface CanvasScheduleProps {
   onBlocksChange?: (blocks: ClassBlock[]) => void; // 블록 변경 콜백
   selectedClassId?: string; // 선택된 수업 ID (강사 모드용)
   selectedClassStudents?: string[]; // 선택된 수업의 학생 ID 목록 (밀집도 계산용)
+  customDensityData?: { [key: string]: number }; // 외부에서 계산된 밀집도 데이터
+  densityTooltipData?: { [key: string]: Array<{ studentId: string; studentName: string; scheduleName: string }> }; // 툴팁용 상세 데이터
   onTimeSlotClick?: (timeSlot: { dayOfWeek: number; startTime: string; endTime: string }) => void; // 시간대 클릭 콜백
 }
 
@@ -273,6 +271,8 @@ export default function CanvasSchedule({
   onBlocksChange,
   selectedClassId,
   selectedClassStudents,
+  customDensityData,
+  densityTooltipData,
   onTimeSlotClick,
 }: CanvasScheduleProps) {
   const timeCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -514,10 +514,8 @@ export default function CanvasSchedule({
     }
 
     // 학생 일정 밀집도 표시
-    if (showDensity) {
-      const densityData = selectedClassStudents
-        ? calculateSelectedClassStudentDensity(config, selectedClassStudents)
-        : calculateStudentDensity(config);
+    if (showDensity && customDensityData) {
+      const densityData = customDensityData;
       const maxDensity = Math.max(...Object.values(densityData).map(v => Number(v)));
 
       for (let day = 0; day < 7; day++) {
@@ -815,7 +813,7 @@ export default function CanvasSchedule({
         ctx.globalAlpha = 1.0;
       }
     }
-  }, [classBlocks, dragState, config, editMode, showDensity, DAY_COLUMN_WIDTH, selectedClassStudents]);
+  }, [classBlocks, dragState, config, editMode, showDensity, DAY_COLUMN_WIDTH, selectedClassStudents, customDensityData]);
 
   // 마우스 이벤트 핸들러
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -860,8 +858,10 @@ export default function CanvasSchedule({
       if (dayIndex >= 0 && dayIndex < 7 && slotIndex >= 0) {
         const startHour = Math.floor((slotIndex * config.timeSlotMinutes) / 60) + config.startHour;
         const startMinute = (slotIndex * config.timeSlotMinutes) % 60;
-        const endHour = Math.floor(((slotIndex + 2) * config.timeSlotMinutes) / 60) + config.startHour; // 2슬롯 = 1시간
-        const endMinute = ((slotIndex + 2) * config.timeSlotMinutes) % 60;
+        // 90분(1시간 30분) = 90 / timeSlotMinutes 슬롯
+        const slotsFor90Min = Math.ceil(90 / config.timeSlotMinutes);
+        const endHour = Math.floor(((slotIndex + slotsFor90Min) * config.timeSlotMinutes) / 60) + config.startHour;
+        const endMinute = ((slotIndex + slotsFor90Min) * config.timeSlotMinutes) % 60;
 
         const startTime = `${startHour.toString().padStart(2, "0")}:${startMinute.toString().padStart(2, "0")}`;
         const endTime = `${endHour.toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`;
@@ -897,21 +897,23 @@ export default function CanvasSchedule({
           .toString()
           .padStart(2, "0")}`;
 
-        const studentsAtTime = selectedClassStudents
-          ? getStudentsAtTime(dayIndex, time).filter(({ student }) =>
-              selectedClassStudents.includes(student.id)
-            )
-          : getStudentsAtTime(dayIndex, time);
+        // Use custom tooltip data if available
+        if (densityTooltipData) {
+          const key = `${dayIndex}-${time}`;
+          const schedules = densityTooltipData[key] || [];
 
-        if (studentsAtTime.length > 0) {
-          setTooltip({
-            visible: true,
-            x: e.clientX,
-            y: e.clientY,
-            dayOfWeek: dayIndex,
-            time,
-            studentCount: studentsAtTime.length,
-          });
+          if (schedules.length > 0) {
+            setTooltip({
+              visible: true,
+              x: e.clientX,
+              y: e.clientY,
+              dayOfWeek: dayIndex,
+              time,
+              studentCount: schedules.length,
+            });
+          } else {
+            setTooltip(null);
+          }
         } else {
           setTooltip(null);
         }
@@ -1271,29 +1273,33 @@ export default function CanvasSchedule({
           </div>
           <div className="space-y-1">
             {(() => {
-              const filteredStudents = selectedClassStudents
-                ? getStudentsAtTime(tooltip.dayOfWeek, tooltip.time).filter(({ student }) =>
-                    selectedClassStudents.includes(student.id)
-                  )
-                : getStudentsAtTime(tooltip.dayOfWeek, tooltip.time);
+              // Use custom tooltip data if available
+              if (densityTooltipData) {
+                const key = `${tooltip.dayOfWeek}-${tooltip.time}`;
+                const schedules = densityTooltipData[key] || [];
 
-              return (
-                <>
-                  {filteredStudents
-                    .slice(0, 5)
-                    .map(({ student, schedule }) => (
-                      <div key={`${student.id}-${schedule.id}`} className="text-xs">
-                        <span className="text-white font-medium">{student.name}</span>
-                        <span className="text-gray-300 ml-1">- {schedule.title}</span>
+                return (
+                  <>
+                    {schedules.slice(0, 5).map((schedule, idx) => (
+                      <div key={`${schedule.studentId}-${idx}`} className="text-xs">
+                        <span className="text-white font-medium">{schedule.studentName}</span>
+                        <span className="text-gray-300 ml-1">- {schedule.scheduleName}</span>
                       </div>
                     ))}
-                  {filteredStudents.length > 5 && (
-                    <div className="text-xs text-gray-400">
-                      +{filteredStudents.length - 5}
-                      명 더...
-                    </div>
-                  )}
-                </>
+                    {schedules.length > 5 && (
+                      <div className="text-xs text-gray-400">
+                        +{schedules.length - 5}명 더...
+                      </div>
+                    )}
+                  </>
+                );
+              }
+
+              // No data available
+              return (
+                <div className="text-xs text-gray-400">
+                  일정 정보를 불러올 수 없습니다.
+                </div>
               );
             })()}
           </div>

@@ -89,6 +89,44 @@ export type Database = {
         }
         Relationships: []
       }
+      backup_students: {
+        Row: {
+          backup_data: Json
+          backup_date: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          notes: string | null
+          student_count: number
+        }
+        Insert: {
+          backup_data: Json
+          backup_date?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          student_count: number
+        }
+        Update: {
+          backup_data?: Json
+          backup_date?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          student_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backup_students_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_exceptions: {
         Row: {
           class_id: string
@@ -194,6 +232,7 @@ export type Database = {
       classes: {
         Row: {
           color: string
+          course_type: string
           created_at: string | null
           day_of_week: number | null
           description: string | null
@@ -210,6 +249,7 @@ export type Database = {
         }
         Insert: {
           color?: string
+          course_type?: string
           created_at?: string | null
           day_of_week?: number | null
           description?: string | null
@@ -226,6 +266,7 @@ export type Database = {
         }
         Update: {
           color?: string
+          course_type?: string
           created_at?: string | null
           day_of_week?: number | null
           description?: string | null
@@ -390,6 +431,30 @@ export type Database = {
           },
         ]
       }
+      schools: {
+        Row: {
+          created_at: string | null
+          id: string
+          level: Database["public"]["Enums"]["school_level"]
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          level: Database["public"]["Enums"]["school_level"]
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          level?: Database["public"]["Enums"]["school_level"]
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       signup_invitations: {
         Row: {
           created_at: string | null
@@ -498,8 +563,12 @@ export type Database = {
       }
       students: {
         Row: {
+          birth_date: string | null
+          class_name: string | null
           created_at: string | null
           email: string | null
+          enrollment_status: string | null
+          gender: string | null
           grade: number
           id: string
           is_active: boolean | null
@@ -507,11 +576,16 @@ export type Database = {
           parent_phone: string | null
           password_hash: string | null
           phone: string | null
+          school_id: string | null
           updated_at: string | null
         }
         Insert: {
+          birth_date?: string | null
+          class_name?: string | null
           created_at?: string | null
           email?: string | null
+          enrollment_status?: string | null
+          gender?: string | null
           grade: number
           id?: string
           is_active?: boolean | null
@@ -519,11 +593,16 @@ export type Database = {
           parent_phone?: string | null
           password_hash?: string | null
           phone?: string | null
+          school_id?: string | null
           updated_at?: string | null
         }
         Update: {
+          birth_date?: string | null
+          class_name?: string | null
           created_at?: string | null
           email?: string | null
+          enrollment_status?: string | null
+          gender?: string | null
           grade?: number
           id?: string
           is_active?: boolean | null
@@ -531,9 +610,18 @@ export type Database = {
           parent_phone?: string | null
           password_hash?: string | null
           phone?: string | null
+          school_id?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "students_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subjects: {
         Row: {
@@ -666,7 +754,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      school_level: "middle" | "high"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -793,6 +881,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      school_level: ["middle", "high"],
+    },
   },
 } as const

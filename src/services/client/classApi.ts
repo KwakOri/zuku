@@ -28,6 +28,7 @@ export interface CreateClassData {
   room?: string;
   maxStudents?: number;
   studentIds: string[];
+  courseType?: "regular" | "school_exam"; // 수업 유형
 }
 
 export class ClassApi {

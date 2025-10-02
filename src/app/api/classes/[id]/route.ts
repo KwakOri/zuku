@@ -55,7 +55,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       'color',
       'max_students',
       'subject_id',
-      'teacher_id'
+      'teacher_id',
+      'course_type'
     ];
 
     const updateData: Record<string, any> = {};

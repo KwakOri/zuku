@@ -1,64 +1,57 @@
 "use client";
 
-import Link from "next/link";
 import StudentList from "@/components/students/StudentList";
 import AddStudentModal from "@/components/common/modals/AddStudentModal";
-import { Home, UserPlus, Users, Calendar } from "lucide-react";
+import StudentRenewalDialog from "@/components/students/StudentRenewalDialog";
+import { PageHeader, PageLayout } from "@/components/common/layout";
+import { UserPlus, Users, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
 export default function StudentsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isRenewalOpen, setIsRenewalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 헤더 */}
-      <header className="flat-surface bg-gray-50 border-0 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <Link
-                href="/"
-                className="p-2 flat-card text-gray-500 hover:text-gray-700 rounded-2xl hover:flat-pressed transition-all duration-200"
-              >
-                <Home className="w-5 h-5" />
-              </Link>
+    <>
+      <PageHeader
+        title="학생 관리"
+        description="학생 정보를 관리하고 개별 일정을 편집하세요"
+        icon={Users}
+        actions={
+          <>
+            <button
+              onClick={() => setIsRenewalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 flat-card bg-white text-primary-600 rounded-2xl hover:bg-primary-50 transition-all duration-200 border border-primary-200"
+            >
+              <RefreshCw className="w-4 h-4" />
+              학생 정보 갱신
+            </button>
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 flat-card bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-2xl hover:from-primary-600 hover:to-primary-700 transition-all duration-200"
+            >
+              <UserPlus className="w-4 h-4" />
+              학생 추가
+            </button>
+          </>
+        }
+      />
 
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl shadow-md">
-                  <Users className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-gray-800">학생 관리</h1>
-                  <p className="text-sm text-gray-600">
-                    학생 정보를 관리하고 개별 일정을 편집하세요
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setIsAddModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 flat-card bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-2xl hover:from-primary-600 hover:to-primary-700 transition-all duration-200"
-              >
-                <UserPlus className="w-4 h-4" />
-                학생 추가
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* 메인 콘텐츠 */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <PageLayout variant="default">
         <StudentList />
-      </main>
+      </PageLayout>
 
       {/* 학생 추가 모달 */}
       <AddStudentModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
       />
-    </div>
+
+      {/* 학생 정보 갱신 다이얼로그 */}
+      <StudentRenewalDialog
+        isOpen={isRenewalOpen}
+        onClose={() => setIsRenewalOpen(false)}
+      />
+    </>
   );
 }

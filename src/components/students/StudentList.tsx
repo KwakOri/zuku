@@ -1,32 +1,30 @@
 "use client";
 
+import {
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  Chip,
+  Icon,
+  SearchInput,
+} from "@/components/design-system";
 import { getGrade } from "@/lib/utils";
-import { Tables } from "@/types/supabase";
+import { useSendKakaoNotification } from "@/queries/useNotifications";
 import { useStudents } from "@/queries/useStudents";
+import { Tables } from "@/types/supabase";
 import {
   Calendar,
   ChevronDown,
   Edit3,
   Filter,
-  GraduationCap,
   Mail,
   MessageSquare,
   Phone,
-  Search,
   User,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { useSendKakaoNotification } from "@/queries/useNotifications";
-import {
-  Card,
-  Button,
-  SearchInput,
-  Avatar,
-  Badge,
-  Chip,
-  Icon
-} from "@/components/design-system";
 
 interface StudentListProps {
   onStudentSelect?: (student: Tables<"students">) => void;
@@ -83,7 +81,6 @@ export default function StudentList({
     return grades;
   }, [students]);
 
-
   const getGradeColor = (grade: number) => {
     if (grade <= 9) return "bg-blue-50 text-blue-700 border-blue-200";
     return "bg-purple-50 text-purple-700 border-purple-200";
@@ -91,7 +88,9 @@ export default function StudentList({
 
   // 알림톡 전송 핸들러
   const handleSendNotification = (studentId: string, studentName: string) => {
-    if (confirm(`${studentName} 학생의 학부모에게 알림톡을 전송하시겠습니까?`)) {
+    if (
+      confirm(`${studentName} 학생의 학부모에게 알림톡을 전송하시겠습니까?`)
+    ) {
       sendNotification.mutate(studentId);
     }
   };
@@ -102,9 +101,9 @@ export default function StudentList({
       <div className="w-full space-y-6">
         <Card size="lg">
           <div className="animate-pulse">
-            <div className="h-8 bg-neu-200 rounded w-1/3 mb-4"></div>
-            <div className="h-4 bg-neu-200 rounded w-full mb-4"></div>
-            <div className="h-12 bg-neu-200 rounded w-full"></div>
+            <div className="w-1/3 h-8 mb-4 rounded bg-neu-200"></div>
+            <div className="w-full h-4 mb-4 rounded bg-neu-200"></div>
+            <div className="w-full h-12 rounded bg-neu-200"></div>
           </div>
         </Card>
       </div>
@@ -117,11 +116,16 @@ export default function StudentList({
       <div className="w-full space-y-6">
         <Card size="lg" variant="flat" className="border-error-200">
           <div className="text-center">
-            <Icon name="alert-triangle" size="xl" color="error" className="mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-error-900 mb-2">
+            <Icon
+              name="alert-triangle"
+              size="xl"
+              color="error"
+              className="mx-auto mb-4"
+            />
+            <h3 className="mb-2 text-lg font-medium text-error-900">
               데이터를 불러오는 중 오류가 발생했습니다
             </h3>
-            <p className="text-error-600 text-sm">{error.message}</p>
+            <p className="text-sm text-error-600">{error.message}</p>
           </div>
         </Card>
       </div>
@@ -150,7 +154,6 @@ export default function StudentList({
             onChange={(e) => setSearchTerm(e.target.value)}
             onSearch={(query) => setSearchTerm(query)}
             placeholder="이름, 이메일, 전화번호로 검색..."
-            variant="flat"
           />
 
           {/* 필터 섹션 */}
@@ -223,22 +226,20 @@ export default function StudentList({
         {Object.keys(studentsByGrade).length === 0 ? (
           <Card size="lg">
             <div className="p-12 text-center">
-              <Icon name="user" size="3xl" color="neutral" className="mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <User className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+              <h3 className="mb-2 text-lg font-medium text-gray-900">
                 검색 결과가 없습니다
               </h3>
-              <p className="text-gray-500">다른 검색어나 필터를 시도해보세요.</p>
+              <p className="text-gray-500">
+                다른 검색어나 필터를 시도해보세요.
+              </p>
             </div>
           </Card>
         ) : (
           Object.entries(studentsByGrade)
             .sort(([a], [b]) => parseInt(a) - parseInt(b))
             .map(([grade, studentsInGrade]) => (
-              <Card
-                key={grade}
-                size="lg"
-                className="overflow-hidden"
-              >
+              <Card key={grade} size="lg" className="overflow-hidden">
                 {/* 학년 헤더 */}
                 <div className="px-6 py-3 border-b border-neu-200 bg-gray-50">
                   <div className="flex items-center justify-between">
@@ -256,7 +257,7 @@ export default function StudentList({
                   {studentsInGrade.map((student) => (
                     <div
                       key={student.id}
-                      className="p-6 hover:bg-gray-50 transition-colors cursor-pointer"
+                      className="p-6 transition-colors cursor-pointer hover:bg-gray-50"
                       onClick={() => {
                         if (onStudentSelect) {
                           onStudentSelect(student);
@@ -272,7 +273,7 @@ export default function StudentList({
                             size="lg"
                             variant="flat"
                             fallback={student.name.substring(0, 2)}
-                            className="bg-primary-500 text-white"
+                            className="text-white bg-primary-500"
                           />
 
                           {/* 학생 정보 */}
@@ -326,7 +327,10 @@ export default function StudentList({
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleSendNotification(student.id, student.name);
+                                handleSendNotification(
+                                  student.id,
+                                  student.name
+                                );
                               }}
                               disabled={sendNotification.isPending}
                               title="알림톡 전송"

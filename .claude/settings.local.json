@@ -24,7 +24,10 @@
       "WebFetch(domain:solapi.github.io)",
       "Bash(npm run storybook:*)",
       "Bash(pkill:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(head:*)",
+      "Bash(for file in /Users/kwakori/projects/promotion/zuku/src/app/(private_route)/*/page.tsx)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

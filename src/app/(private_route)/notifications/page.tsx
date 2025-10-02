@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useStudents } from "@/queries/useStudents";
 import { useSendKakaoNotification } from "@/queries/useNotifications";
-import Link from "next/link";
+import { PageHeader, PageLayout } from "@/components/common/layout";
 import {
   Send,
   CheckCircle,
@@ -14,8 +14,7 @@ import {
   Phone,
   User,
   BookOpen,
-  AlertTriangle,
-  Home
+  AlertTriangle
 } from "lucide-react";
 
 interface StudentForNotification {
@@ -129,46 +128,26 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 헤더 */}
-      <header className="flat-surface bg-gray-50 border-0 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <Link
-                href="/"
-                className="p-2 flat-card text-gray-500 hover:text-gray-700 rounded-2xl hover:flat-pressed transition-all duration-200"
-              >
-                <Home className="w-5 h-5" />
-              </Link>
-
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl shadow-md">
-                  <MessageSquare className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-gray-800">학부모 알림톡 발송</h1>
-                  <p className="text-sm text-gray-600">학생들을 선택하고 학부모님께 알림톡을 발송하세요</p>
-                </div>
-              </div>
+    <>
+      <PageHeader
+        icon={MessageSquare}
+        title="학부모 알림톡 발송"
+        description="학생들을 선택하고 학부모님께 알림톡을 발송하세요"
+        actions={
+          <div className="flex items-center gap-6">
+            <div className="text-center">
+              <div className="text-lg font-bold text-primary-600">{selectedStudents.size}</div>
+              <div className="text-xs text-gray-500">선택된 학생</div>
             </div>
-
-            <div className="flex items-center gap-6">
-              <div className="text-center">
-                <div className="text-lg font-bold text-primary-600">{selectedStudents.size}</div>
-                <div className="text-xs text-gray-500">선택된 학생</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-bold text-success-600">{studentsWithParentPhone.length}</div>
-                <div className="text-xs text-gray-500">전체 학생</div>
-              </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-success-600">{studentsWithParentPhone.length}</div>
+              <div className="text-xs text-gray-500">전체 학생</div>
             </div>
           </div>
-        </div>
-      </header>
+        }
+      />
 
-      {/* 메인 콘텐츠 */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <PageLayout variant="default">
 
         {/* 액션 버튼 */}
         <div className="flat-card rounded-2xl border-0 p-4 mb-6">
@@ -254,7 +233,7 @@ export default function NotificationsPage() {
             </p>
           </div>
         )}
-      </main>
-    </div>
+      </PageLayout>
+    </>
   );
 }

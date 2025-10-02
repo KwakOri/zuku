@@ -47,7 +47,8 @@ export async function POST(request: NextRequest) {
       teacherId,
       room,
       maxStudents,
-      studentIds
+      studentIds,
+      courseType
     } = body;
 
     // 필수 필드 검증 (시간 관련 필드는 선택사항)
@@ -137,6 +138,7 @@ export async function POST(request: NextRequest) {
       room: room || null,
       max_students: maxStudents || null,
       color: subjectColors[subject.subject_name || ''] || "#6b7280", // 기본값: gray-500
+      course_type: courseType || "regular", // 기본값: regular
       rrule: null
     };
 

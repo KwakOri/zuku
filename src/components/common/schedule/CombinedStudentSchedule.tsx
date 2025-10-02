@@ -4,10 +4,12 @@ import { useStudents } from "@/queries/useStudents";
 import { useClasses } from "@/queries/useClasses";
 import { useClassStudents } from "@/queries/useSchedules";
 import { useStudentSchedules } from "@/queries/useSchedules";
+import { useSchools } from "@/queries/useSchools";
 import { Tables } from "@/types/supabase";
-import { Calendar, Clock } from "lucide-react";
+import { Calendar, Clock, Search, ArrowUpDown } from "lucide-react";
 import { Fragment, useMemo, useState, useEffect } from "react";
 import Tooltip from "@/components/common/Tooltip";
+import { getGrade } from "@/lib/utils";
 
 // Helper function to convert time string "HH:mm" to minutes from midnight
 const timeToMinutes = (time: string): number => {
@@ -40,6 +42,16 @@ export default function CombinedStudentSchedule() {
   const { data: classes = [], isLoading: classesLoading } = useClasses();
   const { data: classStudents = [], isLoading: classStudentsLoading } = useClassStudents();
   const { data: studentSchedules = [], isLoading: studentSchedulesLoading } = useStudentSchedules();
+  const { data: schools = [], isLoading: schoolsLoading } = useSchools();
+
+  // 검색어 상태
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // 정렬 상태
+  type SortField = 'name' | 'school' | 'grade';
+  type SortOrder = 'asc' | 'desc';
+  const [sortField, setSortField] = useState<SortField>('grade');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
   // 선택된 학생들 상태
   const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
@@ -79,8 +91,37 @@ export default function CombinedStudentSchedule() {
 
   // Process and merge class and schedule data for each student
   const studentData = useMemo(() => {
-    return students
-      .filter((s) => selectedStudents.includes(s.id))
+    const filteredStudents = students
+      .filter((s) => {
+        // 선택된 학생만
+        if (!selectedStudents.includes(s.id)) return false;
+
+        // 검색어 필터링
+        if (searchQuery) {
+          const query = searchQuery.toLowerCase();
+
+          // 학생 이름 검색
+          if (s.name.toLowerCase().includes(query)) return true;
+
+          // 학교 검색
+          const school = schools.find((sc) => sc.id === s.school_id);
+          if (school && school.name.toLowerCase().includes(query)) return true;
+
+          // 수업명 검색
+          const studentClassIds = classStudents
+            .filter((cs) => cs.student_id === s.id)
+            .map((cs) => cs.class_id);
+
+          const hasMatchingClass = classes.some(
+            (c) => studentClassIds.includes(c.id) && c.title.toLowerCase().includes(query)
+          );
+          if (hasMatchingClass) return true;
+
+          return false;
+        }
+
+        return true;
+      })
       .map((student) => {
         const studentClasses = classStudents
           .filter((cs) => cs.student_id === student.id)
@@ -111,12 +152,48 @@ export default function CombinedStudentSchedule() {
             type: "schedule",
           }));
 
+        const school = schools.find((sc) => sc.id === student.school_id);
+
         return {
           ...student,
+          school,
           events: [...classEvents, ...personalEvents],
         };
       });
-  }, [selectedStudents, students, classes, classStudents, studentSchedules]);
+
+    // 정렬 적용
+    const sortedStudents = [...filteredStudents].sort((a, b) => {
+      let compareValue = 0;
+
+      switch (sortField) {
+        case 'name':
+          compareValue = a.name.localeCompare(b.name, 'ko-KR');
+          break;
+        case 'school':
+          const schoolA = a.school?.name || '';
+          const schoolB = b.school?.name || '';
+          compareValue = schoolA.localeCompare(schoolB, 'ko-KR');
+          break;
+        case 'grade':
+          // 학년으로 먼저 정렬
+          const gradeA = a.grade || 0;
+          const gradeB = b.grade || 0;
+          compareValue = gradeA - gradeB;
+
+          // 학년이 같으면 학교로 정렬
+          if (compareValue === 0) {
+            const schoolA = a.school?.name || '';
+            const schoolB = b.school?.name || '';
+            compareValue = schoolA.localeCompare(schoolB, 'ko-KR');
+          }
+          break;
+      }
+
+      return sortOrder === 'asc' ? compareValue : -compareValue;
+    });
+
+    return sortedStudents;
+  }, [selectedStudents, students, classes, classStudents, studentSchedules, schools, searchQuery, sortField, sortOrder]);
 
   // 겹치는 이벤트들을 그룹화하는 함수
   const groupOverlappingEvents = (events: TimelineEvent[]) => {
@@ -317,7 +394,7 @@ export default function CombinedStudentSchedule() {
   };
 
   // 로딩 상태
-  const isLoading = studentsLoading || classesLoading || classStudentsLoading || studentSchedulesLoading;
+  const isLoading = studentsLoading || classesLoading || classStudentsLoading || studentSchedulesLoading || schoolsLoading;
 
   if (isLoading) {
     return (
@@ -330,8 +407,83 @@ export default function CombinedStudentSchedule() {
     );
   }
 
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // 같은 필드를 다시 클릭하면 정렬 순서 토글
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      // 다른 필드를 클릭하면 해당 필드로 오름차순 정렬
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
   return (
-    <div className="w-full grow overflow-auto bg-gray-50 rounded-lg scrollbar-hide">
+    <div className="w-full grow flex flex-col bg-gray-50 rounded-lg">
+      {/* 검색 및 정렬 바 */}
+      <div className="p-4 border-b border-gray-200 bg-white rounded-t-lg space-y-3">
+        {/* 검색 */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="학생 이름, 학교, 수업명으로 검색..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          />
+        </div>
+
+        {/* 정렬 버튼 */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600 font-medium">정렬:</span>
+          <button
+            onClick={() => handleSort('name')}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+              sortField === 'name'
+                ? 'bg-primary-100 text-primary-700 font-medium'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span>이름</span>
+            {sortField === 'name' && (
+              <ArrowUpDown className="w-3.5 h-3.5" />
+            )}
+          </button>
+          <button
+            onClick={() => handleSort('school')}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+              sortField === 'school'
+                ? 'bg-primary-100 text-primary-700 font-medium'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span>학교</span>
+            {sortField === 'school' && (
+              <ArrowUpDown className="w-3.5 h-3.5" />
+            )}
+          </button>
+          <button
+            onClick={() => handleSort('grade')}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+              sortField === 'grade'
+                ? 'bg-primary-100 text-primary-700 font-medium'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span>학년</span>
+            {sortField === 'grade' && (
+              <ArrowUpDown className="w-3.5 h-3.5" />
+            )}
+          </button>
+          {sortOrder === 'desc' && (
+            <span className="text-xs text-gray-500 ml-1">내림차순</span>
+          )}
+        </div>
+      </div>
+
+      {/* 타임라인 */}
+      <div className="flex-1 overflow-auto scrollbar-hide">
       <div
         className="grid min-w-[4800px]"
         style={{
@@ -408,10 +560,26 @@ export default function CombinedStudentSchedule() {
           return (
             <Fragment key={student.id}>
               <div
-                className="sticky left-0 z-15 bg-gray-200 px-4 py-3 font-medium text-sm text-gray-800 whitespace-nowrap"
+                className="sticky left-0 z-15 bg-gray-200 px-4 py-3 text-sm text-gray-800"
                 style={{ gridRow: rowIndex + 3, gridColumn: "1" }}
               >
-                {student.name}
+                <div className="grid grid-cols-[48px_70px_36px] gap-2 items-center">
+                  <span className="font-medium truncate">{student.name}</span>
+                  {student.school_id ? (
+                    <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded text-center truncate">
+                      {student.school?.name || '학교 정보 없음'}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-gray-400 text-center">-</span>
+                  )}
+                  {student.grade ? (
+                    <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded text-center">
+                      {getGrade(student.grade, 'half')}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-gray-400 text-center">-</span>
+                  )}
+                </div>
               </div>
               {eventGroups.map((eventGroup, groupIndex) => {
                 // 그룹의 대표 이벤트 (시간이 가장 빠른 것)
@@ -490,6 +658,7 @@ export default function CombinedStudentSchedule() {
             </Fragment>
           );
         })}
+      </div>
       </div>
     </div>
   );

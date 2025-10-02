@@ -1,7 +1,3 @@
-import { classes } from "@/lib/mock/classes";
-import { classStudents } from "@/lib/mock/classStudents";
-import { students } from "@/lib/mock/students";
-import { studentSchedules } from "@/lib/mock/studentSchedules";
 import {
   AvailabilityAnalysis,
   ClassBlock,
@@ -22,85 +18,13 @@ export const defaultScheduleConfig: ScheduleConfig = {
   firstDayOfWeek: 1, // 월요일 시작
 };
 
-// 더미 ClassBlock 데이터 생성 함수
-export function generateClassBlocks(): ClassBlock[] {
-  return classes.map((cls) => {
-    const studentsInClass = classStudents.filter(
-      (cs) => cs.classId === cls.id && cs.status === "active"
-    );
+// Mock data functions removed - use API data instead
 
-    return {
-      id: cls.id,
-      classId: cls.id,
-      title: cls.title,
-      subject: cls.subject,
-      teacherName: cls.teacherName,
-      startTime: cls.startTime,
-      endTime: cls.endTime,
-      dayOfWeek: cls.dayOfWeek,
-      color: cls.color,
-      room: cls.room,
-      studentCount: studentsInClass.length,
-      maxStudents: cls.maxStudents,
-    };
-  });
-}
-
-// 시간대별 학생 일정 밀집도 계산 함수
-export function calculateStudentDensity(config: ScheduleConfig) {
-  const timeSlots: { [key: string]: number } = {};
-
-  // 모든 시간 슬롯 초기화
-  for (let day = 0; day < 7; day++) {
-    for (let hour = config.startHour; hour <= config.endHour; hour++) {
-      for (let minute = 0; minute < 60; minute += config.timeSlotMinutes) {
-        const time = `${hour.toString().padStart(2, "0")}:${minute
-          .toString()
-          .padStart(2, "0")}`;
-        const key = `${day}-${time}`;
-        timeSlots[key] = 0;
-      }
-    }
-  }
-
-  // 학생 일정 카운트
-  studentSchedules.forEach((schedule) => {
-    if (schedule.status !== "active") return;
-
-    const startHour = parseInt(schedule.startTime.split(":")[0]);
-    const startMinute = parseInt(schedule.startTime.split(":")[1]);
-    const endHour = parseInt(schedule.endTime.split(":")[0]);
-    const endMinute = parseInt(schedule.endTime.split(":")[1]);
-
-    const startMinutes = startHour * 60 + startMinute;
-    const endMinutes = endHour * 60 + endMinute;
-
-    // 시작 시간부터 종료 시간까지 모든 슬롯에 카운트 추가
-    for (
-      let minutes = startMinutes;
-      minutes < endMinutes;
-      minutes += config.timeSlotMinutes
-    ) {
-      const hour = Math.floor(minutes / 60);
-      const minute = minutes % 60;
-      const time = `${hour.toString().padStart(2, "0")}:${minute
-        .toString()
-        .padStart(2, "0")}`;
-      const key = `${schedule.dayOfWeek}-${time}`;
-
-      if (timeSlots[key] !== undefined) {
-        timeSlots[key]++;
-      }
-    }
-  });
-
-  return timeSlots;
-}
-
-// 선택된 수업의 학생들에 대한 밀집도 계산 함수
-export function calculateSelectedClassStudentDensity(
+// 실제 API 데이터로 밀집도 계산하는 함수
+export function calculateDensityFromScheduleData(
   config: ScheduleConfig,
-  selectedStudentIds: string[]
+  classSchedules: Array<{ class: { day_of_week: number; start_time: string; end_time: string } | null }>,
+  personalSchedules: Array<{ day_of_week: number; start_time: string; end_time: string }>
 ) {
   const timeSlots: { [key: string]: number } = {};
 
@@ -117,19 +41,18 @@ export function calculateSelectedClassStudentDensity(
     }
   }
 
-  // 선택된 학생들의 일정만 카운트
-  studentSchedules.forEach((schedule) => {
-    if (schedule.status !== "active") return;
-    if (!selectedStudentIds.includes(schedule.studentId)) return;
+  // 수업 일정 카운트
+  classSchedules.forEach((cs) => {
+    if (!cs.class) return;
+    const { day_of_week, start_time, end_time } = cs.class;
 
-    const startHour = parseInt(schedule.startTime.split(":")[0]);
-    const startMinute = parseInt(schedule.startTime.split(":")[1]);
-    const endHour = parseInt(schedule.endTime.split(":")[0]);
-    const endMinute = parseInt(schedule.endTime.split(":")[1]);
+    const startHour = parseInt(start_time.split(":")[0]);
+    const startMinute = parseInt(start_time.split(":")[1]);
+    const endHour = parseInt(end_time.split(":")[0]);
+    const endMinute = parseInt(end_time.split(":")[1]);
     const startMinutes = startHour * 60 + startMinute;
     const endMinutes = endHour * 60 + endMinute;
 
-    // 시작 시간부터 종료 시간까지 모든 슬롯에 카운트 추가
     for (
       let minutes = startMinutes;
       minutes < endMinutes;
@@ -140,7 +63,33 @@ export function calculateSelectedClassStudentDensity(
       const time = `${hour.toString().padStart(2, "0")}:${minute
         .toString()
         .padStart(2, "0")}`;
-      const key = `${schedule.dayOfWeek}-${time}`;
+      const key = `${day_of_week}-${time}`;
+      if (timeSlots[key] !== undefined) {
+        timeSlots[key]++;
+      }
+    }
+  });
+
+  // 개인 일정 카운트
+  personalSchedules.forEach((ps) => {
+    const startHour = parseInt(ps.start_time.split(":")[0]);
+    const startMinute = parseInt(ps.start_time.split(":")[1]);
+    const endHour = parseInt(ps.end_time.split(":")[0]);
+    const endMinute = parseInt(ps.end_time.split(":")[1]);
+    const startMinutes = startHour * 60 + startMinute;
+    const endMinutes = endHour * 60 + endMinute;
+
+    for (
+      let minutes = startMinutes;
+      minutes < endMinutes;
+      minutes += config.timeSlotMinutes
+    ) {
+      const hour = Math.floor(minutes / 60);
+      const minute = minutes % 60;
+      const time = `${hour.toString().padStart(2, "0")}:${minute
+        .toString()
+        .padStart(2, "0")}`;
+      const key = `${ps.day_of_week}-${time}`;
       if (timeSlots[key] !== undefined) {
         timeSlots[key]++;
       }
@@ -157,49 +106,18 @@ export function getDensityColor(density: number, maxDensity: number): string {
   const ratio = density / maxDensity;
 
   if (ratio <= 0.3) {
-    // 낮은 밀집도: 파랑 → 초록
-    return `rgba(34, 197, 94, ${0.3 + ratio * 0.4})`; // green-500 기반
+    // 낮은 밀집도: 연한 초록 (투명도 낮음)
+    return `rgba(34, 197, 94, ${0.15 + ratio * 0.2})`; // green-500 기반, 투명도 0.15-0.21
   } else if (ratio <= 0.7) {
-    // 중간 밀집도: 초록 → 노랑
-    return `rgba(234, 179, 8, ${0.4 + ratio * 0.3})`; // yellow-500 기반
+    // 중간 밀집도: 노랑 (투명도 중간)
+    return `rgba(234, 179, 8, ${0.2 + ratio * 0.25})`; // yellow-500 기반, 투명도 0.2-0.375
   } else {
-    // 높은 밀집도: 노랑 → 빨강
-    return `rgba(239, 68, 68, ${0.5 + ratio * 0.4})`; // red-500 기반
+    // 높은 밀집도: 빨강 (투명도 높음)
+    return `rgba(239, 68, 68, ${0.3 + ratio * 0.3})`; // red-500 기반, 투명도 0.3-0.6
   }
 }
 
-// 특정 시간대의 학생들 정보 가져오기 함수
-export function getStudentsAtTime(dayOfWeek: number, time: string) {
-  const studentsAtTime: Array<{ student: Student; schedule: StudentSchedule }> =
-    [];
-
-  const targetHour = parseInt(time.split(":")[0]);
-  const targetMinute = parseInt(time.split(":")[1]);
-  const targetMinutes = targetHour * 60 + targetMinute;
-
-  studentSchedules.forEach((schedule) => {
-    if (schedule.status !== "active" || schedule.dayOfWeek !== dayOfWeek)
-      return;
-
-    const startHour = parseInt(schedule.startTime.split(":")[0]);
-    const startMinute = parseInt(schedule.startTime.split(":")[1]);
-    const endHour = parseInt(schedule.endTime.split(":")[0]);
-    const endMinute = parseInt(schedule.endTime.split(":")[1]);
-
-    const startMinutes = startHour * 60 + startMinute;
-    const endMinutes = endHour * 60 + endMinute;
-
-    // 해당 시간이 일정 시간 범위에 포함되는지 확인
-    if (targetMinutes >= startMinutes && targetMinutes < endMinutes) {
-      const student = students.find((s) => s.id === schedule.studentId);
-      if (student) {
-        studentsAtTime.push({ student, schedule });
-      }
-    }
-  });
-
-  return studentsAtTime;
-}
+// Mock function removed - use custom tooltip data instead
 
 // 시간표 가용 시간 분석 함수
 export function analyzeStudentAvailability(

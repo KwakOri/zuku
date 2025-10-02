@@ -1,19 +1,21 @@
 import { QueryClient } from "@tanstack/react-query";
 
+const isDevelopment = process.env.NODE_ENV === "development";
+
 export function createQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        // 5분간 캐시 유지
-        staleTime: 5 * 60 * 1000,
-        // 30분간 garbage collection 방지
-        gcTime: 30 * 60 * 1000,
-        // 백그라운드에서 자동 리페치
-        refetchOnWindowFocus: true,
+        // 개발 환경에서는 캐시 비활성화, 프로덕션에서는 5분간 캐시 유지
+        staleTime: isDevelopment ? 0 : 5 * 60 * 1000,
+        // 개발 환경에서는 즉시 GC, 프로덕션에서는 30분간 유지
+        gcTime: isDevelopment ? 0 : 30 * 60 * 1000,
+        // 개발 환경에서는 항상 리페치
+        refetchOnWindowFocus: isDevelopment ? true : true,
         // 네트워크 재연결시 리페치
         refetchOnReconnect: true,
-        // 컴포넌트 마운트시 리페치 (staleTime이 지난 경우만)
-        refetchOnMount: true,
+        // 개발 환경에서는 항상 마운트시 리페치
+        refetchOnMount: isDevelopment ? true : true,
         // 재시도 설정
       },
     },
