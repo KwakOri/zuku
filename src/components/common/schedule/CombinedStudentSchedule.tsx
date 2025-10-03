@@ -24,6 +24,45 @@ const formatTime = (time: string): string => {
   return `${hours}:${minutes}`;
 };
 
+// 학년별 색상 함수 (초등: 초록, 중등: 노랑, 고등: 초록)
+const getGradeColor = (grade: number) => {
+  // 초등학교 (1-6학년): 초록 계열
+  if (grade >= 1 && grade <= 6) {
+    const colors = [
+      { bg: "#e8f5e9", text: "#2e7d32", badge: "#c8e6c9" }, // 1학년 - 매우 연한 초록
+      { bg: "#dcedc8", text: "#558b2f", badge: "#aed581" }, // 2학년
+      { bg: "#c5e1a5", text: "#689f38", badge: "#9ccc65" }, // 3학년
+      { bg: "#aed581", text: "#7cb342", badge: "#8bc34a" }, // 4학년
+      { bg: "#9ccc65", text: "#689f38", badge: "#7cb342" }, // 5학년
+      { bg: "#8bc34a", text: "#558b2f", badge: "#689f38" }, // 6학년 - 진한 초록
+    ];
+    return colors[grade - 1];
+  }
+
+  // 중학교 (7-9학년): 붉은색 계열
+  if (grade >= 7 && grade <= 9) {
+    const colors = [
+      { bg: "#ffcdd2", text: "#c62828", badge: "#ef9a9a" }, // 1학년 - 연한 붉은색
+      { bg: "#ef9a9a", text: "#b71c1c", badge: "#e57373" }, // 2학년
+      { bg: "#e57373", text: "#c62828", badge: "#ef5350" }, // 3학년 - 진한 붉은색
+    ];
+    return colors[grade - 7];
+  }
+
+  // 고등학교 (10-12학년): 초록 계열 (초등보다 진함)
+  if (grade >= 10 && grade <= 12) {
+    const colors = [
+      { bg: "#a5d6a7", text: "#388e3c", badge: "#81c784" }, // 1학년
+      { bg: "#81c784", text: "#2e7d32", badge: "#66bb6a" }, // 2학년
+      { bg: "#66bb6a", text: "#1b5e20", badge: "#4caf50" }, // 3학년 - 진한 초록
+    ];
+    return colors[grade - 10];
+  }
+
+  // 기본값
+  return { bg: "#e0e0e0", text: "#424242", badge: "#bdbdbd" };
+};
+
 // Represents a single event on the timeline
 interface TimelineEvent {
   id: string;
@@ -448,58 +487,62 @@ export default function CombinedStudentSchedule() {
   return (
     <div className="flex flex-col w-full h-full rounded-lg grow bg-gray-50">
       {/* 검색 및 정렬 바 */}
-      <div className="p-4 space-y-3 bg-white border-b border-gray-200 rounded-t-lg">
-        {/* 검색 */}
-        <div className="relative">
-          <Search className="absolute w-5 h-5 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
-          <input
-            type="text"
-            placeholder="학생 이름, 학교, 수업명으로 검색..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          />
-        </div>
+      <div className="p-4 bg-white border-b border-gray-200 rounded-t-lg">
+        <div className="flex items-center gap-4">
+          {/* 검색 */}
+          <div className="relative flex-1">
+            <Search className="absolute w-5 h-5 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
+            <input
+              type="text"
+              placeholder="학생 이름, 학교, 수업명으로 검색..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
 
-        {/* 정렬 버튼 */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-600">정렬:</span>
-          <button
-            onClick={() => handleSort("name")}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-              sortField === "name"
-                ? "bg-primary-100 text-primary-700 font-medium"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            <span>이름</span>
-            {sortField === "name" && <ArrowUpDown className="w-3.5 h-3.5" />}
-          </button>
-          <button
-            onClick={() => handleSort("school")}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-              sortField === "school"
-                ? "bg-primary-100 text-primary-700 font-medium"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            <span>학교</span>
-            {sortField === "school" && <ArrowUpDown className="w-3.5 h-3.5" />}
-          </button>
-          <button
-            onClick={() => handleSort("grade")}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-              sortField === "grade"
-                ? "bg-primary-100 text-primary-700 font-medium"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            <span>학년</span>
-            {sortField === "grade" && <ArrowUpDown className="w-3.5 h-3.5" />}
-          </button>
-          {sortOrder === "desc" && (
-            <span className="ml-1 text-xs text-gray-500">내림차순</span>
-          )}
+          {/* 정렬 버튼 */}
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-sm font-medium text-gray-600">정렬:</span>
+            <button
+              onClick={() => handleSort("name")}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                sortField === "name"
+                  ? "bg-primary-100 text-primary-700 font-medium"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              <span>이름</span>
+              {sortField === "name" && <ArrowUpDown className="w-3.5 h-3.5" />}
+            </button>
+            <button
+              onClick={() => handleSort("school")}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                sortField === "school"
+                  ? "bg-primary-100 text-primary-700 font-medium"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              <span>학교</span>
+              {sortField === "school" && (
+                <ArrowUpDown className="w-3.5 h-3.5" />
+              )}
+            </button>
+            <button
+              onClick={() => handleSort("grade")}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                sortField === "grade"
+                  ? "bg-primary-100 text-primary-700 font-medium"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              <span>학년</span>
+              {sortField === "grade" && <ArrowUpDown className="w-3.5 h-3.5" />}
+            </button>
+            {sortOrder === "desc" && (
+              <span className="ml-1 text-xs text-gray-500">내림차순</span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -575,11 +618,12 @@ export default function CombinedStudentSchedule() {
           {studentData.map((student, rowIndex) => {
             // 학생의 이벤트들을 겹치는 것끼리 그룹화
             const eventGroups = groupOverlappingEvents(student.events);
+            const gradeColors = student.grade ? getGradeColor(student.grade) : { bg: "#e0e0e0", text: "#424242", badge: "#bdbdbd" };
 
             return (
               <Fragment key={student.id}>
                 <div
-                  className="sticky left-0 px-4 py-3 text-sm text-gray-800 bg-gray-200 z-15"
+                  className="sticky left-0 px-4 py-3 text-sm bg-gray-200 text-gray-800 z-15"
                   style={{ gridRow: rowIndex + 3, gridColumn: "1" }}
                 >
                   <div className="grid grid-cols-[48px_70px_36px] gap-2 items-center">
@@ -594,7 +638,13 @@ export default function CombinedStudentSchedule() {
                       </span>
                     )}
                     {student.grade ? (
-                      <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded text-center">
+                      <span
+                        className="text-xs px-2 py-0.5 rounded text-center font-medium"
+                        style={{
+                          backgroundColor: gradeColors.bg,
+                          color: gradeColors.text,
+                        }}
+                      >
                         {getGrade(student.grade, "half")}
                       </span>
                     ) : (

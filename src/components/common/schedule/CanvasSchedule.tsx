@@ -1,12 +1,9 @@
 "use client";
 
-import {
-  defaultScheduleConfig,
-  getDensityColor,
-} from "@/lib/utils";
+import { defaultScheduleConfig, getDensityColor } from "@/lib/utils";
 import { formatDisplayTime } from "@/lib/utils/time";
 import { ClassBlock, EditMode, ScheduleConfig } from "@/types/schedule";
-import { Check, Clock, Plus, Users, X } from "lucide-react";
+import { Check, Clock, Users, X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 const days = ["월", "화", "수", "목", "금", "토", "일"];
@@ -21,8 +18,18 @@ interface CanvasScheduleProps {
   selectedClassId?: string; // 선택된 수업 ID (강사 모드용)
   selectedClassStudents?: string[]; // 선택된 수업의 학생 ID 목록 (밀집도 계산용)
   customDensityData?: { [key: string]: number }; // 외부에서 계산된 밀집도 데이터
-  densityTooltipData?: { [key: string]: Array<{ studentId: string; studentName: string; scheduleName: string }> }; // 툴팁용 상세 데이터
-  onTimeSlotClick?: (timeSlot: { dayOfWeek: number; startTime: string; endTime: string }) => void; // 시간대 클릭 콜백
+  densityTooltipData?: {
+    [key: string]: Array<{
+      studentId: string;
+      studentName: string;
+      scheduleName: string;
+    }>;
+  }; // 툴팁용 상세 데이터
+  onTimeSlotClick?: (timeSlot: {
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+  }) => void; // 시간대 클릭 콜백
 }
 
 interface ClassModalProps {
@@ -77,14 +84,14 @@ function ClassModal({
       onClick={onClose}
     >
       <div
-        className="flat-card rounded-2xl p-6 max-w-md w-full mx-4 border-0"
+        className="w-full max-w-md p-6 mx-4 border-0 flat-card rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-800">수업 정보</h3>
           <button
             onClick={onClose}
-            className="flat-card p-2 rounded-xl hover:flat-pressed transition-all duration-200 text-gray-600 hover:text-gray-800"
+            className="p-2 text-gray-600 transition-all duration-200 flat-card rounded-xl hover:flat-pressed hover:text-gray-800"
           >
             <X className="w-5 h-5" />
           </button>
@@ -94,7 +101,7 @@ function ClassModal({
           {canEdit ? (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block mb-2 text-sm font-medium text-gray-700">
                   수업명
                 </label>
                 <input
@@ -103,12 +110,12 @@ function ClassModal({
                   onChange={(e) =>
                     setEditData({ ...editData, title: e.target.value })
                   }
-                  className="w-full flat-surface rounded-xl px-4 py-3 text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
+                  className="w-full px-4 py-3 text-gray-800 transition-all duration-200 flat-surface rounded-xl placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block mb-2 text-sm font-medium text-gray-700">
                   과목
                 </label>
                 <input
@@ -117,12 +124,12 @@ function ClassModal({
                   onChange={(e) =>
                     setEditData({ ...editData, subject: e.target.value })
                   }
-                  className="w-full flat-surface rounded-xl px-4 py-3 text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
+                  className="w-full px-4 py-3 text-gray-800 transition-all duration-200 flat-surface rounded-xl placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block mb-2 text-sm font-medium text-gray-700">
                   강사명
                 </label>
                 <input
@@ -131,12 +138,12 @@ function ClassModal({
                   onChange={(e) =>
                     setEditData({ ...editData, teacherName: e.target.value })
                   }
-                  className="w-full flat-surface rounded-xl px-4 py-3 text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
+                  className="w-full px-4 py-3 text-gray-800 transition-all duration-200 flat-surface rounded-xl placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block mb-2 text-sm font-medium text-gray-700">
                   강의실
                 </label>
                 <input
@@ -145,13 +152,13 @@ function ClassModal({
                   onChange={(e) =>
                     setEditData({ ...editData, room: e.target.value })
                   }
-                  className="w-full flat-surface rounded-xl px-4 py-3 text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
+                  className="w-full px-4 py-3 text-gray-800 transition-all duration-200 flat-surface rounded-xl placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
                     시작 시간
                   </label>
                   <input
@@ -160,11 +167,11 @@ function ClassModal({
                     onChange={(e) =>
                       setEditData({ ...editData, startTime: e.target.value })
                     }
-                    className="w-full flat-surface rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
+                    className="w-full px-4 py-3 text-gray-800 transition-all duration-200 flat-surface rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
                     종료 시간
                   </label>
                   <input
@@ -173,7 +180,7 @@ function ClassModal({
                     onChange={(e) =>
                       setEditData({ ...editData, endTime: e.target.value })
                     }
-                    className="w-full flat-surface rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
+                    className="w-full px-4 py-3 text-gray-800 transition-all duration-200 flat-surface rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
               </div>
@@ -184,28 +191,34 @@ function ClassModal({
                 <span className="block text-sm font-medium text-gray-700">
                   수업명
                 </span>
-                <p className="mt-2 text-gray-800 font-medium">{block.title}</p>
+                <p className="mt-2 font-medium text-gray-800">{block.title}</p>
               </div>
 
               <div>
                 <span className="block text-sm font-medium text-gray-700">
                   과목
                 </span>
-                <p className="mt-2 text-gray-800 font-medium">{block.subject}</p>
+                <p className="mt-2 font-medium text-gray-800">
+                  {block.subject}
+                </p>
               </div>
 
               <div>
                 <span className="block text-sm font-medium text-gray-700">
                   강사명
                 </span>
-                <p className="mt-2 text-gray-800 font-medium">{block.teacherName}</p>
+                <p className="mt-2 font-medium text-gray-800">
+                  {block.teacherName}
+                </p>
               </div>
 
               <div>
                 <span className="block text-sm font-medium text-gray-700">
                   강의실
                 </span>
-                <p className="mt-2 text-gray-800 font-medium">{block.room || "미정"}</p>
+                <p className="mt-2 font-medium text-gray-800">
+                  {block.room || "미정"}
+                </p>
               </div>
             </>
           )}
@@ -217,7 +230,7 @@ function ClassModal({
               </span>
               <div className="flex items-center mt-2">
                 <Clock className="w-4 h-4 mr-2 text-gray-500" />
-                <span className="text-gray-800 font-medium">
+                <span className="font-medium text-gray-800">
                   {formatDisplayTime(block.startTime)} ~{" "}
                   {formatDisplayTime(block.endTime)}
                 </span>
@@ -230,7 +243,7 @@ function ClassModal({
               </span>
               <div className="flex items-center mt-2">
                 <Users className="w-4 h-4 mr-2 text-gray-500" />
-                <span className="text-gray-800 font-medium">
+                <span className="font-medium text-gray-800">
                   {block.studentCount}
                   {block.maxStudents && `/${block.maxStudents}`}
                 </span>
@@ -242,14 +255,14 @@ function ClassModal({
             <div className="flex gap-3 pt-6 border-t border-gray-300">
               <button
                 onClick={handleSave}
-                className="flex-1 flat-card py-3 px-4 rounded-xl hover:flat-pressed text-primary-600 font-medium transition-all duration-200 flex items-center justify-center gap-2"
+                className="flex items-center justify-center flex-1 gap-2 px-4 py-3 font-medium transition-all duration-200 flat-card rounded-xl hover:flat-pressed text-primary-600"
               >
                 <Check className="w-4 h-4" />
                 저장
               </button>
               <button
                 onClick={onClose}
-                className="flex-1 flat-card py-3 px-4 rounded-xl hover:flat-pressed text-gray-600 font-medium transition-all duration-200 flex items-center justify-center gap-2"
+                className="flex items-center justify-center flex-1 gap-2 px-4 py-3 font-medium text-gray-600 transition-all duration-200 flat-card rounded-xl hover:flat-pressed"
               >
                 <X className="w-4 h-4" />
                 취소
@@ -285,12 +298,14 @@ export default function CanvasSchedule({
   // 강사 모드에서는 선택된 수업만 표시
   const filteredBlocks = React.useMemo(() => {
     if (selectedClassId && customBlocks) {
-      return customBlocks.filter(block => block.id === selectedClassId);
+      return customBlocks.filter((block) => block.id === selectedClassId);
     }
-    return customBlocks || generateClassBlocks();
+    return customBlocks || [];
   }, [selectedClassId, customBlocks]);
 
-  const [classBlocks, setClassBlocks] = useState<ClassBlock[]>(() => filteredBlocks);
+  const [classBlocks, setClassBlocks] = useState<ClassBlock[]>(
+    () => filteredBlocks
+  );
   const [modalBlock, setModalBlock] = useState<ClassBlock | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [containerWidth, setContainerWidth] = useState(1000);
@@ -516,7 +531,9 @@ export default function CanvasSchedule({
     // 학생 일정 밀집도 표시
     if (showDensity && customDensityData) {
       const densityData = customDensityData;
-      const maxDensity = Math.max(...Object.values(densityData).map(v => Number(v)));
+      const maxDensity = Math.max(
+        ...Object.values(densityData).map((v) => Number(v))
+      );
 
       for (let day = 0; day < 7; day++) {
         for (let hour = config.startHour; hour <= config.endHour; hour++) {
@@ -663,7 +680,14 @@ export default function CanvasSchedule({
         ctx.shadowOffsetY = -1;
         ctx.shadowBlur = 2;
 
-        drawRoundedRect(ctx, iconX + 1, iconY + 1, iconSize - 2, iconSize - 2, 5);
+        drawRoundedRect(
+          ctx,
+          iconX + 1,
+          iconY + 1,
+          iconSize - 2,
+          iconSize - 2,
+          5
+        );
         ctx.fill();
 
         // Reset shadow
@@ -798,7 +822,14 @@ export default function CanvasSchedule({
         // Color overlay for preview
         ctx.globalAlpha = 0.4;
         ctx.fillStyle = dragState.draggedBlock.color;
-        drawRoundedRect(ctx, px + 2, py + 2, pwidth - 4, pheight - 4, radius - 2);
+        drawRoundedRect(
+          ctx,
+          px + 2,
+          py + 2,
+          pwidth - 4,
+          pheight - 4,
+          radius - 2
+        );
         ctx.fill();
 
         // 점선 테두리
@@ -813,7 +844,16 @@ export default function CanvasSchedule({
         ctx.globalAlpha = 1.0;
       }
     }
-  }, [classBlocks, dragState, config, editMode, showDensity, DAY_COLUMN_WIDTH, selectedClassStudents, customDensityData]);
+  }, [
+    classBlocks,
+    dragState,
+    config,
+    editMode,
+    showDensity,
+    DAY_COLUMN_WIDTH,
+    selectedClassStudents,
+    customDensityData,
+  ]);
 
   // 마우스 이벤트 핸들러
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -856,15 +896,25 @@ export default function CanvasSchedule({
       const slotIndex = Math.floor((y - 20) / SLOT_HEIGHT);
 
       if (dayIndex >= 0 && dayIndex < 7 && slotIndex >= 0) {
-        const startHour = Math.floor((slotIndex * config.timeSlotMinutes) / 60) + config.startHour;
+        const startHour =
+          Math.floor((slotIndex * config.timeSlotMinutes) / 60) +
+          config.startHour;
         const startMinute = (slotIndex * config.timeSlotMinutes) % 60;
         // 90분(1시간 30분) = 90 / timeSlotMinutes 슬롯
         const slotsFor90Min = Math.ceil(90 / config.timeSlotMinutes);
-        const endHour = Math.floor(((slotIndex + slotsFor90Min) * config.timeSlotMinutes) / 60) + config.startHour;
-        const endMinute = ((slotIndex + slotsFor90Min) * config.timeSlotMinutes) % 60;
+        const endHour =
+          Math.floor(
+            ((slotIndex + slotsFor90Min) * config.timeSlotMinutes) / 60
+          ) + config.startHour;
+        const endMinute =
+          ((slotIndex + slotsFor90Min) * config.timeSlotMinutes) % 60;
 
-        const startTime = `${startHour.toString().padStart(2, "0")}:${startMinute.toString().padStart(2, "0")}`;
-        const endTime = `${endHour.toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`;
+        const startTime = `${startHour
+          .toString()
+          .padStart(2, "0")}:${startMinute.toString().padStart(2, "0")}`;
+        const endTime = `${endHour.toString().padStart(2, "0")}:${endMinute
+          .toString()
+          .padStart(2, "0")}`;
 
         onTimeSlotClick({
           dayOfWeek: dayIndex,
@@ -1150,7 +1200,7 @@ export default function CanvasSchedule({
 
   // 커스텀 블록이 변경될 때 업데이트
   useEffect(() => {
-    setClassBlocks(prev => {
+    setClassBlocks((prev) => {
       // 깊은 비교를 통해 실제로 변경된 경우에만 업데이트
       if (JSON.stringify(prev) !== JSON.stringify(filteredBlocks)) {
         return filteredBlocks;
@@ -1167,41 +1217,13 @@ export default function CanvasSchedule({
   }, [drawTimeCanvas, drawHeaderCanvas, drawScheduleCanvas]);
 
   return (
-    <div className="w-full max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <h2 className="text-3xl font-bold text-gray-800">주간 시간표</h2>
-        <div className="flex items-center gap-4 text-sm text-gray-600">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-lg flat-card-sm bg-gradient-to-r from-blue-400 to-blue-600"></div>
-            <span className="font-medium">수학</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-lg flat-card-sm bg-gradient-to-r from-emerald-400 to-emerald-600"></div>
-            <span className="font-medium">영어</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-lg flat-card-sm bg-gradient-to-r from-amber-400 to-amber-600"></div>
-            <span className="font-medium">과학</span>
-          </div>
-        </div>
-      </div>
-
+    <div className="flex-1 min-h-0 w-full h-full flex flex-col max-h-[960px]">
       <div
         ref={containerRef}
-        className="flat-card rounded-3xl max-h-[600px] overflow-hidden relative border-0"
+        className="relative flex flex-col flex-1 min-h-0 border-0 flat-card rounded-3xl"
       >
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-            .scroll-hide::-webkit-scrollbar {
-              display: none;
-            }
-          `,
-          }}
-        />
-
         {/* 그리드 레이아웃: 시간(고정) + 헤더(가로스크롤) */}
-        <div className="flex">
+        <div className="flex shrink-0">
           {/* 왼쪽 상단 모서리 - 시간 헤더 */}
           <div className="w-[80px] h-[60px] flex-shrink-0 bg-gray-50 flat-surface border-r border-b border-gray-300/50 flex items-center justify-center rounded-tl-3xl">
             <span className="text-sm font-semibold text-gray-700">시간</span>
@@ -1210,29 +1232,33 @@ export default function CanvasSchedule({
           {/* 상단 고정 요일 헤더 (가로 스크롤만) */}
           <div
             ref={headerContainerRef}
-            className="flex-1 h-[60px] bg-gray-50 border-b border-gray-300/50 overflow-x-auto overflow-y-hidden scroll-hide flat-surface rounded-tr-3xl"
+            className="flex-1 h-[60px] bg-gray-50 border-b border-gray-300/50 overflow-x-auto overflow-y-hidden flat-surface rounded-tr-3xl"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            <canvas ref={headerCanvasRef} className="bg-gray-50 flat-surface rounded-tr-3xl" />
+            <canvas
+              ref={headerCanvasRef}
+              className="bg-gray-50 flat-surface rounded-tr-3xl"
+            />
           </div>
         </div>
 
         {/* 하단 영역 */}
-        <div className="flex h-[540px]">
+        <div className="flex flex-1 min-h-0">
           {/* 왼쪽 고정 시간 컬럼 (세로 스크롤만) */}
           <div
             ref={timeContainerRef}
-            className="w-[80px] flex-shrink-0 bg-gray-50 flat-surface border-r border-gray-300/50 overflow-x-hidden overflow-y-auto scroll-hide rounded-bl-3xl"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            className="w-[80px] flex-shrink-0 bg-gray-50 flat-surface border-r border-gray-300/50 overflow-hidden rounded-bl-3xl"
           >
-            <canvas ref={timeCanvasRef} className="bg-gray-50 flat-surface rounded-bl-3xl" />
+            <canvas
+              ref={timeCanvasRef}
+              className="bg-gray-50 flat-surface rounded-bl-3xl"
+            />
           </div>
 
           {/* 오른쪽 스케줄 영역 (양방향 스크롤) */}
           <div
             ref={scheduleContainerRef}
-            className="flex-1 bg-gray-50 overflow-auto scroll-hide flat-surface rounded-br-3xl"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            className="flex-1 overflow-auto bg-gray-50 flat-surface rounded-br-3xl"
           >
             <canvas
               ref={scheduleCanvasRef}
@@ -1252,7 +1278,7 @@ export default function CanvasSchedule({
       {/* 밀집도 툴팁 */}
       {tooltip && showDensity && (
         <div
-          className="fixed z-50 text-white px-4 py-3 rounded-2xl text-sm pointer-events-none max-w-xs shadow-2xl border-2"
+          className="fixed z-50 max-w-xs px-4 py-3 text-sm text-white border-2 shadow-2xl pointer-events-none rounded-2xl"
           style={{
             left: tooltip.x + 10,
             top: tooltip.y - 40,
@@ -1260,15 +1286,15 @@ export default function CanvasSchedule({
               tooltip.x > window.innerWidth - 250
                 ? "translateX(-100%)"
                 : "none",
-            backgroundColor: '#111827', // gray-900
-            borderColor: '#4b5563', // gray-600
+            backgroundColor: "#111827", // gray-900
+            borderColor: "#4b5563", // gray-600
             zIndex: 9999,
           }}
         >
-          <div className="font-medium mb-2 text-white">
+          <div className="mb-2 font-medium text-white">
             {days[tooltip.dayOfWeek]} {tooltip.time}
           </div>
-          <div className="text-xs text-gray-300 mb-3">
+          <div className="mb-3 text-xs text-gray-300">
             일정 있는 학생: {tooltip.studentCount}명
           </div>
           <div className="space-y-1">
@@ -1281,9 +1307,16 @@ export default function CanvasSchedule({
                 return (
                   <>
                     {schedules.slice(0, 5).map((schedule, idx) => (
-                      <div key={`${schedule.studentId}-${idx}`} className="text-xs">
-                        <span className="text-white font-medium">{schedule.studentName}</span>
-                        <span className="text-gray-300 ml-1">- {schedule.scheduleName}</span>
+                      <div
+                        key={`${schedule.studentId}-${idx}`}
+                        className="text-xs"
+                      >
+                        <span className="font-medium text-white">
+                          {schedule.studentName}
+                        </span>
+                        <span className="ml-1 text-gray-300">
+                          - {schedule.scheduleName}
+                        </span>
                       </div>
                     ))}
                     {schedules.length > 5 && (
@@ -1314,20 +1347,6 @@ export default function CanvasSchedule({
         onClose={handleCloseModal}
         onSave={handleSave}
       />
-
-      {editMode === "admin" && (
-        <div className="mt-8 flat-surface p-6 rounded-2xl">
-          <div className="flex items-center gap-3 text-sm text-primary-700">
-            <div className="flat-card p-2 rounded-xl">
-              <Plus className="w-4 h-4" />
-            </div>
-            <span className="font-medium">
-              관리자 모드: 수업 블록을 클릭하여 정보를 보거나 우측 핸들을
-              드래그하여 이동할 수 있습니다.
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

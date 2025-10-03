@@ -757,7 +757,7 @@ export default function ClassManagementPage() {
         }
       />
 
-      <PageLayout>
+      <PageLayout hasTopSpacer={false}>
         {/* Tab Navigation */}
         <div className="flex gap-2 mb-8 border-b border-gray-200">
           <button
@@ -790,11 +790,11 @@ export default function ClassManagementPage() {
 
         {activeTab === "create" ? (
           /* CREATE TAB - Class Creation */
-          <div className="grid grid-cols-1 gap-8 grow-0 shrink lg:grid-cols-4">
+          <div className="grid flex-1 min-h-0 grid-cols-1 gap-8 lg:grid-cols-4">
             {/* Panel 1 - Class Info (1/4) */}
-            <div className="h-full lg:col-span-1">
+            <div className="flex flex-col min-h-0 lg:col-span-1">
               {/* Class Form */}
-              <div className="flex flex-col flex-1 h-full p-6 border-0 flat-card rounded-2xl">
+              <div className="flex flex-col flex-1 min-h-0 p-6 border-0 flat-card rounded-2xl">
                 <div className="flex items-center gap-3 mb-6 shrink">
                   <div className="p-2 bg-primary-100 rounded-xl">
                     <BookOpen className="w-5 h-5 text-primary-600" />
@@ -806,7 +806,7 @@ export default function ClassManagementPage() {
 
                 <form
                   onSubmit={handleSubmit(onSubmit)}
-                  className="flex-1 h-full space-y-4 overflow-y-scroll"
+                  className="flex-1 min-h-0 space-y-4 overflow-y-auto"
                 >
                   <div>
                     <label className="block mb-2 text-sm font-medium text-gray-700">
@@ -995,9 +995,9 @@ export default function ClassManagementPage() {
             </div>
 
             {/* Panel 2 - Student Selection (1/4) */}
-            <div className="h-full overflow-y-scroll lg:col-span-1">
+            <div className="flex flex-col min-h-0 lg:col-span-1">
               {/* Student Selection */}
-              <div className="flex flex-col h-full p-6 border-0 flat-card rounded-2xl">
+              <div className="flex flex-col flex-1 min-h-0 p-6 border-0 flat-card rounded-2xl">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-success-100 rounded-xl">
@@ -1017,7 +1017,7 @@ export default function ClassManagementPage() {
                     <div className="w-6 h-6 mx-auto border-b-2 rounded-full animate-spin border-primary-600"></div>
                   </div>
                 ) : (
-                  <div className="space-y-2 overflow-y-auto shrink">
+                  <div className="flex-1 min-h-0 space-y-2 overflow-y-auto">
                     {students.length === 0 ? (
                       <p className="py-4 text-sm text-center text-gray-500">
                         등록된 학생이 없습니다.
@@ -1058,9 +1058,9 @@ export default function ClassManagementPage() {
             </div>
 
             {/* Panel 3 & 4 - Timetable (2/4) */}
-            <div className="lg:col-span-2">
-              <div className="p-6 border-0 flat-card rounded-2xl">
-                <div className="mb-6">
+            <div className="flex flex-col min-h-0 lg:col-span-2">
+              <div className="flex flex-col flex-1 min-h-0 p-6 border-0 flat-card rounded-2xl">
+                <div className="mb-6 shrink-0">
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <h2 className="mb-2 text-lg font-semibold text-gray-800">
@@ -1109,7 +1109,7 @@ export default function ClassManagementPage() {
 
                 {/* Density Info */}
                 {selectedStudents.length > 0 && (
-                  <div className="p-4 mt-4 border-0 flat-surface bg-blue-50 rounded-xl">
+                  <div className="p-4 mt-4 border-0 shrink-0 flat-surface bg-blue-50 rounded-xl">
                     <div className="flex items-center gap-2 mb-2">
                       <Users className="w-4 h-4 text-blue-600" />
                       <span className="text-sm font-medium text-blue-900">
@@ -1128,9 +1128,9 @@ export default function ClassManagementPage() {
           </div>
         ) : (
           /* MANAGE TAB - Existing Class Management */
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
+          <div className="grid flex-1 min-h-0 grid-cols-1 gap-8 lg:grid-cols-4">
             {/* Left Panel - Class List (1/4) */}
-            <div className="lg:col-span-1">
+            <div className="flex flex-col min-h-0 lg:col-span-1">
               {/* Filter */}
               <div className="p-4 mb-6 border-0 flat-card rounded-2xl">
                 <h3 className="mb-4 text-lg font-semibold text-gray-800">
@@ -1186,11 +1186,11 @@ export default function ClassManagementPage() {
               </div>
 
               {/* Class List */}
-              <div className="p-4 border-0 flat-card rounded-2xl">
-                <h3 className="mb-4 text-lg font-semibold text-gray-800">
+              <div className="flex flex-col flex-1 min-h-0 p-4 border-0 flat-card rounded-2xl">
+                <h3 className="mb-4 text-lg font-semibold text-gray-800 shrink-0">
                   수업 목록
                 </h3>
-                <div className="space-y-2 overflow-y-auto max-h-96">
+                <div className="flex-1 min-h-0 space-y-2 overflow-y-auto">
                   {filteredClasses.length === 0 ? (
                     <p className="py-4 text-sm text-center text-gray-500">
                       수업이 없습니다.
@@ -1276,11 +1276,11 @@ export default function ClassManagementPage() {
             </div>
 
             {/* Right Panel - Timetable (3/4) */}
-            <div className="lg:col-span-3">
+            <div className="flex flex-col min-h-0 lg:col-span-3">
               {selectedClass ? (
-                <div>
+                <div className="flex flex-col flex-1 min-h-0">
                   {/* Selected Class Info */}
-                  <div className="p-4 mb-6 border-0 flat-card rounded-2xl">
+                  <div className="p-4 mb-6 border-0 shrink-0 flat-card rounded-2xl">
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-lg font-semibold text-gray-800">

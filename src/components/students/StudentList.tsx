@@ -133,9 +133,9 @@ export default function StudentList({
   }
 
   return (
-    <div className="w-full space-y-6">
+    <div className="flex flex-col flex-1 w-full min-h-0 space-y-6">
       {/* 헤더 */}
-      <Card size="lg">
+      <Card size="lg" className="shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <Icon name="graduation-cap" size="lg" color="primary" />
@@ -222,7 +222,7 @@ export default function StudentList({
       </Card>
 
       {/* 학생 목록 */}
-      <div className="space-y-6">
+      <div className="flex-1 min-h-0 space-y-6 overflow-y-auto">
         {Object.keys(studentsByGrade).length === 0 ? (
           <Card size="lg">
             <div className="p-12 text-center">
