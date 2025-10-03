@@ -13,7 +13,7 @@ export default function CombinedSchedulePage() {
         icon={Calendar}
       />
 
-      <PageLayout>
+      <PageLayout maxWidth={"inset"}>
         <div className="h-full overflow-hidden border-0 flat-card rounded-2xl">
           <CombinedStudentSchedule />
         </div>

@@ -618,12 +618,14 @@ export default function CombinedStudentSchedule() {
           {studentData.map((student, rowIndex) => {
             // 학생의 이벤트들을 겹치는 것끼리 그룹화
             const eventGroups = groupOverlappingEvents(student.events);
-            const gradeColors = student.grade ? getGradeColor(student.grade) : { bg: "#e0e0e0", text: "#424242", badge: "#bdbdbd" };
+            const gradeColors = student.grade
+              ? getGradeColor(student.grade)
+              : { bg: "#e0e0e0", text: "#424242", badge: "#bdbdbd" };
 
             return (
               <Fragment key={student.id}>
                 <div
-                  className="sticky left-0 px-4 py-3 text-sm bg-gray-200 text-gray-800 z-15"
+                  className="sticky left-0 px-4 py-3 text-sm text-gray-800 bg-gray-200 z-15"
                   style={{ gridRow: rowIndex + 3, gridColumn: "1" }}
                 >
                   <div className="grid grid-cols-[48px_70px_36px] gap-2 items-center">
