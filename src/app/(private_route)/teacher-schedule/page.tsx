@@ -12,7 +12,7 @@ export default function TeacherSchedulePage() {
         title="담당 수업 관리"
         description="강사 전용 - 담당 수업의 시간표를 조정하고 학생 밀집도를 확인하세요"
       />
-      <PageLayout variant="default">
+      <PageLayout>
         <TeacherClassManager />
       </PageLayout>
     </>

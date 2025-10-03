@@ -79,7 +79,7 @@ export default function CreateClassPage() {
         icon={Plus}
       />
 
-      <PageLayout variant="default">
+      <PageLayout>
         <div className="flat-card rounded-2xl border-0 overflow-hidden">
           {/* 페이지 헤더 */}
           <div className="flat-surface bg-gradient-to-r from-success-50 to-primary-50 px-8 py-6 border-0">

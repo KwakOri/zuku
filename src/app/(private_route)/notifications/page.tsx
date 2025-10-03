@@ -147,7 +147,7 @@ export default function NotificationsPage() {
         }
       />
 
-      <PageLayout variant="default">
+      <PageLayout>
 
         {/* 액션 버튼 */}
         <div className="flat-card rounded-2xl border-0 p-4 mb-6">

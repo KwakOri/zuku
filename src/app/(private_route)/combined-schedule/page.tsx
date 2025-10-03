@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import CombinedStudentSchedule from "@/components/common/schedule/CombinedStudentSchedule";
 import { PageHeader, PageLayout } from "@/components/common/layout";
+import CombinedStudentSchedule from "@/components/common/schedule/CombinedStudentSchedule";
 import { Calendar } from "lucide-react";
 
 export default function CombinedSchedulePage() {
@@ -13,8 +13,8 @@ export default function CombinedSchedulePage() {
         icon={Calendar}
       />
 
-      <PageLayout variant="inset">
-        <div className="overflow-hidden border-0 flat-card rounded-2xl">
+      <PageLayout>
+        <div className="h-full overflow-hidden border-0 flat-card rounded-2xl">
           <CombinedStudentSchedule />
         </div>
       </PageLayout>

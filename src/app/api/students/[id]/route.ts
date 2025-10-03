@@ -83,21 +83,14 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 }
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  const { id } = await params;
   try {
     const supabase = createAdminSupabaseClient();
-    const studentId = parseInt(params.id);
-
-    if (isNaN(studentId)) {
-      return NextResponse.json(
-        { error: "Invalid student ID" },
-        { status: 400 }
-      );
-    }
 
     const { error } = await supabase
       .from("students")
       .delete()
-      .eq("id", studentId);
+      .eq("id", id);
 
     if (error) {
       console.error("Student delete error:", error);

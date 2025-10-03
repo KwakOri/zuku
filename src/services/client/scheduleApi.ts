@@ -9,17 +9,17 @@ export interface ApiError {
   error: string;
 }
 
-interface StudentScheduleWithStudent extends Tables<"student_schedules"> {
+export interface StudentScheduleWithStudent extends Tables<"student_schedules"> {
   student?: {
-    id: number;
+    id: string;
     name: string;
     grade: number;
   } | null;
 }
 
-interface ClassStudentWithDetails extends Tables<"class_students"> {
+export interface ClassStudentWithDetails extends Tables<"class_students"> {
   student?: {
-    id: number;
+    id: string;
     name: string;
     grade: number;
     phone: string | null;
@@ -44,10 +44,10 @@ export class ScheduleApi {
   private classStudentsUrl = "/api/class-students";
 
   // 학생 개인 일정 API
-  async getStudentSchedules(studentId?: number): Promise<StudentScheduleWithStudent[]> {
+  async getStudentSchedules(studentId?: string): Promise<StudentScheduleWithStudent[]> {
     const params = new URLSearchParams();
     if (studentId) {
-      params.set("student_id", studentId.toString());
+      params.set("student_id", studentId);
     }
 
     const url = params.toString() ? `${this.studentSchedulesUrl}?${params}` : this.studentSchedulesUrl;
@@ -135,13 +135,13 @@ export class ScheduleApi {
   }
 
   // 수업-학생 관계 API
-  async getClassStudents(classId?: string, studentId?: number): Promise<ClassStudentWithDetails[]> {
+  async getClassStudents(classId?: string, studentId?: string): Promise<ClassStudentWithDetails[]> {
     const params = new URLSearchParams();
     if (classId) {
       params.set("class_id", classId);
     }
     if (studentId) {
-      params.set("student_id", studentId.toString());
+      params.set("student_id", studentId);
     }
 
     const url = params.toString() ? `${this.classStudentsUrl}?${params}` : this.classStudentsUrl;
@@ -179,7 +179,7 @@ export class ScheduleApi {
     return result.data;
   }
 
-  async unenrollStudentFromClass(classId: string, studentId: number): Promise<void> {
+  async unenrollStudentFromClass(classId: string, studentId: string): Promise<void> {
     const response = await fetch(`${this.classStudentsUrl}/${classId}/${studentId}`, {
       method: "DELETE",
       headers: {
@@ -194,7 +194,7 @@ export class ScheduleApi {
   }
 
   // 종합 스케줄 조회
-  async getStudentCompleteSchedule(studentId: number) {
+  async getStudentCompleteSchedule(studentId: string) {
     const [classSchedules, personalSchedules] = await Promise.all([
       this.getClassStudents(undefined, studentId),
       this.getStudentSchedules(studentId),

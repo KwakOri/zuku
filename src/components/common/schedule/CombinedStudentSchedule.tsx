@@ -1,15 +1,14 @@
 "use client";
 
-import { useStudents } from "@/queries/useStudents";
-import { useClasses } from "@/queries/useClasses";
-import { useClassStudents } from "@/queries/useSchedules";
-import { useStudentSchedules } from "@/queries/useSchedules";
-import { useSchools } from "@/queries/useSchools";
-import { Tables } from "@/types/supabase";
-import { Calendar, Clock, Search, ArrowUpDown } from "lucide-react";
-import { Fragment, useMemo, useState, useEffect } from "react";
 import Tooltip from "@/components/common/Tooltip";
 import { getGrade } from "@/lib/utils";
+import { useClasses } from "@/queries/useClasses";
+import { useClassStudents, useStudentSchedules } from "@/queries/useSchedules";
+import { useSchools } from "@/queries/useSchools";
+import { useStudents } from "@/queries/useStudents";
+import { Tables } from "@/types/supabase";
+import { ArrowUpDown, Calendar, Clock, Search } from "lucide-react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 
 // Helper function to convert time string "HH:mm" to minutes from midnight
 const timeToMinutes = (time: string): number => {
@@ -30,7 +29,7 @@ interface TimelineEvent {
   id: string;
   title: string;
   startTime: string; // Non-null since we filter out null times
-  endTime: string;   // Non-null since we filter out null times
+  endTime: string; // Non-null since we filter out null times
   dayOfWeek: number; // 0 for Mon, 1 for Tue, ..., 6 for Sun
   color: string;
   type: "class" | "schedule";
@@ -40,21 +39,23 @@ export default function CombinedStudentSchedule() {
   // API에서 데이터 가져오기
   const { data: students = [], isLoading: studentsLoading } = useStudents();
   const { data: classes = [], isLoading: classesLoading } = useClasses();
-  const { data: classStudents = [], isLoading: classStudentsLoading } = useClassStudents();
-  const { data: studentSchedules = [], isLoading: studentSchedulesLoading } = useStudentSchedules();
+  const { data: classStudents = [], isLoading: classStudentsLoading } =
+    useClassStudents();
+  const { data: studentSchedules = [], isLoading: studentSchedulesLoading } =
+    useStudentSchedules();
   const { data: schools = [], isLoading: schoolsLoading } = useSchools();
 
   // 검색어 상태
   const [searchQuery, setSearchQuery] = useState("");
 
   // 정렬 상태
-  type SortField = 'name' | 'school' | 'grade';
-  type SortOrder = 'asc' | 'desc';
-  const [sortField, setSortField] = useState<SortField>('grade');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  type SortField = "name" | "school" | "grade";
+  type SortOrder = "asc" | "desc";
+  const [sortField, setSortField] = useState<SortField>("grade");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
   // 선택된 학생들 상태
-  const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
   // 학생 데이터가 로드되면 전체 선택으로 초기화
   useEffect(() => {
@@ -63,15 +64,18 @@ export default function CombinedStudentSchedule() {
     }
   }, [students, selectedStudents.length]);
 
-  const daysOfWeek = useMemo(() => [
-    { name: "월", startHour: 16, endHour: 22 },
-    { name: "화", startHour: 16, endHour: 22 },
-    { name: "수", startHour: 16, endHour: 22 },
-    { name: "목", startHour: 16, endHour: 22 },
-    { name: "금", startHour: 16, endHour: 22 },
-    { name: "토", startHour: 10, endHour: 22 },
-    { name: "일", startHour: 10, endHour: 22 },
-  ], []);
+  const daysOfWeek = useMemo(
+    () => [
+      { name: "월", startHour: 16, endHour: 22 },
+      { name: "화", startHour: 16, endHour: 22 },
+      { name: "수", startHour: 16, endHour: 22 },
+      { name: "목", startHour: 16, endHour: 22 },
+      { name: "금", startHour: 16, endHour: 22 },
+      { name: "토", startHour: 10, endHour: 22 },
+      { name: "일", startHour: 10, endHour: 22 },
+    ],
+    []
+  );
 
   // Pre-calculate timeline metrics for performance
   const timelineMetrics = useMemo(() => {
@@ -113,7 +117,9 @@ export default function CombinedStudentSchedule() {
             .map((cs) => cs.class_id);
 
           const hasMatchingClass = classes.some(
-            (c) => studentClassIds.includes(c.id) && c.title.toLowerCase().includes(query)
+            (c) =>
+              studentClassIds.includes(c.id) &&
+              c.title.toLowerCase().includes(query)
           );
           if (hasMatchingClass) return true;
 
@@ -141,7 +147,13 @@ export default function CombinedStudentSchedule() {
           }));
 
         const personalEvents: TimelineEvent[] = studentSchedules
-          .filter((ss) => ss.student_id === student.id && ss.start_time && ss.end_time && ss.day_of_week !== null)
+          .filter(
+            (ss) =>
+              ss.student_id === student.id &&
+              ss.start_time &&
+              ss.end_time &&
+              ss.day_of_week !== null
+          )
           .map((ss) => ({
             id: `schedule-${ss.id}`,
             title: ss.title,
@@ -166,15 +178,15 @@ export default function CombinedStudentSchedule() {
       let compareValue = 0;
 
       switch (sortField) {
-        case 'name':
-          compareValue = a.name.localeCompare(b.name, 'ko-KR');
+        case "name":
+          compareValue = a.name.localeCompare(b.name, "ko-KR");
           break;
-        case 'school':
-          const schoolA = a.school?.name || '';
-          const schoolB = b.school?.name || '';
-          compareValue = schoolA.localeCompare(schoolB, 'ko-KR');
+        case "school":
+          const schoolA = a.school?.name || "";
+          const schoolB = b.school?.name || "";
+          compareValue = schoolA.localeCompare(schoolB, "ko-KR");
           break;
-        case 'grade':
+        case "grade":
           // 학년으로 먼저 정렬
           const gradeA = a.grade || 0;
           const gradeB = b.grade || 0;
@@ -182,18 +194,28 @@ export default function CombinedStudentSchedule() {
 
           // 학년이 같으면 학교로 정렬
           if (compareValue === 0) {
-            const schoolA = a.school?.name || '';
-            const schoolB = b.school?.name || '';
-            compareValue = schoolA.localeCompare(schoolB, 'ko-KR');
+            const schoolA = a.school?.name || "";
+            const schoolB = b.school?.name || "";
+            compareValue = schoolA.localeCompare(schoolB, "ko-KR");
           }
           break;
       }
 
-      return sortOrder === 'asc' ? compareValue : -compareValue;
+      return sortOrder === "asc" ? compareValue : -compareValue;
     });
 
     return sortedStudents;
-  }, [selectedStudents, students, classes, classStudents, studentSchedules, schools, searchQuery, sortField, sortOrder]);
+  }, [
+    selectedStudents,
+    students,
+    classes,
+    classStudents,
+    studentSchedules,
+    schools,
+    searchQuery,
+    sortField,
+    sortOrder,
+  ]);
 
   // 겹치는 이벤트들을 그룹화하는 함수
   const groupOverlappingEvents = (events: TimelineEvent[]) => {
@@ -283,10 +305,10 @@ export default function CombinedStudentSchedule() {
       const event = events[0];
       return (
         <div className="text-left">
-          <div className="font-bold text-base mb-2 text-white">
+          <div className="mb-2 text-base font-bold text-white">
             {event.title}
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-200 mb-1">
+          <div className="flex items-center gap-2 mb-1 text-sm text-gray-200">
             <Clock className="w-4 h-4 text-blue-300" />
             <span>
               {formatTime(event.startTime)} - {formatTime(event.endTime)}
@@ -303,10 +325,10 @@ export default function CombinedStudentSchedule() {
     // 다중 이벤트인 경우
     return (
       <div className="text-left">
-        <div className="font-bold text-sm mb-2 text-white">
+        <div className="mb-2 text-sm font-bold text-white">
           겹치는 일정 ({events.length}개)
         </div>
-        <div className="flex items-center gap-2 text-xs text-gray-200 mb-2">
+        <div className="flex items-center gap-2 mb-2 text-xs text-gray-200">
           <Calendar className="w-3 h-3 text-green-300" />
           <span>{dayName}요일</span>
         </div>
@@ -314,10 +336,10 @@ export default function CombinedStudentSchedule() {
           {events.map((event) => (
             <div
               key={event.id}
-              className="border-l-2 pl-2"
+              className="pl-2 border-l-2"
               style={{ borderColor: event.color }}
             >
-              <div className="font-medium text-sm text-white">
+              <div className="text-sm font-medium text-white">
                 {event.title}
               </div>
               <div className="flex items-center gap-1 text-xs text-gray-200">
@@ -394,13 +416,18 @@ export default function CombinedStudentSchedule() {
   };
 
   // 로딩 상태
-  const isLoading = studentsLoading || classesLoading || classStudentsLoading || studentSchedulesLoading || schoolsLoading;
+  const isLoading =
+    studentsLoading ||
+    classesLoading ||
+    classStudentsLoading ||
+    studentSchedulesLoading ||
+    schoolsLoading;
 
   if (isLoading) {
     return (
-      <div className="w-full grow overflow-auto bg-gray-50 rounded-lg flex items-center justify-center">
+      <div className="flex items-center justify-center w-full overflow-auto rounded-lg grow bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <div className="w-12 h-12 mx-auto mb-4 border-b-2 rounded-full animate-spin border-primary-600"></div>
           <p className="text-gray-600">스케줄 데이터를 불러오는 중...</p>
         </div>
       </div>
@@ -410,255 +437,253 @@ export default function CombinedStudentSchedule() {
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       // 같은 필드를 다시 클릭하면 정렬 순서 토글
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
       // 다른 필드를 클릭하면 해당 필드로 오름차순 정렬
       setSortField(field);
-      setSortOrder('asc');
+      setSortOrder("asc");
     }
   };
 
   return (
-    <div className="w-full grow flex flex-col bg-gray-50 rounded-lg">
+    <div className="flex flex-col w-full h-full rounded-lg grow bg-gray-50">
       {/* 검색 및 정렬 바 */}
-      <div className="p-4 border-b border-gray-200 bg-white rounded-t-lg space-y-3">
+      <div className="p-4 space-y-3 bg-white border-b border-gray-200 rounded-t-lg">
         {/* 검색 */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute w-5 h-5 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
           <input
             type="text"
             placeholder="학생 이름, 학교, 수업명으로 검색..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
 
         {/* 정렬 버튼 */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600 font-medium">정렬:</span>
+          <span className="text-sm font-medium text-gray-600">정렬:</span>
           <button
-            onClick={() => handleSort('name')}
+            onClick={() => handleSort("name")}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-              sortField === 'name'
-                ? 'bg-primary-100 text-primary-700 font-medium'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              sortField === "name"
+                ? "bg-primary-100 text-primary-700 font-medium"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
             <span>이름</span>
-            {sortField === 'name' && (
-              <ArrowUpDown className="w-3.5 h-3.5" />
-            )}
+            {sortField === "name" && <ArrowUpDown className="w-3.5 h-3.5" />}
           </button>
           <button
-            onClick={() => handleSort('school')}
+            onClick={() => handleSort("school")}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-              sortField === 'school'
-                ? 'bg-primary-100 text-primary-700 font-medium'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              sortField === "school"
+                ? "bg-primary-100 text-primary-700 font-medium"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
             <span>학교</span>
-            {sortField === 'school' && (
-              <ArrowUpDown className="w-3.5 h-3.5" />
-            )}
+            {sortField === "school" && <ArrowUpDown className="w-3.5 h-3.5" />}
           </button>
           <button
-            onClick={() => handleSort('grade')}
+            onClick={() => handleSort("grade")}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-              sortField === 'grade'
-                ? 'bg-primary-100 text-primary-700 font-medium'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              sortField === "grade"
+                ? "bg-primary-100 text-primary-700 font-medium"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
             <span>학년</span>
-            {sortField === 'grade' && (
-              <ArrowUpDown className="w-3.5 h-3.5" />
-            )}
+            {sortField === "grade" && <ArrowUpDown className="w-3.5 h-3.5" />}
           </button>
-          {sortOrder === 'desc' && (
-            <span className="text-xs text-gray-500 ml-1">내림차순</span>
+          {sortOrder === "desc" && (
+            <span className="ml-1 text-xs text-gray-500">내림차순</span>
           )}
         </div>
       </div>
 
       {/* 타임라인 */}
       <div className="flex-1 overflow-auto scrollbar-hide">
-      <div
-        className="grid min-w-[4800px]"
-        style={{
-          gridTemplateColumns: `min-content repeat(${timelineMetrics.totalSlots}, 1fr)`,
-        }}
-      >
-        {/* Timeline Header */}
         <div
-          className="bg-gray-200 sticky left-0 top-0 z-30"
-          style={{ gridRow: "1 / 3", gridColumn: "1" }}
-        ></div>
-        {renderTimelineHeader()}
+          className="grid min-w-[4800px]"
+          style={{
+            gridTemplateColumns: `min-content repeat(${timelineMetrics.totalSlots}, 1fr)`,
+          }}
+        >
+          {/* Timeline Header */}
+          <div
+            className="sticky top-0 left-0 z-30 bg-gray-200"
+            style={{ gridRow: "1 / 3", gridColumn: "1" }}
+          ></div>
+          {renderTimelineHeader()}
 
-        {/* Grid Background */}
-        {studentData.map((student, rowIndex) =>
-          daysOfWeek.map((day, dayIndex) => {
-            const dayDurationHours = day.endHour - day.startHour + 1;
-            return Array.from({ length: dayDurationHours }).map(
-              (_, hourIndex) => {
-                const dayOffset = timelineMetrics.dayStartSlot[dayIndex] || 0;
-                const hourSlot = 2 + dayOffset + hourIndex * 24;
-                const isFirstHour = hourIndex === 0;
+          {/* Grid Background */}
+          {studentData.map((student, rowIndex) =>
+            daysOfWeek.map((day, dayIndex) => {
+              const dayDurationHours = day.endHour - day.startHour + 1;
+              return Array.from({ length: dayDurationHours }).map(
+                (_, hourIndex) => {
+                  const dayOffset = timelineMetrics.dayStartSlot[dayIndex] || 0;
+                  const hourSlot = 2 + dayOffset + hourIndex * 24;
+                  const isFirstHour = hourIndex === 0;
 
-                return (
-                  <div
-                    key={`grid-${student.id}-${dayIndex}-${hourIndex}`}
-                    className={`${
-                      dayIndex % 2 === 0
-                        ? "bg-white"
-                        : "bg-gray-50"
-                    }`}
-                    style={{
-                      gridColumn: `${hourSlot} / span 24`,
-                      gridRow: rowIndex + 3,
-                    }}
-                  />
-                );
-              }
-            );
-          })
-        )}
+                  return (
+                    <div
+                      key={`grid-${student.id}-${dayIndex}-${hourIndex}`}
+                      className={`${
+                        dayIndex % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      }`}
+                      style={{
+                        gridColumn: `${hourSlot} / span 24`,
+                        gridRow: rowIndex + 3,
+                      }}
+                    />
+                  );
+                }
+              );
+            })
+          )}
 
-        {/* 정각 세로선 */}
-        {studentData.map((student, rowIndex) =>
-          daysOfWeek.map((day, dayIndex) => {
-            const dayDurationHours = day.endHour - day.startHour + 1;
-            return Array.from({ length: dayDurationHours }).map(
-              (_, hourIndex) => {
-                const dayOffset = timelineMetrics.dayStartSlot[dayIndex] || 0;
-                const hourSlot = 2 + dayOffset + hourIndex * 24 + 12; // 정각 위치 (30분 오프셋)
+          {/* 정각 세로선 */}
+          {studentData.map((student, rowIndex) =>
+            daysOfWeek.map((day, dayIndex) => {
+              const dayDurationHours = day.endHour - day.startHour + 1;
+              return Array.from({ length: dayDurationHours }).map(
+                (_, hourIndex) => {
+                  const dayOffset = timelineMetrics.dayStartSlot[dayIndex] || 0;
+                  const hourSlot = 2 + dayOffset + hourIndex * 24 + 12; // 정각 위치 (30분 오프셋)
 
-                return (
-                  <div
-                    key={`hour-line-${student.id}-${dayIndex}-${hourIndex}`}
-                    className="bg-gray-200"
-                    style={{
-                      gridColumn: `${hourSlot}`,
-                      gridRow: rowIndex + 3,
-                      height: "100%",
-                      width: "1px",
-                    }}
-                  />
-                );
-              }
-            );
-          })
-        )}
+                  return (
+                    <div
+                      key={`hour-line-${student.id}-${dayIndex}-${hourIndex}`}
+                      className="bg-gray-200"
+                      style={{
+                        gridColumn: `${hourSlot}`,
+                        gridRow: rowIndex + 3,
+                        height: "100%",
+                        width: "1px",
+                      }}
+                    />
+                  );
+                }
+              );
+            })
+          )}
 
-        {/* Student Rows */}
-        {studentData.map((student, rowIndex) => {
-          // 학생의 이벤트들을 겹치는 것끼리 그룹화
-          const eventGroups = groupOverlappingEvents(student.events);
+          {/* Student Rows */}
+          {studentData.map((student, rowIndex) => {
+            // 학생의 이벤트들을 겹치는 것끼리 그룹화
+            const eventGroups = groupOverlappingEvents(student.events);
 
-          return (
-            <Fragment key={student.id}>
-              <div
-                className="sticky left-0 z-15 bg-gray-200 px-4 py-3 text-sm text-gray-800"
-                style={{ gridRow: rowIndex + 3, gridColumn: "1" }}
-              >
-                <div className="grid grid-cols-[48px_70px_36px] gap-2 items-center">
-                  <span className="font-medium truncate">{student.name}</span>
-                  {student.school_id ? (
-                    <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded text-center truncate">
-                      {student.school?.name || '학교 정보 없음'}
-                    </span>
-                  ) : (
-                    <span className="text-xs text-gray-400 text-center">-</span>
-                  )}
-                  {student.grade ? (
-                    <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded text-center">
-                      {getGrade(student.grade, 'half')}
-                    </span>
-                  ) : (
-                    <span className="text-xs text-gray-400 text-center">-</span>
-                  )}
-                </div>
-              </div>
-              {eventGroups.map((eventGroup, groupIndex) => {
-                // 그룹의 대표 이벤트 (시간이 가장 빠른 것)
-                const representativeEvent = eventGroup.reduce(
-                  (earliest, current) =>
-                    timeToMinutes(current.startTime) <
-                    timeToMinutes(earliest.startTime)
-                      ? current
-                      : earliest
-                );
-
-                const position = getGridPosition(representativeEvent);
-                if (!position.gridColumn) return null;
-
-                // 겹치는 이벤트가 있으면 시각적 표시 (쌓인 효과)
-                const isStacked = eventGroup.length > 1;
-
-                return (
-                  <div
-                    key={`group-${student.id}-${groupIndex}`}
-                    style={{
-                      ...position,
-                      gridRow: rowIndex + 3,
-                      // 이벤트가 그리드 위에 표시되도록
-                    }}
-                    className="relative z-10 hover:z-20"
-                  >
-                    <Tooltip
-                      content={renderTooltipContent(eventGroup)}
-                      position="top"
-                      delay={200}
-                    >
-                      <div className="relative w-full h-full z-50">
-                        {/* 쌓인 효과를 위한 백그라운드 아이템들 */}
-                        {isStacked &&
-                          eventGroup.slice(1).map((event, stackIndex) => (
-                            <div
-                              key={`stack-${event.id}`}
-                              className="absolute rounded-lg text-white px-1.5 py-0.5 overflow-hidden whitespace-nowrap text-ellipsis text-xs leading-tight opacity-70 border-2 border-white shadow-lg"
-                              style={{
-                                backgroundColor: "rgb(107, 124, 93)", // primary-600
-                                width: "100%",
-                                height: "100%",
-                                top: `${(stackIndex + 1) * 2}px`,
-                                left: `${(stackIndex + 1) * 2}px`,
-                                zIndex: -(stackIndex + 1),
-                                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                              }}
-                            />
-                          ))}
-
-                        {/* 메인 아이템 */}
-                        <div
-                          className="relative rounded-lg my-0.5 text-white px-1.5 py-0.5 overflow-hidden whitespace-nowrap text-ellipsis text-xs leading-tight cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:transform hover:-translate-y-px border-2 border-white shadow-md"
-                          style={{
-                            backgroundColor: "rgb(88, 101, 72)", // primary-600
-                            width: "100%",
-                            height: "100%",
-                            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-                            textShadow: "0 1px 2px rgba(0, 0, 0, 0.3)",
-                          }}
-                        >
-                          <span className="pointer-events-none">
-                            {isStacked
-                              ? `${representativeEvent.title} +${
-                                  eventGroup.length - 1
-                                }`
-                              : representativeEvent.title}
-                          </span>
-                        </div>
-                      </div>
-                    </Tooltip>
+            return (
+              <Fragment key={student.id}>
+                <div
+                  className="sticky left-0 px-4 py-3 text-sm text-gray-800 bg-gray-200 z-15"
+                  style={{ gridRow: rowIndex + 3, gridColumn: "1" }}
+                >
+                  <div className="grid grid-cols-[48px_70px_36px] gap-2 items-center">
+                    <span className="font-medium truncate">{student.name}</span>
+                    {student.school_id ? (
+                      <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded text-center truncate">
+                        {student.school?.name || "학교 정보 없음"}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-center text-gray-400">
+                        -
+                      </span>
+                    )}
+                    {student.grade ? (
+                      <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded text-center">
+                        {getGrade(student.grade, "half")}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-center text-gray-400">
+                        -
+                      </span>
+                    )}
                   </div>
-                );
-              })}
-            </Fragment>
-          );
-        })}
-      </div>
+                </div>
+                {eventGroups.map((eventGroup, groupIndex) => {
+                  // 그룹의 대표 이벤트 (시간이 가장 빠른 것)
+                  const representativeEvent = eventGroup.reduce(
+                    (earliest, current) =>
+                      timeToMinutes(current.startTime) <
+                      timeToMinutes(earliest.startTime)
+                        ? current
+                        : earliest
+                  );
+
+                  const position = getGridPosition(representativeEvent);
+                  if (!position.gridColumn) return null;
+
+                  // 겹치는 이벤트가 있으면 시각적 표시 (쌓인 효과)
+                  const isStacked = eventGroup.length > 1;
+
+                  return (
+                    <div
+                      key={`group-${student.id}-${groupIndex}`}
+                      style={{
+                        ...position,
+                        gridRow: rowIndex + 3,
+                        // 이벤트가 그리드 위에 표시되도록
+                      }}
+                      className="relative z-10 hover:z-20"
+                    >
+                      <Tooltip
+                        content={renderTooltipContent(eventGroup)}
+                        position="top"
+                        delay={200}
+                      >
+                        <div className="relative z-50 w-full h-full">
+                          {/* 쌓인 효과를 위한 백그라운드 아이템들 */}
+                          {isStacked &&
+                            eventGroup.slice(1).map((event, stackIndex) => (
+                              <div
+                                key={`stack-${event.id}`}
+                                className="absolute rounded-lg text-white px-1.5 py-0.5 overflow-hidden whitespace-nowrap text-ellipsis text-xs leading-tight opacity-70 border-2 border-white shadow-lg"
+                                style={{
+                                  backgroundColor: "rgb(107, 124, 93)", // primary-600
+                                  width: "100%",
+                                  height: "100%",
+                                  top: `${(stackIndex + 1) * 2}px`,
+                                  left: `${(stackIndex + 1) * 2}px`,
+                                  zIndex: -(stackIndex + 1),
+                                  boxShadow:
+                                    "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                                }}
+                              />
+                            ))}
+
+                          {/* 메인 아이템 */}
+                          <div
+                            className="relative rounded-lg my-0.5 text-white px-1.5 py-0.5 overflow-hidden whitespace-nowrap text-ellipsis text-xs leading-tight cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:transform hover:-translate-y-px border-2 border-white shadow-md"
+                            style={{
+                              backgroundColor: "rgb(88, 101, 72)", // primary-600
+                              width: "100%",
+                              height: "100%",
+                              boxShadow:
+                                "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+                              textShadow: "0 1px 2px rgba(0, 0, 0, 0.3)",
+                            }}
+                          >
+                            <span className="pointer-events-none">
+                              {isStacked
+                                ? `${representativeEvent.title} +${
+                                    eventGroup.length - 1
+                                  }`
+                                : representativeEvent.title}
+                            </span>
+                          </div>
+                        </div>
+                      </Tooltip>
+                    </div>
+                  );
+                })}
+              </Fragment>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

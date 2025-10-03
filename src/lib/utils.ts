@@ -23,7 +23,7 @@ export const defaultScheduleConfig: ScheduleConfig = {
 // 실제 API 데이터로 밀집도 계산하는 함수
 export function calculateDensityFromScheduleData(
   config: ScheduleConfig,
-  classSchedules: Array<{ class: { day_of_week: number; start_time: string; end_time: string } | null }>,
+  classSchedules: Array<{ class?: { day_of_week: number; start_time: string; end_time: string } | null }>,
   personalSchedules: Array<{ day_of_week: number; start_time: string; end_time: string }>
 ) {
   const timeSlots: { [key: string]: number } = {};

@@ -37,7 +37,7 @@ export default function StudentsPage() {
         }
       />
 
-      <PageLayout variant="default">
+      <PageLayout>
         <StudentList />
       </PageLayout>
 
