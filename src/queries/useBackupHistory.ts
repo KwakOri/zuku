@@ -7,7 +7,7 @@ interface BackupRecord {
   created_by: string | null;
   notes: string | null;
   backup_data: {
-    students: any[];
+    students: Record<string, unknown>[];
     timestamp: string;
   };
 }

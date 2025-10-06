@@ -17,6 +17,15 @@ interface ClassWithStudents extends Tables<"classes"> {
   }[];
 }
 
+interface ClassStudentRelation {
+  student: {
+    id: number;
+    name: string;
+    grade: number;
+  };
+  enrolled_date: string;
+}
+
 export class ClassService {
   private supabase = createAdminSupabaseClient();
 
@@ -81,16 +90,16 @@ export class ClassService {
     // 데이터 구조 변환
     const classData = {
       ...data,
-      students: data.class_students?.map((cs: any) => ({
+      students: data.class_students?.map((cs: ClassStudentRelation) => ({
         id: cs.student.id,
         name: cs.student.name,
         grade: cs.student.grade,
         enrolled_date: cs.enrolled_date,
       })) || []
-    };
+    } as ClassWithStudents;
 
     // class_students 속성 제거
-    delete (classData as any).class_students;
+    delete (classData as Record<string, unknown>).class_students;
 
     return classData;
   }

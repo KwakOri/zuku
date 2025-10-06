@@ -111,7 +111,7 @@ function EditModal({
             <select
               value={editData.type}
               onChange={(e) =>
-                setEditData({ ...editData, type: e.target.value as any })
+                setEditData({ ...editData, type: e.target.value as "personal" | "extracurricular" | "study" | "appointment" | "other" })
               }
               className="w-full border rounded-md px-3 py-2"
             >

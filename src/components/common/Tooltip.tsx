@@ -158,7 +158,7 @@ export default function Tooltip({
     const tooltipHeight = 80; // 대략적인 높이
     const margin = 16;
 
-    let style: React.CSSProperties = {
+    const style: React.CSSProperties = {
       position: 'fixed',
       zIndex: 9999,
       backgroundColor: '#111827', // gray-900

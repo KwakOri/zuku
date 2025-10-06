@@ -23,10 +23,11 @@ export async function GET(
     if (error) throw error;
 
     return NextResponse.json({ data: schedules || [] });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching student schedules:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to fetch student schedules";
     return NextResponse.json(
-      { error: error.message || "Failed to fetch student schedules" },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -87,10 +88,11 @@ export async function POST(
     if (error) throw error;
 
     return NextResponse.json({ data: newSchedule }, { status: 201 });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error creating student schedule:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to create student schedule";
     return NextResponse.json(
-      { error: error.message || "Failed to create student schedule" },
+      { error: errorMessage },
       { status: 500 }
     );
   }

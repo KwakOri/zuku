@@ -77,14 +77,9 @@ export function useCreateClass() {
         });
       }
 
-      // 과목별 쿼리 무효화
+      // 모든 관련 쿼리 무효화 (시간 정보가 class_composition에 있으므로)
       queryClient.invalidateQueries({
-        queryKey: classKeys.bySubject(newClass.subject)
-      });
-
-      // 요일별 쿼리 무효화
-      queryClient.invalidateQueries({
-        queryKey: classKeys.byDay(newClass.day_of_week)
+        queryKey: classKeys.all
       });
 
       // 강사 수업 목록도 무효화 (TeacherClassManager에서 사용)
@@ -106,26 +101,9 @@ export function useCreateClassLegacy() {
 
   return useMutation({
     mutationFn: (data: TablesInsert<"classes">) => classApi.createClass(data),
-    onSuccess: (newClass) => {
-      // 수업 목록 쿼리 무효화
-      queryClient.invalidateQueries({ queryKey: classKeys.lists() });
-
-      // 강사별 쿼리 무효화
-      if (newClass.teacher_id) {
-        queryClient.invalidateQueries({
-          queryKey: classKeys.byTeacher(newClass.teacher_id)
-        });
-      }
-
-      // 과목별 쿼리 무효화
-      queryClient.invalidateQueries({
-        queryKey: classKeys.bySubject(newClass.subject)
-      });
-
-      // 요일별 쿼리 무효화
-      queryClient.invalidateQueries({
-        queryKey: classKeys.byDay(newClass.day_of_week)
-      });
+    onSuccess: () => {
+      // 모든 수업 관련 쿼리 무효화
+      queryClient.invalidateQueries({ queryKey: classKeys.all });
 
       toast.success("수업이 성공적으로 등록되었습니다.");
     },
@@ -198,27 +176,37 @@ export function useDeleteClass() {
 }
 
 // 수업 시간표 관련 유틸리티 훅
+// 참고: 시간 정보는 class_composition 테이블에서 관리되므로
+// 주간 시간표를 조회하려면 class_composition을 함께 조회해야 합니다
 export function useWeeklyClasses() {
   return useQuery({
     queryKey: [...classKeys.all, "weekly"],
     queryFn: async () => {
       const classes = await classApi.getClasses();
-      
-      // 요일별로 그룹화
-      const weeklySchedule = classes.reduce((acc, classItem) => {
-        const day = classItem.day_of_week;
-        if (!acc[day]) {
-          acc[day] = [];
-        }
-        acc[day].push(classItem);
-        return acc;
-      }, {} as Record<number, typeof classes>);
 
-      // 각 요일의 수업을 시간 순으로 정렬
+      // class_composition 정보를 포함하여 요일별로 그룹화
+      const weeklySchedule: Record<number, typeof classes> = {};
+
+      classes.forEach((classItem) => {
+        // class_composition 배열이 있으면 각 composition의 요일별로 그룹화
+        if (classItem.class_composition && Array.isArray(classItem.class_composition)) {
+          classItem.class_composition.forEach((comp: { day_of_week: number; start_time: string }) => {
+            const day = comp.day_of_week;
+            if (!weeklySchedule[day]) {
+              weeklySchedule[day] = [];
+            }
+            weeklySchedule[day].push(classItem);
+          });
+        }
+      });
+
+      // 각 요일의 수업을 시간 순으로 정렬 (class_composition의 start_time 기준)
       Object.keys(weeklySchedule).forEach((day) => {
-        weeklySchedule[parseInt(day)].sort((a, b) => 
-          a.start_time.localeCompare(b.start_time)
-        );
+        weeklySchedule[parseInt(day)].sort((a, b) => {
+          const aTime = a.class_composition?.[0]?.start_time || '';
+          const bTime = b.class_composition?.[0]?.start_time || '';
+          return aTime.localeCompare(bTime);
+        });
       });
 
       return weeklySchedule;

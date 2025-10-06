@@ -84,6 +84,28 @@ export default function CombinedStudentSchedule() {
     useStudentSchedules();
   const { data: schools = [], isLoading: schoolsLoading } = useSchools();
 
+  // Fetch class compositions
+  const [classCompositions, setClassCompositions] = useState<Tables<"class_composition">[]>([]);
+  const [compositionsLoading, setCompositionsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCompositions = async () => {
+      try {
+        const response = await fetch('/api/class-composition');
+        if (response.ok) {
+          const data = await response.json();
+          setClassCompositions(data.data || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch class compositions:', error);
+      } finally {
+        setCompositionsLoading(false);
+      }
+    };
+
+    fetchCompositions();
+  }, []);
+
   // 검색어 상태
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -168,22 +190,49 @@ export default function CombinedStudentSchedule() {
         return true;
       })
       .map((student) => {
-        const studentClasses = classStudents
-          .filter((cs) => cs.student_id === student.id)
-          .map((cs) => classes.find((c) => c.id === cs.class_id))
-          .filter((c): c is Tables<"classes"> => !!c);
+        // Get student's class enrollments with their composition IDs
+        const studentClassEnrollments = classStudents.filter(
+          (cs) => cs.student_id === student.id
+        );
 
-        const classEvents: TimelineEvent[] = studentClasses
-          .filter((c) => c.start_time && c.end_time && c.day_of_week !== null)
-          .map((c) => ({
-            id: `class-${c.id}`,
-            title: c.title,
-            startTime: c.start_time!,
-            endTime: c.end_time!,
-            dayOfWeek: c.day_of_week === 0 ? 6 : c.day_of_week! - 1, // Adjust dayOfWeek (Sun=0 -> Sun=6)
-            color: c.color,
-            type: "class",
-          }));
+        const classEvents: TimelineEvent[] = studentClassEnrollments
+          .flatMap((enrollment) => {
+            const classInfo = classes.find((c) => c.id === enrollment.class_id);
+            if (!classInfo) return [];
+
+            // For split type classes, use the specific composition
+            if (classInfo.split_type === "split" && enrollment.composition_id) {
+              const composition = classCompositions.find(
+                (comp) => comp.id === enrollment.composition_id
+              );
+              if (!composition) return [];
+
+              return [{
+                id: `class-${classInfo.id}-${composition.id}`,
+                title: classInfo.title,
+                startTime: composition.start_time,
+                endTime: composition.end_time,
+                dayOfWeek: composition.day_of_week,
+                color: classInfo.color,
+                type: "class" as const,
+              }];
+            }
+
+            // For single type classes, get all compositions for this class
+            const classComps = classCompositions.filter(
+              (comp) => comp.class_id === classInfo.id
+            );
+
+            return classComps.map((comp) => ({
+              id: `class-${classInfo.id}-${comp.id}`,
+              title: classInfo.title,
+              startTime: comp.start_time,
+              endTime: comp.end_time,
+              dayOfWeek: comp.day_of_week,
+              color: classInfo.color,
+              type: "class" as const,
+            }));
+          });
 
         const personalEvents: TimelineEvent[] = studentSchedules
           .filter(
@@ -254,6 +303,7 @@ export default function CombinedStudentSchedule() {
     searchQuery,
     sortField,
     sortOrder,
+    classCompositions,
   ]);
 
   // 겹치는 이벤트들을 그룹화하는 함수
@@ -460,7 +510,8 @@ export default function CombinedStudentSchedule() {
     classesLoading ||
     classStudentsLoading ||
     studentSchedulesLoading ||
-    schoolsLoading;
+    schoolsLoading ||
+    compositionsLoading;
 
   if (isLoading) {
     return (

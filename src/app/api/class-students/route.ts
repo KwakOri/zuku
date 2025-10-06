@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
       student_id: body.student_id,
       enrolled_date: body.enrolled_date || new Date().toISOString().split('T')[0],
       status: body.status || "active",
+      composition_id: body.composition_id || null,
     };
 
     // 중복 등록 체크

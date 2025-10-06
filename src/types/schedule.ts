@@ -1,68 +1,24 @@
-// 학생 정보
-export interface Student {
-  id: string;
-  name: string;
-  grade: number;
-  phone?: string;
-  parentPhone?: string;
-  email?: string;
-}
+import { Tables } from "./supabase";
 
-// 강사 정보
-export interface Teacher {
-  id: string;
-  name: string;
-  subjects: string[];
-  phone?: string;
-  email?: string;
-}
+// Supabase 타입을 사용
+export type Student = Tables<"students">;
+export type Teacher = Tables<"teachers">;
+export type Class = Tables<"classes">;
+export type ClassComposition = Tables<"class_composition">;
+export type Subject = Tables<"subjects">;
 
-// 수업 정보
-export interface Class {
-  id: string;
-  title: string;
-  subject: string;
-  teacherId: Teacher["id"];
-  teacherName: Teacher["name"];
-  startTime: string; // HH:mm 형식
-  endTime: string; // HH:mm 형식
-  dayOfWeek: number; // 0: 일요일, 1: 월요일, ..., 6: 토요일
-  color: string; // 수업 블록 색상
-  room?: string;
-  maxStudents?: number;
-  description?: string;
-  rrule?: string; // 반복 규칙 (RRULE 형식)
-}
-
-// 수업 예외 정보 (휴강, 시간 변경 등)
-export interface ClassException {
-  id: string;
-  classId: Class["id"];
-  date: string; // YYYY-MM-DD 형식
-  type: "cancel" | "reschedule" | "substitute";
-  reason?: string;
-  newStartTime?: string;
-  newEndTime?: string;
-  newRoom?: string;
-  substituteTeacherId?: string;
-}
-
-// 수업-학생 관계
-export interface ClassStudent {
-  id: string;
-  classId: Class["id"];
-  studentId: Student["id"];
-  enrolledDate: string; // YYYY-MM-DD 형식
-  status: "active" | "paused" | "withdrawn";
-}
+// Supabase 타입 사용
+export type ClassStudent = Tables<"class_students">;
+export type ClassException = Tables<"class_exceptions">;
 
 // UI에서 사용할 수업 블록 데이터
 export interface ClassBlock {
   id: string;
-  classId: Class["id"];
+  classId: string;
+  compositionId?: string; // 연결된 시간 구성 ID
   title: string;
-  subject: Class["subject"];
-  teacherName: Teacher["name"];
+  subject: string;
+  teacherName: string;
   startTime: string;
   endTime: string;
   dayOfWeek: number;
@@ -72,6 +28,8 @@ export interface ClassBlock {
   maxStudents?: number;
   date?: string; // 특정 날짜 (예외 처리용)
   isException?: boolean;
+  splitType?: string; // single | split
+  compositionType?: string; // class | clinic (앞타임/뒤타임 구분)
 }
 
 // 시간표 편집 모드
@@ -115,7 +73,7 @@ export interface StudentSchedule {
 // 시간표 필터
 export interface ScheduleFilter {
   teacherIds?: Teacher["id"][];
-  subjects?: Class["subject"][];
+  subjectIds?: Subject["id"][];
   grades?: Student["grade"][];
   rooms?: Class["room"][];
 }
@@ -128,7 +86,7 @@ export interface Assistant {
   id: string;
   name: string;
   teacherId: Teacher["id"]; // 담당 강사
-  subjects: Class["subject"][];
+  subjectIds: Subject["id"][]; // 담당 과목 ID 목록
   phone?: string;
   email?: string;
   assignedGrades: number[]; // 담당 학년
@@ -192,7 +150,13 @@ export interface ClassSchedulingSuggestion {
 export interface StudentScheduleBlock {
   id: string;
   title: string;
-  type: "class" | "personal" | "extracurricular" | "study" | "appointment" | "other";
+  type:
+    | "class"
+    | "personal"
+    | "extracurricular"
+    | "study"
+    | "appointment"
+    | "other";
   startTime: string; // HH:mm 형식
   endTime: string; // HH:mm 형식
   dayOfWeek: number; // 0: 월요일, 1: 화요일, ..., 6: 일요일

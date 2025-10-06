@@ -12,6 +12,7 @@ interface CanvasScheduleProps {
   editMode?: EditMode;
   config?: ScheduleConfig;
   showDensity?: boolean;
+  studentId?: number | string; // 학생 개별 시간표 모드 (UUID 지원)
   customBlocks?: ClassBlock[]; // 커스텀 블록 데이터
   onBlocksChange?: (blocks: ClassBlock[]) => void; // 블록 변경 콜백
   selectedClassId?: string; // 선택된 수업 ID (강사 모드용)
@@ -278,6 +279,7 @@ export default function CanvasSchedule({
   editMode = "view",
   config = defaultScheduleConfig,
   showDensity = false,
+  studentId,
   customBlocks,
   onBlocksChange,
   selectedClassId,

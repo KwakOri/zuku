@@ -102,7 +102,7 @@ export class AuthManager {
   }
 
   // JWT 디코딩 (클라이언트에서는 페이로드 디코딩만, 검증은 서버에서)
-  private decodeTokenPayload(token: string): any | null {
+  private decodeTokenPayload(token: string): Record<string, unknown> | null {
     try {
       const payload = token.split('.')[1];
       if (!payload) return null;

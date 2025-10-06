@@ -2,15 +2,16 @@
 
 import React, { useEffect, useRef, useMemo, useState, useCallback } from 'react';
 import { Search, Filter, Download, RefreshCw } from 'lucide-react';
-import { 
-  students, 
-  classes, 
-  classStudents, 
-  studentSchedules 
+import {
+  students,
+  classes,
+  classStudents,
+  studentSchedules
 } from '@/lib/mock';
-import { 
-  generateAllStudentsComprehensiveSchedules 
+import {
+  generateAllStudentsComprehensiveSchedules
 } from '@/lib/utils/comprehensiveScheduleUtils';
+import type { StudentComprehensiveSchedule, DaySchedule, ScheduleItem } from '@/types/comprehensiveSchedule';
 
 interface ExcelScheduleTableProps {
   className?: string;
@@ -225,7 +226,7 @@ export default function ExcelScheduleTable({ className = '' }: ExcelScheduleTabl
   };
 
   // 학생 행 그리기
-  const drawStudentRow = (ctx: CanvasRenderingContext2D, schedule: any, rowIndex: number) => {
+  const drawStudentRow = (ctx: CanvasRenderingContext2D, schedule: StudentComprehensiveSchedule, rowIndex: number) => {
     const y = CANVAS_CONFIG.headerHeight + rowIndex * CANVAS_CONFIG.rowHeight;
     
     // 행 배경 (교대로 색상)
@@ -240,7 +241,7 @@ export default function ExcelScheduleTable({ className = '' }: ExcelScheduleTabl
   };
 
   // 학생 정보 그리기
-  const drawStudentInfo = (ctx: CanvasRenderingContext2D, schedule: any, y: number) => {
+  const drawStudentInfo = (ctx: CanvasRenderingContext2D, schedule: StudentComprehensiveSchedule, y: number) => {
     const student = schedule.student;
     const studentData = [
       { text: student.id.toString(), width: 60 },
@@ -273,14 +274,14 @@ export default function ExcelScheduleTable({ className = '' }: ExcelScheduleTabl
   };
 
   // 스케줄 블록 그리기
-  const drawScheduleBlocks = (ctx: CanvasRenderingContext2D, schedule: any, rowY: number) => {
+  const drawScheduleBlocks = (ctx: CanvasRenderingContext2D, schedule: StudentComprehensiveSchedule, rowY: number) => {
     let dayStartX = CANVAS_CONFIG.studentInfoWidth;
 
-    schedule.weeklySchedule.forEach((daySchedule: any, dayIndex: number) => {
+    schedule.weeklySchedule.forEach((daySchedule: DaySchedule, dayIndex: number) => {
       const isWeekend = dayIndex === 5 || dayIndex === 6;
       const startHour = isWeekend ? SCHEDULE_CONFIG.weekendStartHour : SCHEDULE_CONFIG.weekdayStartHour;
-      
-      daySchedule.schedules.forEach((scheduleItem: any) => {
+
+      daySchedule.schedules.forEach((scheduleItem: ScheduleItem) => {
         drawScheduleBlock(ctx, scheduleItem, dayStartX, rowY, startHour);
       });
 
@@ -293,8 +294,8 @@ export default function ExcelScheduleTable({ className = '' }: ExcelScheduleTabl
 
   // 개별 스케줄 블록 그리기
   const drawScheduleBlock = (
-    ctx: CanvasRenderingContext2D, 
-    scheduleItem: any, 
+    ctx: CanvasRenderingContext2D,
+    scheduleItem: ScheduleItem,
     dayStartX: number, 
     rowY: number, 
     dayStartHour: number

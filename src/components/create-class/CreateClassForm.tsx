@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Calendar, Clock, Users, MapPin, BookOpen, Save, Plus, X } from "lucide-react";
+import { Calendar, Clock, Users, MapPin, BookOpen, Save, Plus, X, Split } from "lucide-react";
 import { useCreateClass } from "@/queries/useClasses";
 import { useTeachers } from "@/queries/useTeachers";
 import { useStudents } from "@/queries/useStudents";
@@ -16,6 +16,7 @@ import {
   Icon,
   Chip
 } from "@/components/design-system";
+import ClassCompositionSelector from "@/components/ClassCompositionSelector";
 
 interface CreateClassFormProps {
   userRole: string;
@@ -33,6 +34,7 @@ interface CreateClassFormData {
   room?: string;
   maxStudents?: number;
   studentIds: string[];
+  type: "single" | "split";
 }
 
 const subjects = [
@@ -44,11 +46,13 @@ const dayNames = ["일요일", "월요일", "화요일", "수요일", "목요일
 export default function CreateClassForm({ userRole, userId }: CreateClassFormProps) {
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createdClassId, setCreatedClassId] = useState<string | null>(null);
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<CreateClassFormData>({
     defaultValues: {
       teacherId: userRole === 'teacher' ? userId : '',
       studentIds: [],
+      type: 'single',
     }
   });
 
@@ -58,6 +62,7 @@ export default function CreateClassForm({ userRole, userId }: CreateClassFormPro
 
   const watchedStartTime = watch("startTime");
   const watchedEndTime = watch("endTime");
+  const watchedClassType = watch("type");
 
   // 시간 유효성 검증
   const validateTimeRange = () => {
@@ -90,12 +95,18 @@ export default function CreateClassForm({ userRole, userId }: CreateClassFormPro
     setIsSubmitting(true);
 
     try {
-      await createClassMutation.mutateAsync({
+      const result = await createClassMutation.mutateAsync({
         ...data,
         studentIds: selectedStudents,
       });
 
-      toast.success("수업이 성공적으로 개설되었습니다!");
+      // split 타입인 경우 생성된 수업 ID 저장
+      if (data.type === 'split' && result?.id) {
+        setCreatedClassId(result.id);
+        toast.success("수업이 개설되었습니다. 이제 앞/뒤타임을 설정해주세요.");
+      } else {
+        toast.success("수업이 성공적으로 개설되었습니다!");
+      }
 
       // 폼 초기화는 부모 컴포넌트에서 처리하거나 페이지 이동
       // router.push("/classes") 등으로 처리 가능
@@ -178,6 +189,44 @@ export default function CreateClassForm({ userRole, userId }: CreateClassFormPro
           </div>
       </Card>
 
+      {/* 수업 타입 섹션 */}
+      <Card size="lg" className="p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <Avatar
+            size="md"
+            variant="flat"
+            className="bg-info-100"
+            fallback={<Split className="w-5 h-5 text-info-600" />}
+          />
+          <h3 className="text-lg font-semibold text-gray-900">수업 구성</h3>
+        </div>
+
+        <FormField
+          label="수업 타입"
+          type="select"
+          required
+          error={errors.type?.message}
+          helperText="앞/뒤타임 수업은 학생별로 다른 시간대를 선택할 수 있습니다"
+          {...register("type", { required: "수업 타입을 선택해주세요" })}
+          options={[
+            { value: "single", label: "단일 수업" },
+            { value: "split", label: "앞/뒤타임 수업" }
+          ]}
+        />
+
+        {/* split 타입이고 수업이 생성된 경우 시간 구성 설정 UI 표시 */}
+        {watchedClassType === "split" && createdClassId && (
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h4 className="text-sm font-medium text-blue-900 mb-3">앞/뒤타임 설정</h4>
+            <ClassCompositionSelector
+              classId={createdClassId}
+              classType="split"
+              editMode={true}
+            />
+          </div>
+        )}
+      </Card>
+
       {/* 시간 설정 섹션 */}
       <Card size="lg" className="p-6">
         <div className="flex items-center gap-3 mb-6">
@@ -188,6 +237,11 @@ export default function CreateClassForm({ userRole, userId }: CreateClassFormPro
             fallback={<Icon name="clock" size="sm" color="success" />}
           />
           <h3 className="text-lg font-semibold text-gray-900">시간 설정</h3>
+          {watchedClassType === "split" && (
+            <Badge variant="info" size="sm">
+              기본 시간 (나중에 앞/뒤타임 설정 가능)
+            </Badge>
+          )}
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">

@@ -59,7 +59,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       'course_type'
     ];
 
-    const updateData: Record<string, any> = {};
+    const updateData: Record<string, string | number | boolean> = {};
 
     // 허용된 필드만 추출
     Object.keys(body).forEach(key => {

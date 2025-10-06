@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react-webpack5";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   AlertTriangle,
   CheckCircle,
@@ -326,7 +326,7 @@ export const FullShowcase: Story = {
                   />
                   {searchValue && (
                     <div className="text-sm text-gray-600">
-                      Searching for: "{searchValue}"
+                      {`Searching for: "${searchValue}"`}
                     </div>
                   )}
                 </div>

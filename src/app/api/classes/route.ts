@@ -5,16 +5,21 @@ import { TablesInsert } from "@/types/supabase";
 export async function GET() {
   try {
     const supabase = createAdminSupabaseClient();
-    
+
     const { data: classes, error } = await supabase
       .from("classes")
       .select(`
         *,
         teacher:teachers(id, name),
-        subject:subjects(id, subject_name)
-      `)
-      .order("day_of_week")
-      .order("start_time");
+        subject:subjects(id, subject_name),
+        class_composition(
+          id,
+          type,
+          day_of_week,
+          start_time,
+          end_time
+        )
+      `);
 
     if (error) {
       console.error("Classes fetch error:", error);
@@ -48,7 +53,8 @@ export async function POST(request: NextRequest) {
       room,
       maxStudents,
       studentIds,
-      courseType
+      courseType,
+      splitType
     } = body;
 
     // 필수 필드 검증 (시간 관련 필드는 선택사항)
@@ -90,27 +96,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 시간 중복 검사 (시간이 설정된 경우에만)
-    if (dayOfWeek !== undefined && startTime && endTime) {
-      const { data: conflictingClasses, error: conflictError } = await supabase
-        .from("classes")
-        .select("id, title, start_time, end_time")
-        .eq("teacher_id", teacherId)
-        .eq("day_of_week", dayOfWeek)
-        .or(`and(start_time.lte.${formattedEndTime},end_time.gt.${formattedStartTime})`);
-
-      if (conflictError) {
-        console.error("Conflict check error:", conflictError);
-      } else if (conflictingClasses && conflictingClasses.length > 0) {
-        return NextResponse.json(
-          {
-            error: "해당 시간대에 이미 강사의 다른 수업이 있습니다",
-            conflictingClasses
-          },
-          { status: 409 }
-        );
-      }
-    }
+    // 시간 중복 검사는 class_composition에서 수행 (시간 배정 시)
 
     // 과목별 기본 색상 설정
     const subjectColors: { [key: string]: string } = {
@@ -126,19 +112,17 @@ export async function POST(request: NextRequest) {
       "지구과학": "#a855f7", // purple-500
     };
 
-    // 수업 생성
+    // 수업 생성 (시간 정보는 class_composition 테이블에서 관리)
     const classData: TablesInsert<"classes"> = {
       title,
       subject_id: subjectId,
       description: description || null,
-      day_of_week: dayOfWeek || null,
-      start_time: formattedStartTime,
-      end_time: formattedEndTime,
       teacher_id: teacherId,
       room: room || null,
       max_students: maxStudents || null,
       color: subjectColors[subject.subject_name || ''] || "#6b7280", // 기본값: gray-500
       course_type: courseType || "regular", // 기본값: regular
+      split_type: splitType || "single", // 기본값: single
       rrule: null
     };
 

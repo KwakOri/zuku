@@ -341,9 +341,9 @@ export async function applyChanges(
   const schoolMap = await getAllSchoolsMap(supabase);
 
   // 모든 작업을 배열로 준비
-  const insertPromises: Promise<any>[] = [];
-  const updatePromises: Promise<any>[] = [];
-  const withdrawPromises: Promise<any>[] = [];
+  const insertPromises: Promise<unknown>[] = [];
+  const updatePromises: Promise<unknown>[] = [];
+  const withdrawPromises: Promise<unknown>[] = [];
 
   // 1. 새 학생 추가 준비
   const newStudentInserts = preview.newStudents

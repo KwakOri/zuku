@@ -27,7 +27,8 @@
       "WebSearch",
       "Bash(head:*)",
       "Bash(for file in /Users/kwakori/projects/promotion/zuku/src/app/(private_route)/*/page.tsx)",
-      "Bash(done)"
+      "Bash(done)",
+      "Read(///**)"
     ],
     "deny": [],
     "ask": []

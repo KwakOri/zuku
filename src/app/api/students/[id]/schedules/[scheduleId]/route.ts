@@ -61,10 +61,11 @@ export async function PUT(
     }
 
     return NextResponse.json({ data: updatedSchedule });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error updating student schedule:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to update student schedule";
     return NextResponse.json(
-      { error: error.message || "Failed to update student schedule" },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -97,10 +98,11 @@ export async function DELETE(
     }
 
     return NextResponse.json({ data: deletedSchedule });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error deleting student schedule:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to delete student schedule";
     return NextResponse.json(
-      { error: error.message || "Failed to delete student schedule" },
+      { error: errorMessage },
       { status: 500 }
     );
   }

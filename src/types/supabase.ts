@@ -127,6 +127,47 @@ export type Database = {
           },
         ]
       }
+      class_composition: {
+        Row: {
+          class_id: string
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          start_time: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          start_time: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          start_time?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_composition_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_exceptions: {
         Row: {
           class_id: string
@@ -187,6 +228,7 @@ export type Database = {
       class_students: {
         Row: {
           class_id: string
+          composition_id: string | null
           created_at: string | null
           enrolled_date: string
           id: string
@@ -196,6 +238,7 @@ export type Database = {
         }
         Insert: {
           class_id: string
+          composition_id?: string | null
           created_at?: string | null
           enrolled_date?: string
           id?: string
@@ -205,6 +248,7 @@ export type Database = {
         }
         Update: {
           class_id?: string
+          composition_id?: string | null
           created_at?: string | null
           enrolled_date?: string
           id?: string
@@ -221,6 +265,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "class_students_composition_id_fkey"
+            columns: ["composition_id"]
+            isOneToOne: false
+            referencedRelation: "class_composition"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "class_students_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
@@ -234,14 +285,12 @@ export type Database = {
           color: string
           course_type: string
           created_at: string | null
-          day_of_week: number | null
           description: string | null
-          end_time: string | null
           id: string
           max_students: number | null
           room: string | null
           rrule: string | null
-          start_time: string | null
+          split_type: string | null
           subject_id: string | null
           teacher_id: string | null
           title: string
@@ -251,14 +300,12 @@ export type Database = {
           color?: string
           course_type?: string
           created_at?: string | null
-          day_of_week?: number | null
           description?: string | null
-          end_time?: string | null
           id?: string
           max_students?: number | null
           room?: string | null
           rrule?: string | null
-          start_time?: string | null
+          split_type?: string | null
           subject_id?: string | null
           teacher_id?: string | null
           title: string
@@ -268,14 +315,12 @@ export type Database = {
           color?: string
           course_type?: string
           created_at?: string | null
-          day_of_week?: number | null
           description?: string | null
-          end_time?: string | null
           id?: string
           max_students?: number | null
           room?: string | null
           rrule?: string | null
-          start_time?: string | null
+          split_type?: string | null
           subject_id?: string | null
           teacher_id?: string | null
           title?: string

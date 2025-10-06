@@ -51,7 +51,7 @@ export async function loginUser(
 
     const supabase = createAdminSupabaseClient();
     const emailLower = email.toLowerCase();
-    let user: any = null;
+    let user: Record<string, unknown> | null = null;
     let userRole: string = '';
 
     // 1. 먼저 users 테이블에서 관리자/매니저 확인
@@ -216,9 +216,8 @@ export async function signupUser(
     const userId = uuidv4();
     const nameTrimmed = name.trim();
 
-    let newUser: any;
     let targetTable: string;
-    let userData: any;
+    let userData: Record<string, unknown>;
 
     // 역할에 따라 적절한 테이블에 저장
     if (invitation.role === 'admin' || invitation.role === 'manager') {
@@ -280,7 +279,7 @@ export async function signupUser(
       };
     }
 
-    newUser = createdUser;
+    const newUser = createdUser;
 
     // 초대 토큰 사용 처리
     await supabase
@@ -315,7 +314,7 @@ export async function signupUser(
 export async function getUserById(userId: string): Promise<AuthUser | null> {
   try {
     const supabase = createAdminSupabaseClient();
-    let user: any = null;
+    let user: Record<string, unknown> | null = null;
     let userRole: string = '';
 
     // 1. 먼저 users 테이블에서 관리자/매니저 확인

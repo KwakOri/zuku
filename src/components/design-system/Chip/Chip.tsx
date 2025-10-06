@@ -83,7 +83,7 @@ export const Chip: React.FC<ChipProps> = ({
   disabled,
   ...props
 }) => {
-  const Component = as as any;
+  const Component = as as React.ElementType;
   const isClickable = interactive || !!props.onClick;
 
   const chipClasses = cn(

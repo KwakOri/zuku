@@ -630,7 +630,6 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
               key={`schedule-${scheduleBlocks.length}-${scheduleBlocks
                 .map((b) => b.id)
                 .join("-")}`}
-              studentId={studentId}
               customBlocks={scheduleBlocks}
               onBlocksChange={handleBlocksChange}
               editMode={"admin"}

@@ -86,7 +86,7 @@ export default function HomePage() {
         "새로운 수업을 개설하고 강사를 배정하며 학생들을 등록할 수 있습니다",
       icon: Plus,
       color: "bg-emerald-50 text-emerald-600 border-emerald-200",
-      href: "/create-class",
+      href: "/class-management",
       stats: "관리자/매니저/강사",
       features: [
         "수업 정보 설정",

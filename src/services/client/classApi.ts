@@ -29,6 +29,7 @@ export interface CreateClassData {
   maxStudents?: number;
   studentIds: string[];
   courseType?: "regular" | "school_exam"; // 수업 유형
+  splitType?: "single" | "split"; // 수업 구성 타입
 }
 
 export class ClassApi {
