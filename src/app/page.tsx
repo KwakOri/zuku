@@ -12,22 +12,42 @@ import {
   Loader2,
   LogOut,
   MessageSquare,
-  Plus,
   Settings,
   Star,
-  UserCheck,
   UserPlus,
   Users,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function HomePage() {
   const { isAuthenticated, user, isLoading } = useAuthState();
   const logoutMutation = useLogout();
+  const router = useRouter();
+
+  // 로그인 체크: 로그인되어 있지 않으면 로그인 페이지로 리다이렉트
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isLoading, isAuthenticated, router]);
 
   const handleLogout = () => {
     logoutMutation.mutate();
   };
+
+  // 로딩 중이거나 인증되지 않은 경우 로딩 화면 표시
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 mx-auto mb-4 text-primary-600 animate-spin" />
+          <p className="text-gray-600">로그인 확인 중...</p>
+        </div>
+      </div>
+    );
+  }
 
   const features = [
     {
@@ -61,38 +81,6 @@ export default function HomePage() {
         "고정 타임라인",
         "세로 스크롤",
         "통합 관리",
-      ],
-    },
-    {
-      id: "teacher-schedule",
-      title: "강사 수업 관리",
-      description:
-        "강사가 담당 수업을 선택하고 학생 밀집도를 확인하며 수업 시간을 조정할 수 있습니다",
-      icon: UserCheck,
-      color: "bg-cyan-50 text-cyan-600 border-cyan-200",
-      href: "/teacher-schedule",
-      stats: "강사 전용",
-      features: [
-        "담당 수업 조회",
-        "학생 밀집도 표시",
-        "드래그 앤 드롭 편집",
-        "실시간 시간 조정",
-      ],
-    },
-    {
-      id: "create-class",
-      title: "수업 개설",
-      description:
-        "새로운 수업을 개설하고 강사를 배정하며 학생들을 등록할 수 있습니다",
-      icon: Plus,
-      color: "bg-emerald-50 text-emerald-600 border-emerald-200",
-      href: "/class-management",
-      stats: "관리자/매니저/강사",
-      features: [
-        "수업 정보 설정",
-        "강사 배정",
-        "학생 선택 등록",
-        "시간 중복 검사",
       ],
     },
     {
@@ -273,15 +261,6 @@ export default function HomePage() {
                   return (
                     isAuthenticated &&
                     (user?.role === "admin" || user?.role === "manager")
-                  );
-                }
-                // 수업 개설은 관리자, 매니저, 강사만 볼 수 있음
-                if (feature.id === "create-class") {
-                  return (
-                    isAuthenticated &&
-                    (user?.role === "admin" ||
-                      user?.role === "manager" ||
-                      user?.role === "teacher")
                   );
                 }
                 return true;

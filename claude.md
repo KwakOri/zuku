@@ -109,6 +109,36 @@ Component → useQuery/useMutation → Client Service → API Route → Server S
 
 **절대 규칙**: 컴포넌트에서 직접 Supabase 클라이언트를 호출하지 말고, 반드시 위 아키텍처를 따라 구현하세요.
 
+# 공통 유틸리티 규칙
+
+## 학년 표시 규칙
+
+학생의 학년을 UI에 표시할 때는 반드시 `@/lib/utils`의 `getGrade` 함수를 사용해야 합니다.
+
+```typescript
+import { getGrade } from "@/lib/utils";
+
+// 짧은 형식 (초1, 중2, 고3)
+getGrade(grade, "half")
+
+// 전체 형식 (초등학교 1학년, 중학교 2학년, 고등학교 3학년)
+getGrade(grade, "full")
+```
+
+**예시:**
+```typescript
+// ❌ 잘못된 방법
+<span>{student.grade}학년</span>
+
+// ✅ 올바른 방법
+<span>{getGrade(student.grade, "half")}</span>
+```
+
+**출력 형식:**
+- 1~6학년: 초1, 초2, ..., 초6
+- 7~9학년: 중1, 중2, 중3
+- 10~12학년: 고1, 고2, 고3
+
 # 최종 목표
 
 위 요구사항을 만족하는 Next.js 프로젝트 예시 코드를 생성해 주세요.

@@ -36,9 +36,7 @@ export function useCreateClassComposition() {
 
       toast.success("시간표가 성공적으로 추가되었습니다.");
     },
-    onError: (error: Error) => {
-      toast.error(error.message || "시간표 추가 중 오류가 발생했습니다.");
-    },
+    // onError removed - let the component handle it
   });
 }
 

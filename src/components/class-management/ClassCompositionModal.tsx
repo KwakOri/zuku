@@ -34,13 +34,19 @@ export default function ClassCompositionModal({
   const [startTime, setStartTime] = useState<string>("09:00");
   const [endTime, setEndTime] = useState<string>("10:30");
   const [type, setType] = useState<"class" | "clinic" | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validation
     if (startTime >= endTime) {
       alert("종료 시간은 시작 시간보다 늦어야 합니다.");
+      return;
+    }
+
+    if (classData.split_type === "split" && !type) {
+      alert("정규 수업 또는 클리닉을 선택해주세요.");
       return;
     }
 
@@ -52,7 +58,19 @@ export default function ClassCompositionModal({
       type: classData.split_type === "split" ? type : null,
     };
 
-    onSubmit(formData);
+    setIsSubmitting(true);
+    try {
+      await onSubmit(formData);
+    } catch (error) {
+      // Show error to user
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("시간표 추가 중 오류가 발생했습니다.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -84,18 +102,22 @@ export default function ClassCompositionModal({
             <label className="block mb-2 text-sm font-medium text-gray-700">
               요일 <span className="text-red-500">*</span>
             </label>
-            <select
-              value={dayOfWeek}
-              onChange={(e) => setDayOfWeek(Number(e.target.value))}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-              required
-            >
+            <div className="grid grid-cols-7 gap-2">
               {DAYS.map((day, index) => (
-                <option key={index} value={index}>
-                  {day}
-                </option>
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => setDayOfWeek(index)}
+                  className={`px-2 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                    dayOfWeek === index
+                      ? "bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  {day.slice(0, 1)}
+                </button>
               ))}
-            </select>
+            </div>
           </div>
 
           {/* Start Time */}
@@ -132,31 +154,29 @@ export default function ClassCompositionModal({
               <label className="block mb-2 text-sm font-medium text-gray-700">
                 타임 구분 <span className="text-red-500">*</span>
               </label>
-              <div className="flex gap-4">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="type"
-                    value="class"
-                    checked={type === "class"}
-                    onChange={(e) => setType(e.target.value as "class")}
-                    className="mr-2"
-                    required
-                  />
-                  <span className="text-sm text-gray-700">정규 수업</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="type"
-                    value="clinic"
-                    checked={type === "clinic"}
-                    onChange={(e) => setType(e.target.value as "clinic")}
-                    className="mr-2"
-                    required
-                  />
-                  <span className="text-sm text-gray-700">클리닉</span>
-                </label>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setType("class")}
+                  className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
+                    type === "class"
+                      ? "bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  정규 수업
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setType("clinic")}
+                  className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
+                    type === "clinic"
+                      ? "bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  클리닉
+                </button>
               </div>
             </div>
           )}
@@ -166,15 +186,17 @@ export default function ClassCompositionModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               취소
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 text-white bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg hover:from-primary-600 hover:to-primary-700 transition-all"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-2 text-white bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg hover:from-primary-600 hover:to-primary-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              추가
+              {isSubmitting ? "추가 중..." : "추가"}
             </button>
           </div>
         </form>

@@ -28,7 +28,15 @@
       "Bash(head:*)",
       "Bash(for file in /Users/kwakori/projects/promotion/zuku/src/app/(private_route)/*/page.tsx)",
       "Bash(done)",
-      "Read(///**)"
+      "Read(///**)",
+      "Read(//Users/kwakori/projects/promotion/temis/src/app/(root)/**)",
+      "Read(//Users/kwakori/projects/promotion/temis/src/app/(root)/time-table/_template/_settings/**)",
+      "Read(//Users/kwakori/projects/promotion/temis/src/app/(root)/time-table/**)",
+      "Read(//Users/kwakori/projects/promotion/temis/src/app/(root)/time-table/24dacf02-9032-4def-ab0f-5d38244f9c05/_settings/**)",
+      "Read(//Users/kwakori/projects/promotion/temis/src/app/(root)/time-table/69a0dcfe-ab5d-4bef-b181-539b995fd73e/_settings/**)",
+      "Read(//Users/kwakori/projects/promotion/temis/src/app/(root)/time-table/_template/_components/**)",
+      "Read(//Users/kwakori/projects/promotion/temis/src/app/**)",
+      "Read(//private/tmp/**)"
     ],
     "deny": [],
     "ask": []

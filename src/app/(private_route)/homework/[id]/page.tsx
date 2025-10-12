@@ -6,13 +6,14 @@ import { classes } from "@/lib/mock/classes";
 import { GraduationCap, Calendar, Clock, User, BookOpen, FileText, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 
 interface HomeworkDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default function HomeworkDetailPage({ params }: HomeworkDetailPageProps) {
-  const record = middleSchoolRecords.find((r) => r.id === params.id);
+export default async function HomeworkDetailPage({ params }: HomeworkDetailPageProps) {
+  const { id } = await params;
+  const record = middleSchoolRecords.find((r) => r.id === id);
 
   if (!record) {
     notFound();
@@ -130,7 +131,7 @@ export default function HomeworkDetailPage({ params }: HomeworkDetailPageProps) 
                   {student.name} 학습 기록
                 </h1>
                 <p className="text-gray-600 mt-1">
-                  {classInfo.subject} • {teacher.name} 선생님
+                  {classInfo.title} • {teacher.name} 선생님
                 </p>
               </div>
             </div>
@@ -216,8 +217,8 @@ export default function HomeworkDetailPage({ params }: HomeworkDetailPageProps) 
                 <div className="flex items-center space-x-3">
                   <BookOpen className="h-4 w-4 text-gray-500" />
                   <div>
-                    <p className="text-sm text-gray-600">과목</p>
-                    <p className="font-medium">{classInfo.subject}</p>
+                    <p className="text-sm text-gray-600">수업</p>
+                    <p className="font-medium">{classInfo.title}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
@@ -225,15 +226,6 @@ export default function HomeworkDetailPage({ params }: HomeworkDetailPageProps) 
                   <div>
                     <p className="text-sm text-gray-600">담당 선생님</p>
                     <p className="font-medium">{teacher.name}</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Clock className="h-4 w-4 text-gray-500" />
-                  <div>
-                    <p className="text-sm text-gray-600">수업 시간</p>
-                    <p className="font-medium">
-                      {classInfo.startTime} - {classInfo.endTime}
-                    </p>
                   </div>
                 </div>
                 {classInfo.room && (

@@ -100,7 +100,7 @@ export default function ClassTimetableCanvas({
     ctx.fillText('요일', CANVAS_CONFIG.dayLabelWidth / 2, headerY + 30);
 
     // 시간 격자 레이블
-    let timeX = CANVAS_CONFIG.dayLabelWidth;
+    const timeX = CANVAS_CONFIG.dayLabelWidth;
 
     ctx.font = 'bold 16px Arial';
     ctx.fillText('시간', timeX + (canvasSize.width - CANVAS_CONFIG.dayLabelWidth) / 2, headerY + 25);
@@ -181,7 +181,7 @@ export default function ClassTimetableCanvas({
       ctx.textAlign = 'center';
 
       const textX = blockX + blockWidth / 2;
-      let textY = blockY + blockHeight / 2;
+      const textY = blockY + blockHeight / 2;
 
       // 수업 제목
       const maxLength = Math.floor(blockWidth / 9);

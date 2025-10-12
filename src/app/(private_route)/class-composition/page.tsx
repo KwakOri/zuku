@@ -74,7 +74,7 @@ export default function ClassCompositionPage() {
                         </div>
                       </div>
                       <p className="text-xs text-gray-500">
-                        {cls.teacher_name} • {cls.subject}
+                        {cls.teacher?.name} • {cls.subject?.subject_name}
                       </p>
                     </button>
                   ))
@@ -93,7 +93,7 @@ export default function ClassCompositionPage() {
                     {selectedClass.title}
                   </h3>
                   <p className="text-sm text-gray-500 mt-1">
-                    {selectedClass.subject} • {selectedClass.teacher_name}
+                    {selectedClass.subject?.subject_name} • {selectedClass.teacher?.name}
                   </p>
                 </div>
 

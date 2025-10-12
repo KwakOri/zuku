@@ -28,11 +28,11 @@ export interface ScheduleItem {
 
 // 학생별 종합 시간표
 export interface StudentComprehensiveSchedule {
-  student: Student;
+  student: Pick<Student, "id" | "name" | "grade"> | Student;
   school: string; // 학교명 (임시로 고정값 사용)
   weeklySchedule: DaySchedule[];
-  classSchedules: Class[];
-  personalSchedules: StudentSchedule[];
+  classSchedules?: Class[];
+  personalSchedules?: StudentSchedule[];
 }
 
 // 시간표 설정

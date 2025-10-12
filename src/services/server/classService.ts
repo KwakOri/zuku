@@ -6,6 +6,8 @@ interface ClassWithTeacher extends Tables<"classes"> {
     id: string;
     name: string;
   } | null;
+  subject?: Tables<"subjects"> | null;
+  class_composition?: Tables<"class_composition">[];
 }
 
 interface ClassWithStudents extends Tables<"classes"> {

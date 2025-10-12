@@ -36,6 +36,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useRef, useState } from "react";
 import { useSendKakaoNotification } from "@/queries/useNotifications";
+import ClassEnrollmentModal from "@/components/students/ClassEnrollmentModal";
 
 interface StudentDetailPageProps {
   params: Promise<{
@@ -85,6 +86,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
   // 일정 관리 UI 상태
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"all" | "personal" | "class">(
     "all"
@@ -436,6 +438,15 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
             {/* 학생 정보 카드 및 액션 버튼 */}
             <div className="flex items-center gap-4">
+              {/* 수업 등록 버튼 */}
+              <button
+                onClick={() => setShowEnrollModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                수업 등록
+              </button>
+
               {/* 일정 추가 버튼 */}
               <button
                 onClick={() => setShowAddModal(true)}
@@ -896,6 +907,21 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 수업 등록 모달 */}
+      {showEnrollModal && (
+        <ClassEnrollmentModal
+          studentId={studentId}
+          studentName={student.name}
+          onClose={() => setShowEnrollModal(false)}
+          onSuccess={() => {
+            // 등록 성공 시 시간표 새로고침
+            queryClient.invalidateQueries({
+              queryKey: studentScheduleKeys.list(studentId),
+            });
+          }}
+        />
       )}
     </div>
   );

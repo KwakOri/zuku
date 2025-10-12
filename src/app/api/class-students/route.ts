@@ -13,8 +13,17 @@ export async function GET(request: NextRequest) {
       .from("class_students")
       .select(`
         *,
-        student:students(id, name, grade, phone, parent_phone, email),
-        class:classes(id, title, start_time, end_time, day_of_week, subject:subjects(id, subject_name))
+        student:students(
+          id,
+          name,
+          grade,
+          phone,
+          parent_phone,
+          email,
+          school:schools(id, name, level)
+        ),
+        class:classes(id, title, subject:subjects(id, subject_name)),
+        composition:class_composition(id, day_of_week, start_time, end_time, type)
       `)
       .eq("status", "active");
 
@@ -55,7 +64,6 @@ export async function POST(request: NextRequest) {
 
     // 입력 데이터 검증
     const classStudentData: TablesInsert<"class_students"> = {
-      id: body.id,
       class_id: body.class_id,
       student_id: body.student_id,
       enrolled_date: body.enrolled_date || new Date().toISOString().split('T')[0],
@@ -84,8 +92,17 @@ export async function POST(request: NextRequest) {
       .insert([classStudentData])
       .select(`
         *,
-        student:students(id, name, grade, phone, parent_phone, email),
-        class:classes(id, title, start_time, end_time, day_of_week, subject:subjects(id, subject_name))
+        student:students(
+          id,
+          name,
+          grade,
+          phone,
+          parent_phone,
+          email,
+          school:schools(id, name, level)
+        ),
+        class:classes(id, title, subject:subjects(id, subject_name)),
+        composition:class_composition(id, day_of_week, start_time, end_time, type)
       `)
       .single();
 

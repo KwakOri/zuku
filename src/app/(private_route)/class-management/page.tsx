@@ -4,10 +4,12 @@ import ClassCompositionModal, {
   ClassCompositionFormData,
 } from "@/components/class-management/ClassCompositionModal";
 import SimpleClassForm from "@/components/class-management/SimpleClassForm";
+import ClassStudentPanel from "@/components/class-management/ClassStudentPanel";
 import { PageHeader, PageLayout } from "@/components/common/layout";
+import CanvasSchedule from "@/components/common/schedule/CanvasSchedule";
 import { useCreateClassComposition } from "@/queries/useClassComposition";
 import { useClasses } from "@/queries/useClasses";
-import type { StudentComprehensiveSchedule } from "@/types/comprehensiveSchedule";
+import type { ClassBlock } from "@/types/schedule";
 import { Calendar, Clock, Plus, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -22,6 +24,9 @@ export default function ClassManagementPage() {
 
   // Selected class for time assignment
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+
+  // Selected composition for student management
+  const [selectedCompositionId, setSelectedCompositionId] = useState<string | null>(null);
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -38,8 +43,13 @@ export default function ClassManagementPage() {
   // Find selected class
   const selectedClass = classes.find((c) => c.id === selectedClassId);
 
-  // Convert selected class to StudentComprehensiveSchedule format for CanvasScheduleTable
-  const canvasScheduleData = useMemo((): StudentComprehensiveSchedule[] => {
+  // Find selected composition
+  const selectedComposition = selectedClass?.class_composition?.find(
+    (comp) => comp.id === selectedCompositionId
+  ) || null;
+
+  // Convert selected class to ClassBlock format for CanvasSchedule
+  const classBlocks = useMemo((): ClassBlock[] => {
     if (
       !selectedClass ||
       !selectedClass.class_composition ||
@@ -48,42 +58,21 @@ export default function ClassManagementPage() {
       return [];
     }
 
-    // Create a single row representing the class schedule
-    // 요일 인덱스: 월(0), 화(1), 수(2), 목(3), 금(4), 토(5), 일(6)
-    const weeklySchedule = Array.from({ length: 7 }, (_, dayIndex) => {
-      const dayCompositions = (selectedClass.class_composition || []).filter(
-        (comp: { day_of_week: number }) => comp.day_of_week === dayIndex
-      );
-
-      return {
-        day: dayIndex,
-        schedules: dayCompositions.map(
-          (comp: {
-            start_time: string;
-            end_time: string;
-            type: string | null;
-          }) => ({
-            title: selectedClass.title,
-            startTime: comp.start_time.substring(0, 5), // HH:MM format
-            endTime: comp.end_time.substring(0, 5), // HH:MM format
-            color: selectedClass.color,
-            type: comp.type || undefined,
-          })
-        ),
-      };
-    });
-
-    return [
-      {
-        student: {
-          id: "class-" + selectedClass.id, // Dummy UUID
-          name: selectedClass.title,
-          grade: 0,
-        },
-        school: selectedClass.subject?.subject_name || "",
-        weeklySchedule,
-      },
-    ];
+    return selectedClass.class_composition.map((comp) => ({
+      id: comp.id,
+      classId: selectedClass.id,
+      compositionId: comp.id,
+      title: selectedClass.title,
+      subject: selectedClass.subject?.subject_name || "",
+      teacherName: selectedClass.teacher?.name || "",
+      startTime: comp.start_time.substring(0, 5), // HH:MM format
+      endTime: comp.end_time.substring(0, 5), // HH:MM format
+      dayOfWeek: comp.day_of_week,
+      color: selectedClass.color || "#3B82F6",
+      room: selectedClass.room || undefined,
+      studentCount: 0, // TODO: Get actual student count
+      compositionType: comp.type,
+    }));
   }, [selectedClass]);
 
   const handleBack = () => {
@@ -96,13 +85,8 @@ export default function ClassManagementPage() {
   };
 
   const handleSubmitTimeSlot = async (data: ClassCompositionFormData) => {
-    try {
-      await createComposition.mutateAsync(data);
-      setIsModalOpen(false);
-    } catch (error) {
-      // Error handled by React Query hook with toast
-      console.error("Failed to create time slot:", error);
-    }
+    await createComposition.mutateAsync(data);
+    setIsModalOpen(false);
   };
 
   if (isLoading) {
@@ -202,58 +186,94 @@ export default function ClassManagementPage() {
           </div>
         ) : activeTab === "assign" ? (
           /* ASSIGN TAB - Time Assignment */
-          <div className="grid flex-1 min-h-0 grid-cols-1 gap-8 lg:grid-cols-4">
-            {/* Panel 1 - Class List (1/4) */}
-            <div className="flex flex-col min-h-0 lg:col-span-1">
-              <div className="flex flex-col flex-1 min-h-0 p-6 border-0 flat-card rounded-2xl">
-                <h3 className="mb-4 text-lg font-semibold text-gray-800">
+          !selectedClass ? (
+            /* Show Class List Only */
+            <div className="flex flex-col flex-1 min-h-0">
+              <div className="flex flex-col flex-1 min-h-0 p-8 border-0 flat-card rounded-2xl">
+                <h3 className="mb-6 text-2xl font-semibold text-gray-800">
                   수업 목록
                 </h3>
-                <div className="flex-1 min-h-0 space-y-2 overflow-y-auto">
+                <div className="grid flex-1 grid-cols-1 gap-4 pt-2 overflow-y-auto md:grid-cols-2 lg:grid-cols-3 auto-rows-min">
                   {classes.length === 0 ? (
-                    <p className="py-4 text-sm text-center text-gray-500">
-                      등록된 수업이 없습니다.
-                    </p>
+                    <div className="col-span-full">
+                      <p className="py-16 text-base text-center text-gray-500">
+                        등록된 수업이 없습니다.
+                      </p>
+                    </div>
                   ) : (
                     classes.map((cls) => (
                       <div
                         key={cls.id}
                         onClick={() => setSelectedClassId(cls.id)}
-                        className={`p-3 transition-colors border rounded-lg cursor-pointer ${
-                          selectedClassId === cls.id
-                            ? "border-primary-500 bg-primary-50"
-                            : "border-gray-200 hover:border-primary-500 hover:bg-primary-50"
-                        }`}
+                        className="flex flex-col h-full p-6 transition-all duration-200 border border-gray-200 cursor-pointer rounded-xl hover:border-primary-500 hover:bg-primary-50 hover:shadow-lg hover:-translate-y-1"
                       >
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-start gap-3 mb-4">
                           <div
-                            className="w-3 h-3 rounded-full"
+                            className="w-6 h-6 rounded-full flex-shrink-0 mt-0.5"
                             style={{ backgroundColor: cls.color }}
                           />
-                          <span className="text-sm font-medium text-gray-800">
-                            {cls.title}
-                          </span>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="mb-1 text-lg font-semibold text-gray-800 break-words">
+                              {cls.title}
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              {cls.subject?.subject_name || "과목 미지정"}
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-xs text-gray-600">
-                          {cls.split_type === "split"
-                            ? "앞/뒤타임 수업"
-                            : "단일 수업"}
-                        </p>
+
+                        <div className="flex flex-col gap-2 mt-auto">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <span className="font-medium">유형:</span>
+                            <span>
+                              {cls.split_type === "split"
+                                ? "앞/뒤타임 수업"
+                                : "단일 수업"}
+                            </span>
+                          </div>
+                          {cls.teacher && (
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <span className="font-medium">강사:</span>
+                              <span>{cls.teacher.name}</span>
+                            </div>
+                          )}
+                          {cls.class_composition &&
+                            cls.class_composition.length > 0 && (
+                              <div className="flex items-center gap-2 pt-2 mt-2 text-sm border-t border-gray-200">
+                                <span className="font-semibold text-primary-600">
+                                  {cls.class_composition.length}개 시간대 배정됨
+                                </span>
+                              </div>
+                            )}
+                        </div>
                       </div>
                     ))
                   )}
                 </div>
               </div>
             </div>
-
-            {/* Panel 2 - Time Slots List (1/4) */}
-            <div className="flex flex-col min-h-0 lg:col-span-1">
-              <div className="flex flex-col flex-1 min-h-0 p-6 border-0 flat-card rounded-2xl">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    시간 목록
-                  </h3>
-                  {selectedClass && (
+          ) : (
+            /* Show Selected Class Details */
+            <div className="flex flex-1 min-h-0 gap-6">
+              {/* Left Panel - Time Slots List (Fixed Width) */}
+              <div
+                className="flex flex-col flex-shrink-0"
+                style={{ width: "400px" }}
+              >
+                <div className="flex flex-col flex-1 min-h-0 p-6 border-0 flat-card rounded-2xl">
+                  <div className="flex items-center gap-2 mb-4">
+                    <button
+                      onClick={() => setSelectedClassId(null)}
+                      className="flex items-center justify-center w-8 h-8 transition-colors rounded-lg hover:bg-gray-100"
+                    >
+                      <span className="text-gray-600">←</span>
+                    </button>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        {selectedClass.title}
+                      </h3>
+                      <p className="text-xs text-gray-500">시간대 목록</p>
+                    </div>
                     <button
                       onClick={handleAddTimeSlot}
                       className="flex items-center gap-1 px-3 py-1.5 text-sm text-white transition-all duration-200 bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg hover:from-primary-600 hover:to-primary-700"
@@ -261,14 +281,8 @@ export default function ClassManagementPage() {
                       <Plus className="w-4 h-4" />
                       <span>추가</span>
                     </button>
-                  )}
-                </div>
+                  </div>
 
-                {!selectedClass ? (
-                  <p className="py-8 text-sm text-center text-gray-500">
-                    좌측에서 수업을 선택하세요
-                  </p>
-                ) : (
                   <div className="flex-1 min-h-0 overflow-y-auto">
                     {!selectedClass.class_composition ||
                     selectedClass.class_composition.length === 0 ? (
@@ -278,80 +292,190 @@ export default function ClassManagementPage() {
                           아직 시간표가 없습니다
                         </p>
                         <p className="mt-1 text-xs text-gray-500">
-                          위의 '추가' 버튼을 눌러 시간표를 생성하세요
+                          {`위의 '추가' 버튼을 눌러 시간표를 생성하세요`}
                         </p>
                       </div>
                     ) : (
-                      <div className="space-y-2">
-                        {selectedClass.class_composition.map((comp: any) => (
-                          <div
-                            key={comp.id}
-                            className="p-3 transition-colors border border-gray-200 rounded-lg hover:border-primary-500 hover:bg-primary-50"
-                          >
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-sm font-medium text-gray-800">
-                                {
-                                  ["일", "월", "화", "수", "목", "금", "토"][
-                                    comp.day_of_week
-                                  ]
-                                }
-                                요일
-                              </span>
-                              {comp.type && (
-                                <span className="px-2 py-0.5 text-xs font-medium text-primary-700 bg-primary-100 rounded">
-                                  {comp.type === "class"
-                                    ? "정규 수업"
-                                    : comp.type === "clinic"
-                                    ? "클리닉"
-                                    : "전체"}
-                                </span>
-                              )}
+                      <div className="space-y-4">
+                        {/* 정규 수업 섹션 */}
+                        {selectedClass.class_composition.filter(
+                          (comp) => comp.type === "class"
+                        ).length > 0 && (
+                          <div>
+                            <h4 className="mb-2 text-xs font-semibold text-gray-500 uppercase">
+                              정규 수업
+                            </h4>
+                            <div className="space-y-2">
+                              {selectedClass.class_composition
+                                .filter((comp) => comp.type === "class")
+                                .sort(
+                                  (a, b) =>
+                                    a.day_of_week - b.day_of_week ||
+                                    a.start_time.localeCompare(b.start_time)
+                                )
+                                .map((comp) => (
+                                  <div
+                                    key={comp.id}
+                                    onClick={() => setSelectedCompositionId(comp.id)}
+                                    className={`p-3 transition-colors border rounded-lg cursor-pointer ${
+                                      selectedCompositionId === comp.id
+                                        ? "border-primary-600 bg-primary-100"
+                                        : "border-gray-200 hover:border-primary-500 hover:bg-primary-50"
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between mb-1">
+                                      <span className="text-sm font-medium text-gray-800">
+                                        {
+                                          ["일", "월", "화", "수", "목", "금", "토"][
+                                            comp.day_of_week
+                                          ]
+                                        }
+                                        요일
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-gray-600">
+                                      {comp.start_time?.substring(0, 5)} -{" "}
+                                      {comp.end_time?.substring(0, 5)}
+                                    </p>
+                                  </div>
+                                ))}
                             </div>
-                            <p className="text-xs text-gray-600">
-                              {comp.start_time?.substring(0, 5)} -{" "}
-                              {comp.end_time?.substring(0, 5)}
-                            </p>
                           </div>
-                        ))}
+                        )}
+
+                        {/* 클리닉 섹션 */}
+                        {selectedClass.class_composition.filter(
+                          (comp) => comp.type === "clinic"
+                        ).length > 0 && (
+                          <div>
+                            <h4 className="mb-2 text-xs font-semibold text-gray-500 uppercase">
+                              클리닉
+                            </h4>
+                            <div className="space-y-2">
+                              {selectedClass.class_composition
+                                .filter((comp) => comp.type === "clinic")
+                                .sort(
+                                  (a, b) =>
+                                    a.day_of_week - b.day_of_week ||
+                                    a.start_time.localeCompare(b.start_time)
+                                )
+                                .map((comp) => (
+                                  <div
+                                    key={comp.id}
+                                    onClick={() => setSelectedCompositionId(comp.id)}
+                                    className={`p-3 transition-colors border rounded-lg cursor-pointer ${
+                                      selectedCompositionId === comp.id
+                                        ? "border-primary-600 bg-primary-100"
+                                        : "border-gray-200 hover:border-primary-500 hover:bg-primary-50"
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between mb-1">
+                                      <span className="text-sm font-medium text-gray-800">
+                                        {
+                                          ["일", "월", "화", "수", "목", "금", "토"][
+                                            comp.day_of_week
+                                          ]
+                                        }
+                                        요일
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-gray-600">
+                                      {comp.start_time?.substring(0, 5)} -{" "}
+                                      {comp.end_time?.substring(0, 5)}
+                                    </p>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 타입이 없는 시간대 (단일 수업) */}
+                        {selectedClass.class_composition.filter(
+                          (comp) => !comp.type
+                        ).length > 0 && (
+                          <div className="space-y-2">
+                            {selectedClass.class_composition
+                              .filter((comp) => !comp.type)
+                              .sort(
+                                (a, b) =>
+                                  a.day_of_week - b.day_of_week ||
+                                  a.start_time.localeCompare(b.start_time)
+                              )
+                              .map((comp) => (
+                                <div
+                                  key={comp.id}
+                                  onClick={() => setSelectedCompositionId(comp.id)}
+                                  className={`p-3 transition-colors border rounded-lg cursor-pointer ${
+                                    selectedCompositionId === comp.id
+                                      ? "border-primary-600 bg-primary-100"
+                                      : "border-gray-200 hover:border-primary-500 hover:bg-primary-50"
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="text-sm font-medium text-gray-800">
+                                      {
+                                        ["일", "월", "화", "수", "목", "금", "토"][
+                                          comp.day_of_week
+                                        ]
+                                      }
+                                      요일
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-gray-600">
+                                    {comp.start_time?.substring(0, 5)} -{" "}
+                                    {comp.end_time?.substring(0, 5)}
+                                  </p>
+                                </div>
+                              ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                )}
+                </div>
               </div>
-            </div>
 
-            {/* Panel 3-4 - Timetable (2/4) */}
-            <div className="flex flex-col min-h-0 lg:col-span-2">
-              <div className="flex flex-col flex-1 min-h-0 p-6 border-0 flat-card rounded-2xl">
-                <h3 className="mb-4 text-lg font-semibold text-gray-800">
-                  시간표
-                </h3>
-                {!selectedClass ? (
-                  <div className="flex items-center justify-center flex-1 text-sm text-center text-gray-500">
-                    <div>
-                      <Clock className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                      <p>좌측에서 수업을 선택하세요</p>
-                    </div>
+              {/* Right Panel - Timetable or Student Panel (Flexible Width) */}
+              {selectedCompositionId ? (
+                <ClassStudentPanel
+                  classId={selectedClass.id}
+                  compositionId={selectedCompositionId}
+                  className={selectedClass.title}
+                  composition={selectedComposition}
+                  onClose={() => setSelectedCompositionId(null)}
+                />
+              ) : (
+                <div className="flex flex-col flex-1 min-w-0 min-h-0">
+                  <div className="flex flex-col flex-1 min-h-0 p-6 overflow-hidden border-0 flat-card rounded-2xl">
+                    <h3 className="mb-4 text-lg font-semibold text-gray-800">
+                      시간표
+                    </h3>
+                    {!selectedClass.class_composition ||
+                    selectedClass.class_composition.length === 0 ? (
+                      <div className="flex items-center justify-center flex-1 text-sm text-center text-gray-500">
+                        <div>
+                          <Clock className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                          <p>이 수업에는 아직 시간표가 없습니다</p>
+                          <p className="mt-1 text-xs text-gray-400">
+                            좌측 시간 목록에서 추가 버튼을 눌러 시간표를
+                            생성하세요
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex-1 min-h-0">
+                        <CanvasSchedule
+                          customBlocks={classBlocks}
+                          editMode="view"
+                          showDensity={false}
+                        />
+                      </div>
+                    )}
                   </div>
-                ) : !selectedClass.class_composition ||
-                  selectedClass.class_composition.length === 0 ? (
-                  <div className="flex items-center justify-center flex-1 text-sm text-center text-gray-500">
-                    <div>
-                      <Clock className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                      <p>이 수업에는 아직 시간표가 없습니다</p>
-                      <p className="mt-1 text-xs text-gray-400">
-                        시간 목록에서 추가 버튼을 눌러 시간표를 생성하세요
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex-1 min-h-0 overflow-auto">
-                    <ClassScheduleCanvas schedules={canvasScheduleData} />
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
-          </div>
+          )
         ) : (
           /* MANAGE TAB - Existing Class Management */
           <div className="p-8 text-center border-0 flat-card rounded-2xl">
@@ -373,7 +497,9 @@ export default function ClassManagementPage() {
           classData={{
             id: selectedClass.id,
             title: selectedClass.title,
-            split_type: selectedClass.split_type || "single",
+            split_type: (selectedClass.split_type || "single") as
+              | "split"
+              | "single",
           }}
         />
       )}

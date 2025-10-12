@@ -2,14 +2,41 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase-server";
 import { TablesInsert } from "@/types/supabase";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const supabase = createAdminSupabaseClient();
-    
-    const { data: students, error } = await supabase
+    const { searchParams } = new URL(request.url);
+
+    // 검색 필터 파라미터
+    const search = searchParams.get("search");
+    const grade = searchParams.get("grade");
+    const school = searchParams.get("school");
+
+    let query = supabase
       .from("students")
-      .select("*")
-      .order("name");
+      .select(`
+        *,
+        school:schools(id, name, level)
+      `);
+
+    // 검색어 필터링 (이름, 연락처, 이메일)
+    if (search) {
+      query = query.or(
+        `name.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`
+      );
+    }
+
+    // 학년 필터링
+    if (grade) {
+      query = query.eq("grade", parseInt(grade));
+    }
+
+    // 학교 필터링 (만약 students 테이블에 school 컬럼이 있다면)
+    if (school) {
+      query = query.ilike("school", `%${school}%`);
+    }
+
+    const { data: students, error } = await query.order("name");
 
     if (error) {
       console.error("Students fetch error:", error);

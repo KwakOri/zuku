@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase-server";
-import { ClassComposition } from "@/types/schedule";
+import { Tables } from "@/types/supabase";
 
 // GET: 특정 수업의 모든 시간 구성 조회 또는 전체 조회
 export async function GET(request: NextRequest) {
@@ -25,19 +25,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // DB 형식을 TypeScript 형식으로 변환
-    const compositions: ClassComposition[] = (data || []).map((item) => ({
-      id: item.id,
-      classId: item.class_id,
-      type: item.type as "class" | "clinic",
-      dayOfWeek: item.day_of_week,
-      startTime: item.start_time,
-      endTime: item.end_time,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
-    }));
-
-    return NextResponse.json(compositions);
+    return NextResponse.json(data || []);
   } catch (error) {
     console.error("Error fetching class compositions:", error);
     return NextResponse.json(
@@ -239,18 +227,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const composition: ClassComposition = {
-      id: data.id,
-      classId: data.class_id,
-      type: data.type as "class" | "clinic",
-      dayOfWeek: data.day_of_week,
-      startTime: data.start_time,
-      endTime: data.end_time,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-    };
-
-    return NextResponse.json(composition);
+    return NextResponse.json(data);
   } catch (error) {
     console.error("Error updating class composition:", error);
     return NextResponse.json(
