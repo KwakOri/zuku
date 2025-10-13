@@ -614,16 +614,16 @@ export default function CanvasSchedule({
       ctx.shadowOffsetY = 0;
       ctx.shadowBlur = 0;
 
-      // Color overlay with gradient - 선택되지 않은 블록은 기본 밝기
+      // Color overlay with gradient - 선명한 색상
       const gradient = ctx.createLinearGradient(x, y, x, y + height);
       if (isSelected) {
-        // 선택된 블록은 반투명하게
-        gradient.addColorStop(0, block.color + "99"); // 60% opacity
-        gradient.addColorStop(1, block.color + "80"); // 50% opacity
+        // 선택된 블록은 약간 밝게
+        gradient.addColorStop(0, block.color + "CC"); // 80% opacity
+        gradient.addColorStop(1, block.color + "B3"); // 70% opacity
       } else {
-        // 선택되지 않은 블록은 기본 밝기
-        gradient.addColorStop(0, block.color + "E6"); // 90% opacity
-        gradient.addColorStop(1, block.color + "CC"); // 80% opacity
+        // 선택되지 않은 블록은 선명하게
+        gradient.addColorStop(0, block.color + "FF"); // 100% opacity
+        gradient.addColorStop(1, block.color + "F2"); // 95% opacity
       }
 
       ctx.fillStyle = gradient;
@@ -641,7 +641,51 @@ export default function CanvasSchedule({
       drawRoundedRect(ctx, x, y, width, height, radius);
       ctx.stroke();
 
-      // 텍스트
+      // 뱃지 (수업/클리닉) - 오른쪽 아래 내부 디자인 (수업만 표시)
+      if (block.compositionType && height > 25 && block.subject !== "personal") {
+        const badgeText = block.compositionType === "clinic" ? "클리닉" : "수업";
+        const badgeWidth = 44; // 가로 길이
+        const badgeHeight = 24; // 세로 높이 줄임
+        const badgeX = x + width - badgeWidth - 8; // 카드 안쪽 오른쪽
+        const badgeY = y + height - badgeHeight - 8; // 카드 안쪽 아래
+        const badgeRadius = 6;
+
+        // 뱃지 그림자
+        ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        ctx.shadowBlur = 4;
+
+        // 뱃지 배경 (흰색)
+        ctx.fillStyle = "#ffffff";
+        drawRoundedRect(ctx, badgeX, badgeY, badgeWidth, badgeHeight, badgeRadius);
+        ctx.fill();
+
+        // 뱃지 테두리
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.1)";
+        ctx.lineWidth = 1;
+        drawRoundedRect(ctx, badgeX, badgeY, badgeWidth, badgeHeight, badgeRadius);
+        ctx.stroke();
+
+        // 그림자 리셋
+        ctx.shadowColor = "transparent";
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.shadowBlur = 0;
+
+        // 뱃지 텍스트 (가로로 표시)
+        ctx.fillStyle = block.color; // 블록 색상과 동일
+        ctx.font = "bold 10px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        // 뱃지 중앙에 텍스트 배치
+        const centerX = badgeX + badgeWidth / 2;
+        const centerY = badgeY + badgeHeight / 2;
+        ctx.fillText(badgeText, centerX, centerY);
+      }
+
+      // 텍스트 (왼쪽 위 정렬)
       ctx.fillStyle = "#ffffff"; // 흰색 텍스트
       ctx.font = "bold 13px sans-serif";
       ctx.textAlign = "left";
@@ -652,9 +696,9 @@ export default function CanvasSchedule({
       ctx.shadowOffsetY = 1;
       ctx.shadowBlur = 2;
 
-      // 제목
-      const titleY = y + 18;
-      ctx.fillText(block.title, x + 12, titleY);
+      // 제목 (왼쪽 위에 배치)
+      const titleY = y + 16;
+      ctx.fillText(block.title, x + 10, titleY);
 
       // 시간 (충분한 공간이 있을 때만)
       if (height > 40) {
@@ -664,7 +708,7 @@ export default function CanvasSchedule({
           `${formatDisplayTime(block.startTime)} ~ ${formatDisplayTime(
             block.endTime
           )}`,
-          x + 12,
+          x + 10,
           titleY + 18
         );
       }

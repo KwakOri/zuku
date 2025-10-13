@@ -6,6 +6,7 @@ import {
   convertStudentSchedulesToBlocks,
   findBlockChanges,
   isNewBlock,
+  getSubjectColor,
 } from "@/lib/scheduleUtils";
 import { getGrade } from "@/lib/utils";
 import { useStudents } from "@/queries/useStudents";
@@ -71,19 +72,32 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   // 전체 시간표를 CanvasSchedule용 블록으로 변환
   const allSchedules = fullScheduleData?.all || [];
 
-  // 개인 일정은 회색(#6b7280)으로, 수업 일정은 원래 색상으로 표시
-  const scheduleBlocks = allSchedules.map((schedule: any) => ({
-    id: schedule.id,
-    title: schedule.title,
-    subject: schedule.type === "class" ? schedule.subject_name || "" : schedule.type,
-    teacherName: schedule.teacher_name || "",
-    startTime: schedule.start_time.substring(0, 5), // HH:MM:SS → HH:MM
-    endTime: schedule.end_time.substring(0, 5),     // HH:MM:SS → HH:MM
-    dayOfWeek: schedule.day_of_week,
-    color: schedule.type === "class" ? schedule.color : "#6b7280", // 개인 일정은 회색
-    room: schedule.location || "",
-    isEditable: schedule.type !== "class", // 수업 일정은 편집 불가
-  }));
+  // 과목별 색상 테마 적용
+  // 일반 수업: 밝은 파스텔톤
+  // 클리닉: 진한 색상
+  // 앞타임/뒷타임 구분: composition_order로 판단
+  const scheduleBlocks = allSchedules.map((schedule: any) => {
+    const isPersonal = schedule.type !== "class";
+    const isFrontTime = schedule.composition_order === 0 || !schedule.composition_order;
+    const compositionType = schedule.composition_type || "class";
+    const color = getSubjectColor(schedule.subject_name, isPersonal, isFrontTime, compositionType);
+
+    return {
+      id: schedule.id,
+      classId: schedule.class_id || schedule.id,
+      title: schedule.title,
+      subject: schedule.type === "class" ? schedule.subject_name || "" : schedule.type,
+      teacherName: schedule.teacher_name || "",
+      startTime: schedule.start_time.substring(0, 5), // HH:MM:SS → HH:MM
+      endTime: schedule.end_time.substring(0, 5),     // HH:MM:SS → HH:MM
+      dayOfWeek: schedule.day_of_week,
+      color: color,
+      room: schedule.location || "",
+      isEditable: schedule.type !== "class", // 수업 일정은 편집 불가
+      compositionType: compositionType, // "class" 또는 "clinic"
+      studentCount: 1,
+    };
+  });
 
   // 디버깅을 위한 로그
   useEffect(() => {
@@ -325,36 +339,32 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
   // 블록 클릭 핸들러 - 수업 블록 클릭 시 구성 편집 모달 열기
   const handleBlockClick = async (block: ClassBlock) => {
-    // 수업 블록인지 확인 (회색이 아닌 블록 = 수업)
-    const isClassBlock = block.color !== "#6b7280";
+    // 수업 블록인지 확인: 전체 시간표에서 type으로 판단
+    const originalSchedule = allSchedules.find((s: any) => s.id === block.id);
+    const isClassBlock = originalSchedule?.type === "class";
 
-    if (isClassBlock) {
-      // 전체 시간표에서 해당 블록의 원본 데이터 찾기
-      const originalSchedule = allSchedules.find((s: any) => s.id === block.id);
-
-      if (originalSchedule && originalSchedule.class_student_id && originalSchedule.class_id) {
-        try {
-          // 해당 class의 모든 composition을 API에서 가져오기
-          const response = await fetch(`/api/class-composition?classId=${originalSchedule.class_id}`);
-          if (!response.ok) {
-            throw new Error("Failed to fetch class compositions");
-          }
-          const allClassCompositions = await response.json();
-
-          setSelectedClassForEdit({
-            classStudentId: originalSchedule.class_student_id,
-            classId: originalSchedule.class_id,
-            className: originalSchedule.title,
-            classColor: originalSchedule.color,
-            subjectName: originalSchedule.subject_name,
-            teacherName: originalSchedule.teacher_name,
-            allCompositions: allClassCompositions,
-          });
-          setShowCompositionEditModal(true);
-        } catch (error) {
-          console.error("Failed to fetch class compositions:", error);
-          alert("수업 구성을 불러오는데 실패했습니다.");
+    if (isClassBlock && originalSchedule && originalSchedule.class_student_id && originalSchedule.class_id) {
+      try {
+        // 해당 class의 모든 composition을 API에서 가져오기
+        const response = await fetch(`/api/class-composition?classId=${originalSchedule.class_id}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch class compositions");
         }
+        const allClassCompositions = await response.json();
+
+        setSelectedClassForEdit({
+          classStudentId: originalSchedule.class_student_id,
+          classId: originalSchedule.class_id,
+          className: originalSchedule.title,
+          classColor: originalSchedule.color,
+          subjectName: originalSchedule.subject_name,
+          teacherName: originalSchedule.teacher_name,
+          allCompositions: allClassCompositions,
+        });
+        setShowCompositionEditModal(true);
+      } catch (error) {
+        console.error("Failed to fetch class compositions:", error);
+        alert("수업 구성을 불러오는데 실패했습니다.");
       }
     }
   };
@@ -367,7 +377,8 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
         schedule.subject.toLowerCase().includes(searchTerm.toLowerCase()));
 
     // type 기반으로 필터링 (개인 일정 vs 수업)
-    const isPersonal = schedule.color === "#6b7280"; // 회색 = 개인 일정
+    const originalSchedule = allSchedules.find((s: any) => s.id === schedule.id);
+    const isPersonal = originalSchedule?.type !== "class";
     const matchesFilter =
       filterType === "all" ||
       (filterType === "personal" && isPersonal) ||
@@ -376,8 +387,8 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   });
 
   // 요일별 일정 통계
-  const personalCount = scheduleBlocks.filter((s) => s.color === "#6b7280").length;
-  const classCount = scheduleBlocks.filter((s) => s.color !== "#6b7280").length;
+  const personalCount = allSchedules.filter((s: any) => s.type !== "class").length;
+  const classCount = allSchedules.filter((s: any) => s.type === "class").length;
 
   const scheduleStats = {
     total: scheduleBlocks.length,

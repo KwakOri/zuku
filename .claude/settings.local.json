@@ -36,7 +36,8 @@
       "Read(//Users/kwakori/projects/promotion/temis/src/app/(root)/time-table/69a0dcfe-ab5d-4bef-b181-539b995fd73e/_settings/**)",
       "Read(//Users/kwakori/projects/promotion/temis/src/app/(root)/time-table/_template/_components/**)",
       "Read(//Users/kwakori/projects/promotion/temis/src/app/**)",
-      "Read(//private/tmp/**)"
+      "Read(//private/tmp/**)",
+      "Bash(lsof:*)"
     ],
     "deny": [],
     "ask": []

@@ -69,6 +69,52 @@ export function getRandomColor(): string {
   return defaultColors[Math.floor(Math.random() * defaultColors.length)];
 }
 
+// 과목별 색상 테마 정의 (모두 탁한 색상으로 통일)
+export const subjectColorThemes = {
+  국어: {
+    front: "#c87171",  // 탁한 빨강
+    back: "#b06565",   // 더 탁한 빨강
+  },
+  수학: {
+    front: "#7191b0",  // 탁한 파랑
+    back: "#6080a0",   // 더 탁한 파랑
+  },
+  영어: {
+    front: "#d4b76f",  // 탁한 노랑
+    back: "#c0a660",   // 더 탁한 노랑
+  },
+  개인: {
+    front: "#adb5bd",  // 탁한 회색
+    back: "#868e96",   // 더 탁한 회색
+  },
+};
+
+// 과목명에 따라 색상 반환 (앞타임/뒷타임 구분)
+export function getSubjectColor(
+  subjectName: string | undefined,
+  isPersonal: boolean,
+  isFrontTime: boolean = true,
+  compositionType: string = "class"
+): string {
+  if (isPersonal) {
+    return isFrontTime ? subjectColorThemes.개인.front : subjectColorThemes.개인.back;
+  }
+
+  // 과목명에 "국어", "수학", "영어"가 포함되어 있는지 확인
+  if (subjectName?.includes("국어")) {
+    return isFrontTime ? subjectColorThemes.국어.front : subjectColorThemes.국어.back;
+  }
+  if (subjectName?.includes("수학")) {
+    return isFrontTime ? subjectColorThemes.수학.front : subjectColorThemes.수학.back;
+  }
+  if (subjectName?.includes("영어")) {
+    return isFrontTime ? subjectColorThemes.영어.front : subjectColorThemes.영어.back;
+  }
+
+  // 기본 색상 (회색)
+  return isFrontTime ? subjectColorThemes.개인.front : subjectColorThemes.개인.back;
+}
+
 // 두 블록 배열의 차이점을 찾는 함수
 export function findBlockChanges(
   originalBlocks: ClassBlock[],
@@ -120,4 +166,29 @@ function hasBlockChanged(original: ClassBlock, updated: ClassBlock): boolean {
 // 새 블록인지 확인하는 함수 (임시 ID 패턴으로 판단)
 export function isNewBlock(block: ClassBlock): boolean {
   return block.id.startsWith('temp-') || block.id.startsWith('new-');
+}
+
+// Combined Schedule용 이벤트 색상 반환 (과목명 기반)
+export function getEventColor(
+  subjectName: string | null | undefined,
+  isPersonal: boolean
+): string {
+  // 개인 일정은 회색
+  if (isPersonal) {
+    return subjectColorThemes.개인.front;
+  }
+
+  // 과목명에 "국어", "수학", "영어"가 포함되어 있는지 확인
+  if (subjectName?.includes("국어")) {
+    return subjectColorThemes.국어.front;
+  }
+  if (subjectName?.includes("수학")) {
+    return subjectColorThemes.수학.front;
+  }
+  if (subjectName?.includes("영어")) {
+    return subjectColorThemes.영어.front;
+  }
+
+  // 기본 색상 (회색)
+  return subjectColorThemes.개인.front;
 }

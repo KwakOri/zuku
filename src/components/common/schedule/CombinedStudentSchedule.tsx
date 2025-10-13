@@ -2,13 +2,10 @@
 
 import Tooltip from "@/components/common/Tooltip";
 import { getGrade } from "@/lib/utils";
-import { useClasses } from "@/queries/useClasses";
-import { useClassStudents, useStudentSchedules } from "@/queries/useSchedules";
-import { useSchools } from "@/queries/useSchools";
-import { useStudents } from "@/queries/useStudents";
-import { Tables } from "@/types/supabase";
+import { getEventColor } from "@/lib/scheduleUtils";
+import { useCombinedSchedule } from "@/queries/useCombinedSchedule";
 import { ArrowUpDown, Calendar, Clock, Search } from "lucide-react";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 
 // Helper function to convert time string "HH:mm" to minutes from midnight
 const timeToMinutes = (time: string): number => {
@@ -75,36 +72,11 @@ interface TimelineEvent {
 }
 
 export default function CombinedStudentSchedule() {
-  // API에서 데이터 가져오기
-  const { data: students = [], isLoading: studentsLoading } = useStudents();
-  const { data: classes = [], isLoading: classesLoading } = useClasses();
-  const { data: classStudents = [], isLoading: classStudentsLoading } =
-    useClassStudents();
-  const { data: studentSchedules = [], isLoading: studentSchedulesLoading } =
-    useStudentSchedules();
-  const { data: schools = [], isLoading: schoolsLoading } = useSchools();
+  // Combined schedule API에서 모든 데이터 한번에 가져오기
+  const { data: studentsWithSchedules = [], isLoading } = useCombinedSchedule();
 
-  // Fetch class compositions
-  const [classCompositions, setClassCompositions] = useState<Tables<"class_composition">[]>([]);
-  const [compositionsLoading, setCompositionsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchCompositions = async () => {
-      try {
-        const response = await fetch('/api/class-composition');
-        if (response.ok) {
-          const data = await response.json();
-          setClassCompositions(data.data || []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch class compositions:', error);
-      } finally {
-        setCompositionsLoading(false);
-      }
-    };
-
-    fetchCompositions();
-  }, []);
+  console.log('🚀 [DEBUG] Combined schedule data loaded:', studentsWithSchedules.length);
+  console.log('📦 [DEBUG] Students with schedules:', studentsWithSchedules);
 
   // 검색어 상태
   const [searchQuery, setSearchQuery] = useState("");
@@ -119,11 +91,11 @@ export default function CombinedStudentSchedule() {
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
   // 학생 데이터가 로드되면 전체 선택으로 초기화
-  useEffect(() => {
-    if (students.length > 0 && selectedStudents.length === 0) {
-      setSelectedStudents(students.map((s) => s.id));
+  useMemo(() => {
+    if (studentsWithSchedules.length > 0 && selectedStudents.length === 0) {
+      setSelectedStudents(studentsWithSchedules.map((s) => s.id));
     }
-  }, [students, selectedStudents.length]);
+  }, [studentsWithSchedules, selectedStudents.length]);
 
   const daysOfWeek = useMemo(
     () => [
@@ -156,7 +128,11 @@ export default function CombinedStudentSchedule() {
 
   // Process and merge class and schedule data for each student
   const studentData = useMemo(() => {
-    const filteredStudents = students
+    console.log('\n\n🚀 [DEBUG] ========== PROCESSING STUDENT DATA ==========');
+    console.log('📊 [DEBUG] Students with schedules:', studentsWithSchedules.length);
+    console.log('================================================\n');
+
+    const filteredStudents = studentsWithSchedules
       .filter((s) => {
         // 선택된 학생만
         if (!selectedStudents.includes(s.id)) return false;
@@ -169,18 +145,11 @@ export default function CombinedStudentSchedule() {
           if (s.name.toLowerCase().includes(query)) return true;
 
           // 학교 검색
-          const school = schools.find((sc) => sc.id === s.school_id);
-          if (school && school.name.toLowerCase().includes(query)) return true;
+          if (s.school && s.school.name.toLowerCase().includes(query)) return true;
 
           // 수업명 검색
-          const studentClassIds = classStudents
-            .filter((cs) => cs.student_id === s.id)
-            .map((cs) => cs.class_id);
-
-          const hasMatchingClass = classes.some(
-            (c) =>
-              studentClassIds.includes(c.id) &&
-              c.title.toLowerCase().includes(query)
+          const hasMatchingClass = s.class_students.some(
+            (cs) => cs.class && cs.class.title.toLowerCase().includes(query)
           );
           if (hasMatchingClass) return true;
 
@@ -190,74 +159,72 @@ export default function CombinedStudentSchedule() {
         return true;
       })
       .map((student) => {
-        // Get student's class enrollments with their composition IDs
-        const studentClassEnrollments = classStudents.filter(
-          (cs) => cs.student_id === student.id
-        );
+        console.log(`\n👤 [DEBUG] Processing student: ${student.name} (${student.id})`);
+        console.log(`📚 [DEBUG] Class students:`, student.class_students.length);
+        console.log(`📅 [DEBUG] Student schedules:`, student.student_schedules.length);
 
-        const classEvents: TimelineEvent[] = studentClassEnrollments
-          .flatMap((enrollment) => {
-            const classInfo = classes.find((c) => c.id === enrollment.class_id);
-            if (!classInfo) return [];
+        // 수업 이벤트 생성
+        const classEvents: TimelineEvent[] = student.class_students
+          .flatMap((classStudent, index) => {
+            console.log(`\n  📖 [DEBUG] Processing class_student ${index + 1}/${student.class_students.length}`);
 
-            // For split type classes, use the specific composition
-            if (classInfo.split_type === "split" && enrollment.composition_id) {
-              const composition = classCompositions.find(
-                (comp) => comp.id === enrollment.composition_id
-              );
-              if (!composition) return [];
-
-              return [{
-                id: `class-${classInfo.id}-${composition.id}`,
-                title: classInfo.title,
-                startTime: composition.start_time,
-                endTime: composition.end_time,
-                dayOfWeek: composition.day_of_week,
-                color: classInfo.color,
-                type: "class" as const,
-              }];
+            if (!classStudent.class) {
+              console.warn(`  ⚠️ [DEBUG] Class not found for class_student:`, classStudent.id);
+              return [];
             }
 
-            // For single type classes, get all compositions for this class
-            const classComps = classCompositions.filter(
-              (comp) => comp.class_id === classInfo.id
-            );
+            const classInfo = classStudent.class;
+            console.log(`  ✅ [DEBUG] Class: ${classInfo.title}`);
+            console.log(`  🎯 [DEBUG] Student compositions:`, classStudent.student_compositions.length);
 
-            return classComps.map((comp) => ({
-              id: `class-${classInfo.id}-${comp.id}`,
-              title: classInfo.title,
-              startTime: comp.start_time,
-              endTime: comp.end_time,
-              dayOfWeek: comp.day_of_week,
-              color: classInfo.color,
-              type: "class" as const,
-            }));
+            // student_compositions를 통해 시간표 생성
+            const events = classStudent.student_compositions
+              .filter((sc) => sc.composition !== null)
+              .map((sc) => {
+                const composition = sc.composition!;
+                console.log(`    📅 [DEBUG] Creating event for composition:`, composition);
+
+                // 과목명 기반 색상 결정
+                const subjectName = classInfo.subject?.subject_name;
+                const eventColor = getEventColor(subjectName, false);
+
+                return {
+                  id: `class-${classInfo.id}-${composition.id}`,
+                  title: classInfo.title,
+                  startTime: composition.start_time,
+                  endTime: composition.end_time,
+                  dayOfWeek: composition.day_of_week,
+                  color: eventColor,
+                  type: "class" as const,
+                };
+              });
+
+            console.log(`  ✅ [DEBUG] Created ${events.length} events for ${classInfo.title}`);
+            return events;
           });
 
-        const personalEvents: TimelineEvent[] = studentSchedules
-          .filter(
-            (ss) =>
-              ss.student_id === student.id &&
-              ss.start_time &&
-              ss.end_time &&
-              ss.day_of_week !== null
-          )
-          .map((ss) => ({
-            id: `schedule-${ss.id}`,
-            title: ss.title,
-            startTime: ss.start_time!,
-            endTime: ss.end_time!,
-            dayOfWeek: ss.day_of_week!, // Already 0-6 for Mon-Sun
-            color: ss.color || "#EF4444", // Default color if null
-            type: "schedule",
-          }));
+        console.log(`🎉 [DEBUG] Total class events for ${student.name}:`, classEvents.length);
 
-        const school = schools.find((sc) => sc.id === student.school_id);
+        // 개인 일정 이벤트 생성 (회색으로 표시)
+        const personalEvents: TimelineEvent[] = student.student_schedules.map((ss) => ({
+          id: `schedule-${ss.id}`,
+          title: ss.title,
+          startTime: ss.start_time,
+          endTime: ss.end_time,
+          dayOfWeek: ss.day_of_week,
+          color: getEventColor(null, true), // 개인 일정은 회색
+          type: "schedule" as const,
+        }));
+
+        console.log(`📅 [DEBUG] Personal events for ${student.name}:`, personalEvents.length);
+
+        const allEvents = [...classEvents, ...personalEvents];
+        console.log(`🎊 [DEBUG] Total events for ${student.name}:`, allEvents.length);
+        console.log(`-------------------------------------------\n`);
 
         return {
           ...student,
-          school,
-          events: [...classEvents, ...personalEvents],
+          events: allEvents,
         };
       });
 
@@ -295,15 +262,10 @@ export default function CombinedStudentSchedule() {
     return sortedStudents;
   }, [
     selectedStudents,
-    students,
-    classes,
-    classStudents,
-    studentSchedules,
-    schools,
+    studentsWithSchedules,
     searchQuery,
     sortField,
     sortOrder,
-    classCompositions,
   ]);
 
   // 겹치는 이벤트들을 그룹화하는 함수
@@ -503,15 +465,6 @@ export default function CombinedStudentSchedule() {
       </>
     );
   };
-
-  // 로딩 상태
-  const isLoading =
-    studentsLoading ||
-    classesLoading ||
-    classStudentsLoading ||
-    studentSchedulesLoading ||
-    schoolsLoading ||
-    compositionsLoading;
 
   if (isLoading) {
     return (
@@ -746,7 +699,7 @@ export default function CombinedStudentSchedule() {
                                 key={`stack-${event.id}`}
                                 className="absolute rounded-lg text-white px-1.5 py-0.5 overflow-hidden whitespace-nowrap text-ellipsis text-xs leading-tight opacity-70 border-2 border-white shadow-lg"
                                 style={{
-                                  backgroundColor: "rgb(107, 124, 93)", // primary-600
+                                  backgroundColor: event.color,
                                   width: "100%",
                                   height: "100%",
                                   top: `${(stackIndex + 1) * 2}px`,
@@ -762,7 +715,7 @@ export default function CombinedStudentSchedule() {
                           <div
                             className="relative rounded-lg my-0.5 text-white px-1.5 py-0.5 overflow-hidden whitespace-nowrap text-ellipsis text-xs leading-tight cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:transform hover:-translate-y-px border-2 border-white shadow-md"
                             style={{
-                              backgroundColor: "rgb(88, 101, 72)", // primary-600
+                              backgroundColor: representativeEvent.color,
                               width: "100%",
                               height: "100%",
                               boxShadow:
