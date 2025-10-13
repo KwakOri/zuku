@@ -4,7 +4,10 @@ import { useState, useMemo } from "react";
 import { X, Search, BookOpen, CheckCircle, AlertCircle } from "lucide-react";
 import { useClasses } from "@/queries/useClasses";
 import { useEnrollStudent } from "@/queries/useClassStudents";
+import { useEnrollComposition } from "@/queries/useStudentCompositions";
 import { Tables } from "@/types/supabase";
+import CanvasSchedule from "@/components/common/schedule/CanvasSchedule";
+import { ClassBlock } from "@/types/schedule";
 
 type Class = Tables<"classes"> & {
   subject?: Tables<"subjects"> | null;
@@ -31,6 +34,7 @@ export default function ClassEnrollmentModal({
 
   const { data: classes = [], isLoading } = useClasses();
   const enrollStudent = useEnrollStudent();
+  const enrollComposition = useEnrollComposition();
 
   const selectedClass = useMemo(
     () => classes.find((c) => c.id === selectedClassId),
@@ -38,6 +42,25 @@ export default function ClassEnrollmentModal({
   );
 
   const isSplitClass = selectedClass?.split_type === "split";
+
+  // 선택된 수업의 시간표를 ClassBlock 형태로 변환
+  const scheduleBlocks = useMemo((): ClassBlock[] => {
+    if (!selectedClass?.class_composition) return [];
+
+    return selectedClass.class_composition.map((composition) => ({
+      id: composition.id,
+      title: selectedClass.title,
+      subject: selectedClass.subject?.subject_name || "",
+      teacherName: selectedClass.teacher?.name || "",
+      startTime: composition.start_time.substring(0, 5),
+      endTime: composition.end_time.substring(0, 5),
+      dayOfWeek: composition.day_of_week,
+      color: selectedClass.color || "#3b82f6",
+      room: selectedClass.room || "",
+      type: composition.type || undefined,
+      isEditable: false,
+    }));
+  }, [selectedClass]);
 
   // 앞/뒤타임이 있는 경우 각 타입별로 composition이 선택되었는지 확인
   const hasSelectedClassComposition = useMemo(() => {
@@ -89,22 +112,34 @@ export default function ClassEnrollmentModal({
     });
   };
 
+  // 시간표 블록 클릭 핸들러
+  const handleBlockClick = (block: ClassBlock) => {
+    handleCompositionToggle(block.id);
+  };
+
   const handleEnroll = async () => {
     if (!canEnroll || !selectedClassId) return;
 
     try {
-      // 선택된 각 composition에 대해 등록
-      const promises = Array.from(selectedCompositions).map((compositionId) =>
-        enrollStudent.mutateAsync({
-          class_id: selectedClassId,
-          student_id: studentId,
+      // 1단계: class_students 테이블에 학생-수업 관계 생성
+      const classStudent = await enrollStudent.mutateAsync({
+        class_id: selectedClassId,
+        student_id: studentId,
+        enrolled_date: new Date().toISOString().split("T")[0],
+        status: "active",
+      });
+
+      // 2단계: student_compositions 테이블에 선택된 각 composition 등록
+      const compositionPromises = Array.from(selectedCompositions).map((compositionId) =>
+        enrollComposition.mutateAsync({
+          class_student_id: classStudent.id,
           composition_id: compositionId,
           enrolled_date: new Date().toISOString().split("T")[0],
           status: "active",
         })
       );
 
-      await Promise.all(promises);
+      await Promise.all(compositionPromises);
       onSuccess?.();
       onClose();
     } catch (error) {
@@ -134,9 +169,9 @@ export default function ClassEnrollmentModal({
         </div>
 
         {/* Content */}
-        <div className="grid grid-cols-2 divide-x divide-gray-200">
+        <div className="flex" style={{ height: "600px" }}>
           {/* Left: Class List */}
-          <div className="p-6">
+          <div className="w-80 p-6 border-r border-gray-200 overflow-y-auto">
             <div className="mb-4">
               <div className="relative">
                 <Search className="absolute w-4 h-4 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
@@ -150,7 +185,7 @@ export default function ClassEnrollmentModal({
               </div>
             </div>
 
-            <div className="space-y-2 overflow-y-auto max-h-96">
+            <div className="space-y-2">
               {isLoading ? (
                 <div className="py-8 text-center">
                   <div className="w-6 h-6 mx-auto border-b-2 rounded-full animate-spin border-primary-600"></div>
@@ -194,101 +229,83 @@ export default function ClassEnrollmentModal({
             </div>
           </div>
 
-          {/* Right: Time Slots */}
-          <div className="p-6">
+          {/* Right: Schedule Canvas */}
+          <div className="flex-1 p-6 overflow-hidden">
             {selectedClass ? (
-              <div>
-                <h3 className="mb-4 text-lg font-semibold text-gray-800">
-                  {selectedClass.title}
-                </h3>
+              <div className="flex flex-col h-full">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {selectedClass.title}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {selectedClass.teacher?.name} • {selectedClass.subject?.subject_name}
+                  </p>
+                </div>
 
                 {isSplitClass && (
                   <div className="flex items-start gap-2 p-3 mb-4 rounded-lg bg-amber-50 border border-amber-200">
                     <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-amber-800">
                       <p className="font-medium">앞/뒤타임 수업입니다</p>
-                      <p className="mt-1">앞타임(정규)과 뒤타임(클리닉)을 모두 선택해야 등록됩니다.</p>
+                      <p className="mt-1">시간표에서 앞타임(정규)과 뒤타임(클리닉)을 클릭하여 선택하세요.</p>
                     </div>
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  {selectedClass.class_composition && selectedClass.class_composition.length > 0 ? (
-                    selectedClass.class_composition.map((composition) => {
-                      const isSelected = selectedCompositions.has(composition.id);
-                      return (
-                        <button
-                          key={composition.id}
-                          onClick={() => handleCompositionToggle(composition.id)}
-                          className={`w-full text-left p-4 rounded-lg border transition-all ${
-                            isSelected
-                              ? "border-primary-500 bg-primary-50"
-                              : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="font-medium text-gray-900">
-                                  {getDayOfWeekLabel(composition.day_of_week)}요일
-                                </span>
-                                {composition.type && (
-                                  <span
-                                    className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                      composition.type === "class"
-                                        ? "bg-blue-100 text-blue-700"
-                                        : "bg-purple-100 text-purple-700"
-                                    }`}
-                                  >
-                                    {composition.type === "class" ? "정규" : "클리닉"}
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-sm text-gray-600">
-                                {composition.start_time.substring(0, 5)} -{" "}
-                                {composition.end_time.substring(0, 5)}
-                              </p>
-                            </div>
-                            {isSelected && (
-                              <CheckCircle className="w-5 h-5 text-primary-600" />
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })
+                {selectedCompositions.size > 0 && (
+                  <div className="flex items-center gap-4 p-3 mb-4 rounded-lg bg-blue-50 border border-blue-200">
+                    <div className="flex items-center gap-2 text-sm text-blue-800">
+                      <CheckCircle className="w-4 h-4" />
+                      <span>{selectedCompositions.size}개 시간 선택됨</span>
+                    </div>
+                    {isSplitClass && (
+                      <div className="flex items-center gap-3 text-xs text-blue-700">
+                        <div className="flex items-center gap-1">
+                          {hasSelectedClassComposition ? (
+                            <CheckCircle className="w-3 h-3 text-green-600" />
+                          ) : (
+                            <div className="w-3 h-3 border-2 border-blue-400 rounded-full" />
+                          )}
+                          <span>정규</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {hasSelectedClinicComposition ? (
+                            <CheckCircle className="w-3 h-3 text-green-600" />
+                          ) : (
+                            <div className="w-3 h-3 border-2 border-blue-400 rounded-full" />
+                          )}
+                          <span>클리닉</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex-1 overflow-hidden">
+                  {scheduleBlocks.length > 0 ? (
+                    <CanvasSchedule
+                      key={`schedule-${selectedClassId}`}
+                      customBlocks={scheduleBlocks}
+                      onBlockClick={handleBlockClick}
+                      editMode="view"
+                      showDensity={false}
+                      selectedBlockIds={Array.from(selectedCompositions)}
+                    />
                   ) : (
-                    <p className="py-8 text-sm text-center text-gray-500">
-                      시간표가 설정되지 않았습니다.
-                    </p>
+                    <div className="flex flex-col items-center justify-center h-full text-center">
+                      <BookOpen className="w-12 h-12 mb-4 text-gray-400" />
+                      <p className="text-sm font-medium text-gray-700">
+                        시간표가 설정되지 않았습니다
+                      </p>
+                      <p className="mt-1 text-xs text-gray-500">
+                        수업 관리에서 시간표를 먼저 설정해주세요
+                      </p>
+                    </div>
                   )}
                 </div>
-
-                {isSplitClass && selectedCompositions.size > 0 && (
-                  <div className="p-3 mt-4 rounded-lg bg-gray-50">
-                    <p className="mb-2 text-sm font-medium text-gray-700">선택 상태:</p>
-                    <div className="space-y-1 text-sm text-gray-600">
-                      <div className="flex items-center gap-2">
-                        {hasSelectedClassComposition ? (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <div className="w-4 h-4 border-2 border-gray-300 rounded-full" />
-                        )}
-                        <span>앞타임 (정규)</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {hasSelectedClinicComposition ? (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <div className="w-4 h-4 border-2 border-gray-300 rounded-full" />
-                        )}
-                        <span>뒤타임 (클리닉)</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="flex flex-col items-center justify-center h-full text-center">
                 <BookOpen className="w-12 h-12 mb-4 text-gray-400" />
                 <p className="text-sm font-medium text-gray-700">수업을 선택하세요</p>
                 <p className="mt-1 text-xs text-gray-500">
@@ -315,10 +332,10 @@ export default function ClassEnrollmentModal({
             </button>
             <button
               onClick={handleEnroll}
-              disabled={!canEnroll || enrollStudent.isPending}
+              disabled={!canEnroll || enrollStudent.isPending || enrollComposition.isPending}
               className="px-4 py-2 text-white transition-all duration-200 bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg hover:from-primary-600 hover:to-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {enrollStudent.isPending ? "등록 중..." : "등록"}
+              {enrollStudent.isPending || enrollComposition.isPending ? "등록 중..." : "등록"}
             </button>
           </div>
         </div>

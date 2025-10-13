@@ -29,6 +29,8 @@ interface CanvasScheduleProps {
     startTime: string;
     endTime: string;
   }) => void; // 시간대 클릭 콜백
+  onBlockClick?: (block: ClassBlock) => void; // 블록 클릭 콜백 (선택 모드용)
+  selectedBlockIds?: string[]; // 선택된 블록 ID 목록 (하이라이트 표시용)
 }
 
 interface ClassModalProps {
@@ -285,6 +287,8 @@ export default function CanvasSchedule({
   customDensityData,
   densityTooltipData,
   onTimeSlotClick,
+  onBlockClick,
+  selectedBlockIds = [],
 }: CanvasScheduleProps) {
   const timeCanvasRef = useRef<HTMLCanvasElement>(null);
   const headerCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -579,6 +583,9 @@ export default function CanvasSchedule({
       const height =
         ((endMinutes - startMinutes) / config.timeSlotMinutes) * SLOT_HEIGHT;
 
+      // 선택된 블록인지 확인
+      const isSelected = selectedBlockIds.includes(block.id);
+
       // 블록 배경 (neumorphism effect)
       const radius = 12;
 
@@ -607,18 +614,30 @@ export default function CanvasSchedule({
       ctx.shadowOffsetY = 0;
       ctx.shadowBlur = 0;
 
-      // Color overlay with gradient
+      // Color overlay with gradient - 선택되지 않은 블록은 기본 밝기
       const gradient = ctx.createLinearGradient(x, y, x, y + height);
-      gradient.addColorStop(0, block.color + "E6"); // 90% opacity
-      gradient.addColorStop(1, block.color + "CC"); // 80% opacity
+      if (isSelected) {
+        // 선택된 블록은 반투명하게
+        gradient.addColorStop(0, block.color + "99"); // 60% opacity
+        gradient.addColorStop(1, block.color + "80"); // 50% opacity
+      } else {
+        // 선택되지 않은 블록은 기본 밝기
+        gradient.addColorStop(0, block.color + "E6"); // 90% opacity
+        gradient.addColorStop(1, block.color + "CC"); // 80% opacity
+      }
 
       ctx.fillStyle = gradient;
       drawRoundedRect(ctx, x + 2, y + 2, width - 4, height - 4, radius - 2);
       ctx.fill();
 
-      // Subtle border
-      ctx.strokeStyle = "rgba(168, 173, 168, 0.2)";
-      ctx.lineWidth = 1;
+      // Border - 선택된 블록은 강조 테두리
+      if (isSelected) {
+        ctx.strokeStyle = "#6b7c5d"; // primary-500
+        ctx.lineWidth = 3;
+      } else {
+        ctx.strokeStyle = "rgba(168, 173, 168, 0.2)";
+        ctx.lineWidth = 1;
+      }
       drawRoundedRect(ctx, x, y, width, height, radius);
       ctx.stroke();
 
@@ -851,6 +870,7 @@ export default function CanvasSchedule({
     DAY_COLUMN_WIDTH,
     selectedClassStudents,
     customDensityData,
+    selectedBlockIds,
   ]);
 
   // 마우스 이벤트 핸들러
@@ -872,8 +892,11 @@ export default function CanvasSchedule({
         // 수정 아이콘 클릭 - 모달 열기
         setModalBlock(clickedBlock);
         setIsModalOpen(true);
-      } else if (editMode === "admin") {
-        // 관리자 모드에서 블록의 다른 부분 클릭 - 드래그 시작
+      } else if (onBlockClick) {
+        // onBlockClick이 제공된 경우 (선택 모드) - 콜백 호출
+        onBlockClick(clickedBlock);
+      } else if (editMode === "admin" && clickedBlock.isEditable !== false) {
+        // 관리자 모드에서 편집 가능한 블록의 다른 부분 클릭 - 드래그 시작
         setDragState({
           isDragging: true,
           draggedBlock: clickedBlock,
@@ -884,7 +907,7 @@ export default function CanvasSchedule({
           previewPosition: null,
         });
       } else {
-        // 조회 모드 - 모달 열기
+        // 조회 모드 또는 편집 불가능한 블록 - 모달 열기
         setModalBlock(clickedBlock);
         setIsModalOpen(true);
       }

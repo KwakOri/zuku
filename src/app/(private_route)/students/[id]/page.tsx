@@ -13,6 +13,7 @@ import {
   studentScheduleKeys,
   useStudentSchedules,
 } from "@/queries/useStudentSchedules";
+import { useFullSchedule, fullScheduleKeys } from "@/queries/useFullSchedule";
 import {
   createStudentSchedule,
   CreateStudentScheduleRequest,
@@ -37,6 +38,7 @@ import { useRouter } from "next/navigation";
 import { use, useEffect, useRef, useState } from "react";
 import { useSendKakaoNotification } from "@/queries/useNotifications";
 import ClassEnrollmentModal from "@/components/students/ClassEnrollmentModal";
+import ClassCompositionEditModal from "@/components/students/ClassCompositionEditModal";
 
 interface StudentDetailPageProps {
   params: Promise<{
@@ -59,21 +61,35 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   // URL의 id 파라미터로 학생 정보 찾기
   const student = students.find((s) => s.id === id);
 
-  // 학생 개인 시간표 데이터 가져오기
+  // 학생 전체 시간표 데이터 가져오기 (개인 일정 + 수업 일정)
   const {
-    data: studentSchedules = [],
+    data: fullScheduleData,
     isLoading: isScheduleLoading,
     error: scheduleError,
-  } = useStudentSchedules(studentId);
+  } = useFullSchedule(studentId);
 
-  // 학생 시간표 데이터를 CanvasSchedule용 블록으로 변환
-  const scheduleBlocks = convertStudentSchedulesToBlocks(studentSchedules);
+  // 전체 시간표를 CanvasSchedule용 블록으로 변환
+  const allSchedules = fullScheduleData?.all || [];
+
+  // 개인 일정은 회색(#6b7280)으로, 수업 일정은 원래 색상으로 표시
+  const scheduleBlocks = allSchedules.map((schedule: any) => ({
+    id: schedule.id,
+    title: schedule.title,
+    subject: schedule.type === "class" ? schedule.subject_name || "" : schedule.type,
+    teacherName: schedule.teacher_name || "",
+    startTime: schedule.start_time.substring(0, 5), // HH:MM:SS → HH:MM
+    endTime: schedule.end_time.substring(0, 5),     // HH:MM:SS → HH:MM
+    dayOfWeek: schedule.day_of_week,
+    color: schedule.type === "class" ? schedule.color : "#6b7280", // 개인 일정은 회색
+    room: schedule.location || "",
+    isEditable: schedule.type !== "class", // 수업 일정은 편집 불가
+  }));
 
   // 디버깅을 위한 로그
   useEffect(() => {
-    console.log("Student schedules raw data:", studentSchedules);
+    console.log("Full schedule data:", fullScheduleData);
     console.log("Converted schedule blocks:", scheduleBlocks);
-  }, [studentSchedules, scheduleBlocks]);
+  }, [fullScheduleData, scheduleBlocks]);
 
   // 원본 블록 데이터를 참조로 저장 (변경 감지용)
   const originalBlocksRef = useRef<ClassBlock[]>([]);
@@ -87,6 +103,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   // 일정 관리 UI 상태
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
+  const [showCompositionEditModal, setShowCompositionEditModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"all" | "personal" | "class">(
     "all"
@@ -94,6 +111,15 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   const [selectedSchedule, setSelectedSchedule] = useState<ClassBlock | null>(
     null
   );
+  const [selectedClassForEdit, setSelectedClassForEdit] = useState<{
+    classStudentId: string;
+    classId: string;
+    className: string;
+    classColor: string;
+    subjectName?: string;
+    teacherName?: string;
+    allCompositions: any[];
+  } | null>(null);
 
   // 새로운 일정 추가 폼 상태
   const [newSchedule, setNewSchedule] = useState<CreateStudentScheduleRequest>({
@@ -115,20 +141,9 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
     onSuccess: (newSchedule) => {
       console.log("New schedule created:", newSchedule);
 
-      // 즉시 캐시 업데이트
-      queryClient.setQueryData(
-        studentScheduleKeys.list(studentId),
-        (oldData: Tables<"student_schedules">[] = []) => {
-          console.log("Old cache data:", oldData);
-          const updatedData = [...oldData, newSchedule];
-          console.log("Updated cache data:", updatedData);
-          return updatedData;
-        }
-      );
-
-      // 추가로 캐시 무효화 및 리페치
+      // 전체 시간표 캐시 무효화
       queryClient.invalidateQueries({
-        queryKey: studentScheduleKeys.list(studentId),
+        queryKey: fullScheduleKeys.byStudent(studentId),
       });
     },
     onError: (error) => {
@@ -147,10 +162,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
     }) => updateStudentSchedule(studentId, scheduleId, scheduleData),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: studentScheduleKeys.list(studentId),
-      });
-      queryClient.refetchQueries({
-        queryKey: studentScheduleKeys.list(studentId),
+        queryKey: fullScheduleKeys.byStudent(studentId),
       });
     },
   });
@@ -159,23 +171,9 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   const deleteScheduleMutation = useMutation({
     mutationFn: (scheduleId: string) =>
       deleteStudentSchedule(studentId, scheduleId),
-    onSuccess: (deletedSchedule) => {
-      console.log("Schedule deleted:", deletedSchedule);
-
-      // 즉시 캐시 업데이트
-      queryClient.setQueryData(
-        studentScheduleKeys.list(studentId),
-        (oldData: Tables<"student_schedules">[] = []) => {
-          const updatedData = oldData.filter(
-            (s) => s.id !== deletedSchedule.id
-          );
-          console.log("Updated cache after deletion:", updatedData);
-          return updatedData;
-        }
-      );
-
+    onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: studentScheduleKeys.list(studentId),
+        queryKey: fullScheduleKeys.byStudent(studentId),
       });
     },
     onError: (error) => {
@@ -255,7 +253,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
         // 성공 시 캐시 무효화하여 최신 데이터 다시 가져오기
         queryClient.invalidateQueries({
-          queryKey: studentScheduleKeys.list(studentId),
+          queryKey: fullScheduleKeys.byStudent(studentId),
         });
 
         console.log(
@@ -273,7 +271,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
       // 캐시 무효화하여 원본 데이터로 되돌리기
       queryClient.invalidateQueries({
-        queryKey: studentScheduleKeys.list(studentId),
+        queryKey: fullScheduleKeys.byStudent(studentId),
       });
     }
   };
@@ -325,27 +323,69 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
     }
   };
 
+  // 블록 클릭 핸들러 - 수업 블록 클릭 시 구성 편집 모달 열기
+  const handleBlockClick = async (block: ClassBlock) => {
+    // 수업 블록인지 확인 (회색이 아닌 블록 = 수업)
+    const isClassBlock = block.color !== "#6b7280";
+
+    if (isClassBlock) {
+      // 전체 시간표에서 해당 블록의 원본 데이터 찾기
+      const originalSchedule = allSchedules.find((s: any) => s.id === block.id);
+
+      if (originalSchedule && originalSchedule.class_student_id && originalSchedule.class_id) {
+        try {
+          // 해당 class의 모든 composition을 API에서 가져오기
+          const response = await fetch(`/api/class-composition?classId=${originalSchedule.class_id}`);
+          if (!response.ok) {
+            throw new Error("Failed to fetch class compositions");
+          }
+          const allClassCompositions = await response.json();
+
+          setSelectedClassForEdit({
+            classStudentId: originalSchedule.class_student_id,
+            classId: originalSchedule.class_id,
+            className: originalSchedule.title,
+            classColor: originalSchedule.color,
+            subjectName: originalSchedule.subject_name,
+            teacherName: originalSchedule.teacher_name,
+            allCompositions: allClassCompositions,
+          });
+          setShowCompositionEditModal(true);
+        } catch (error) {
+          console.error("Failed to fetch class compositions:", error);
+          alert("수업 구성을 불러오는데 실패했습니다.");
+        }
+      }
+    }
+  };
+
   // 필터링된 일정 목록
   const filteredSchedules = scheduleBlocks.filter((schedule) => {
     const matchesSearch =
       schedule.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (schedule.subject &&
         schedule.subject.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    // type 기반으로 필터링 (개인 일정 vs 수업)
+    const isPersonal = schedule.color === "#6b7280"; // 회색 = 개인 일정
     const matchesFilter =
       filterType === "all" ||
-      (filterType === "personal" && schedule.subject === "personal") ||
-      (filterType === "class" && schedule.subject !== "personal");
+      (filterType === "personal" && isPersonal) ||
+      (filterType === "class" && !isPersonal);
     return matchesSearch && matchesFilter;
   });
 
   // 요일별 일정 통계
+  const personalCount = scheduleBlocks.filter((s) => s.color === "#6b7280").length;
+  const classCount = scheduleBlocks.filter((s) => s.color !== "#6b7280").length;
+
   const scheduleStats = {
     total: scheduleBlocks.length,
     byDay: [0, 1, 2, 3, 4, 5, 6].map(
       (day) => scheduleBlocks.filter((s) => s.dayOfWeek === day).length
     ),
-    personal: scheduleBlocks.filter((s) => s.subject === "personal").length,
-    class: scheduleBlocks.filter((s) => s.subject !== "personal").length,
+    personal: personalCount,
+    class: classCount,
   };
 
   // 로딩 상태
@@ -643,7 +683,8 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                 .join("-")}`}
               customBlocks={scheduleBlocks}
               onBlocksChange={handleBlocksChange}
-              editMode={"admin"}
+              onBlockClick={handleBlockClick}
+              editMode={"view"}
               showDensity={false}
             />
           </div>
@@ -916,10 +957,36 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
           studentName={student.name}
           onClose={() => setShowEnrollModal(false)}
           onSuccess={() => {
-            // 등록 성공 시 시간표 새로고침
+            // 등록 성공 시 전체 시간표 새로고침
             queryClient.invalidateQueries({
-              queryKey: studentScheduleKeys.list(studentId),
+              queryKey: fullScheduleKeys.byStudent(studentId),
             });
+          }}
+        />
+      )}
+
+      {/* 수업 구성 편집 모달 */}
+      {showCompositionEditModal && selectedClassForEdit && (
+        <ClassCompositionEditModal
+          classStudentId={selectedClassForEdit.classStudentId}
+          classId={selectedClassForEdit.classId}
+          className={selectedClassForEdit.className}
+          classColor={selectedClassForEdit.classColor}
+          subjectName={selectedClassForEdit.subjectName}
+          teacherName={selectedClassForEdit.teacherName}
+          studentName={student.name}
+          allCompositions={selectedClassForEdit.allCompositions}
+          onClose={() => {
+            setShowCompositionEditModal(false);
+            setSelectedClassForEdit(null);
+          }}
+          onSuccess={() => {
+            // 수정 성공 시 전체 시간표 새로고침
+            queryClient.invalidateQueries({
+              queryKey: fullScheduleKeys.byStudent(studentId),
+            });
+            setShowCompositionEditModal(false);
+            setSelectedClassForEdit(null);
           }}
         />
       )}

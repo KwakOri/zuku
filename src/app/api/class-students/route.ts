@@ -62,23 +62,22 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const supabase = createAdminSupabaseClient();
 
-    // 입력 데이터 검증
+    // 입력 데이터 검증 (composition_id 제거됨)
     const classStudentData: TablesInsert<"class_students"> = {
       class_id: body.class_id,
       student_id: body.student_id,
       enrolled_date: body.enrolled_date || new Date().toISOString().split('T')[0],
       status: body.status || "active",
-      composition_id: body.composition_id || null,
     };
 
     // 중복 등록 체크
-    const { data: existing, error: checkError } = await supabase
+    const { data: existing } = await supabase
       .from("class_students")
       .select("id")
       .eq("class_id", body.class_id)
       .eq("student_id", body.student_id)
       .eq("status", "active")
-      .single();
+      .maybeSingle();
 
     if (existing) {
       return NextResponse.json(
@@ -101,13 +100,21 @@ export async function POST(request: NextRequest) {
           email,
           school:schools(id, name, level)
         ),
-        class:classes(id, title, subject:subjects(id, subject_name)),
-        composition:class_composition(id, day_of_week, start_time, end_time, type)
+        class:classes(id, title, subject:subjects(id, subject_name))
       `)
       .single();
 
     if (error) {
       console.error("Class student creation error:", error);
+
+      // Handle database constraint violations with user-friendly messages
+      if (error.code === '23505') {
+        return NextResponse.json(
+          { error: "Student is already enrolled in this class" },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json(
         { error: "Failed to enroll student in class" },
         { status: 500 }

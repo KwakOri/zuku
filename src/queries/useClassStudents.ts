@@ -52,7 +52,7 @@ const classStudentApi = {
     return result.data;
   },
 
-  // 수업에 학생 등록
+  // 수업에 학생 등록 (composition_id 제거됨)
   enrollStudent: async (data: TablesInsert<"class_students">): Promise<ClassStudentRow> => {
     const response = await fetch('/api/class-students', {
       method: 'POST',
