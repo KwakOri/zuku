@@ -3,10 +3,11 @@
 import ClassCompositionModal, {
   ClassCompositionFormData,
 } from "@/components/class-management/ClassCompositionModal";
-import SimpleClassForm from "@/components/class-management/SimpleClassForm";
 import ClassStudentPanel from "@/components/class-management/ClassStudentPanel";
+import SimpleClassForm from "@/components/class-management/SimpleClassForm";
 import { PageHeader, PageLayout } from "@/components/common/layout";
 import CanvasSchedule from "@/components/common/schedule/CanvasSchedule";
+import { DAYS_OF_WEEK } from "@/constants/schedule";
 import { useCreateClassComposition } from "@/queries/useClassComposition";
 import { useClasses } from "@/queries/useClasses";
 import type { ClassBlock } from "@/types/schedule";
@@ -26,10 +27,17 @@ export default function ClassManagementPage() {
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
 
   // Selected composition for student management
-  const [selectedCompositionId, setSelectedCompositionId] = useState<string | null>(null);
+  const [selectedCompositionId, setSelectedCompositionId] = useState<
+    string | null
+  >(null);
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Create tab filters
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>("");
+  const [selectedCourseType, setSelectedCourseType] = useState<"regular" | "school_exam" | "">("");
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string>("");
 
   // Data queries
   const { data: classes = [], isLoading, error } = useClasses();
@@ -44,11 +52,12 @@ export default function ClassManagementPage() {
   const selectedClass = classes.find((c) => c.id === selectedClassId);
 
   // Find selected composition
-  const selectedComposition = selectedClass?.class_composition?.find(
-    (comp) => comp.id === selectedCompositionId
-  ) || null;
+  const selectedComposition =
+    selectedClass?.class_composition?.find(
+      (comp) => comp.id === selectedCompositionId
+    ) || null;
 
-  // Convert selected class to ClassBlock format for CanvasSchedule
+  // Convert selected class to ClassBlock format for CanvasSchedule (for assign tab)
   const classBlocks = useMemo((): ClassBlock[] => {
     if (
       !selectedClass ||
@@ -74,6 +83,45 @@ export default function ClassManagementPage() {
       compositionType: comp.type,
     }));
   }, [selectedClass]);
+
+  // Filter classes for create tab based on selected subject, course type, and teacher
+  const filteredClasses = useMemo(() => {
+    return classes.filter(cls => {
+      const subjectMatch = !selectedSubjectId || cls.subject_id === selectedSubjectId;
+      const courseTypeMatch = !selectedCourseType || cls.course_type === selectedCourseType;
+      const teacherMatch = !selectedTeacherId || cls.teacher_id === selectedTeacherId;
+      return subjectMatch && courseTypeMatch && teacherMatch;
+    });
+  }, [classes, selectedSubjectId, selectedCourseType, selectedTeacherId]);
+
+  // Convert filtered classes to ClassBlock format for create tab
+  const filteredClassBlocks = useMemo((): ClassBlock[] => {
+    const blocks: ClassBlock[] = [];
+
+    filteredClasses.forEach(cls => {
+      if (cls.class_composition && cls.class_composition.length > 0) {
+        cls.class_composition.forEach(comp => {
+          blocks.push({
+            id: comp.id,
+            classId: cls.id,
+            compositionId: comp.id,
+            title: cls.title,
+            subject: cls.subject?.subject_name || "",
+            teacherName: cls.teacher?.name || "",
+            startTime: comp.start_time.substring(0, 5),
+            endTime: comp.end_time.substring(0, 5),
+            dayOfWeek: comp.day_of_week,
+            color: cls.color || "#3B82F6",
+            room: cls.room || undefined,
+            studentCount: 0,
+            compositionType: comp.type,
+          });
+        });
+      }
+    });
+
+    return blocks;
+  }, [filteredClasses]);
 
   const handleBack = () => {
     router.back();
@@ -180,9 +228,57 @@ export default function ClassManagementPage() {
         </div>
 
         {activeTab === "create" ? (
-          /* CREATE TAB - Simple Class Creation */
-          <div className="flex-1 w-full py-8 overflow-y-auto">
-            <SimpleClassForm />
+          /* CREATE TAB - 3 Grid Layout */
+          <div className="flex flex-1 min-h-0 gap-6">
+            {/* Left Section - Class Creation Form */}
+            <div className="flex flex-col flex-shrink-0 overflow-y-auto" style={{ width: "400px" }}>
+              <SimpleClassForm
+                onSubjectChange={setSelectedSubjectId}
+                onCourseTypeChange={setSelectedCourseType}
+                onTeacherChange={setSelectedTeacherId}
+              />
+            </div>
+
+            {/* Right Section - Combined Schedule (2 grids wide) */}
+            <div className="flex flex-col flex-1 min-w-0 min-h-0">
+              <div className="flex flex-col flex-1 min-h-0 p-6 overflow-hidden border-0 flat-card rounded-2xl">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {selectedCourseType === "regular"
+                      ? "정규수업 시간표"
+                      : selectedCourseType === "school_exam"
+                      ? "학교내신 시간표"
+                      : "전체 시간표"}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    {selectedSubjectId && selectedCourseType && selectedTeacherId
+                      ? "선택한 조건의 수업 일정이 표시됩니다"
+                      : "과목, 수업 유형, 담당 강사를 모두 선택하면 관련 시간표가 표시됩니다"}
+                  </p>
+                </div>
+                {selectedSubjectId && selectedCourseType && selectedTeacherId ? (
+                  <div className="flex-1 min-h-0">
+                    <CanvasSchedule
+                      customBlocks={filteredClassBlocks}
+                      editMode="view"
+                      showDensity={false}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center flex-1 text-center">
+                    <div>
+                      <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                      <p className="text-sm text-gray-600">
+                        과목, 수업 유형, 담당 강사를
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        모두 선택하면 관련 시간표가 표시됩니다
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         ) : activeTab === "assign" ? (
           /* ASSIGN TAB - Time Assignment */
@@ -316,7 +412,9 @@ export default function ClassManagementPage() {
                                 .map((comp) => (
                                   <div
                                     key={comp.id}
-                                    onClick={() => setSelectedCompositionId(comp.id)}
+                                    onClick={() =>
+                                      setSelectedCompositionId(comp.id)
+                                    }
                                     className={`p-3 transition-colors border rounded-lg cursor-pointer ${
                                       selectedCompositionId === comp.id
                                         ? "border-primary-600 bg-primary-100"
@@ -325,11 +423,7 @@ export default function ClassManagementPage() {
                                   >
                                     <div className="flex items-center justify-between mb-1">
                                       <span className="text-sm font-medium text-gray-800">
-                                        {
-                                          ["일", "월", "화", "수", "목", "금", "토"][
-                                            comp.day_of_week
-                                          ]
-                                        }
+                                        {DAYS_OF_WEEK[comp.day_of_week]}
                                         요일
                                       </span>
                                     </div>
@@ -362,7 +456,9 @@ export default function ClassManagementPage() {
                                 .map((comp) => (
                                   <div
                                     key={comp.id}
-                                    onClick={() => setSelectedCompositionId(comp.id)}
+                                    onClick={() =>
+                                      setSelectedCompositionId(comp.id)
+                                    }
                                     className={`p-3 transition-colors border rounded-lg cursor-pointer ${
                                       selectedCompositionId === comp.id
                                         ? "border-primary-600 bg-primary-100"
@@ -371,11 +467,7 @@ export default function ClassManagementPage() {
                                   >
                                     <div className="flex items-center justify-between mb-1">
                                       <span className="text-sm font-medium text-gray-800">
-                                        {
-                                          ["일", "월", "화", "수", "목", "금", "토"][
-                                            comp.day_of_week
-                                          ]
-                                        }
+                                        {DAYS_OF_WEEK[comp.day_of_week]}
                                         요일
                                       </span>
                                     </div>
@@ -404,7 +496,9 @@ export default function ClassManagementPage() {
                               .map((comp) => (
                                 <div
                                   key={comp.id}
-                                  onClick={() => setSelectedCompositionId(comp.id)}
+                                  onClick={() =>
+                                    setSelectedCompositionId(comp.id)
+                                  }
                                   className={`p-3 transition-colors border rounded-lg cursor-pointer ${
                                     selectedCompositionId === comp.id
                                       ? "border-primary-600 bg-primary-100"
@@ -414,9 +508,15 @@ export default function ClassManagementPage() {
                                   <div className="flex items-center justify-between mb-1">
                                     <span className="text-sm font-medium text-gray-800">
                                       {
-                                        ["일", "월", "화", "수", "목", "금", "토"][
-                                          comp.day_of_week
-                                        ]
+                                        [
+                                          "일",
+                                          "월",
+                                          "화",
+                                          "수",
+                                          "목",
+                                          "금",
+                                          "토",
+                                        ][comp.day_of_week]
                                       }
                                       요일
                                     </span>
@@ -442,6 +542,8 @@ export default function ClassManagementPage() {
                   compositionId={selectedCompositionId}
                   className={selectedClass.title}
                   composition={selectedComposition}
+                  classData={selectedClass}
+                  allCompositions={selectedClass.class_composition || []}
                   onClose={() => setSelectedCompositionId(null)}
                 />
               ) : (

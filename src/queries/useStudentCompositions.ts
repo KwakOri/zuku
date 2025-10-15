@@ -3,7 +3,7 @@ import { Tables, TablesInsert } from "@/types/supabase";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 
-type StudentCompositionRow = Tables<"student_compositions">;
+type CompositionStudentRow = Tables<"compositions_students">;
 
 // Query Keys
 export const studentCompositionKeys = {
@@ -11,15 +11,15 @@ export const studentCompositionKeys = {
   lists: () => [...studentCompositionKeys.all, "list"] as const,
   list: (filters?: Record<string, unknown>) =>
     [...studentCompositionKeys.lists(), { filters }] as const,
-  byClassStudent: (classStudentId: string) =>
-    [...studentCompositionKeys.all, "byClassStudent", classStudentId] as const,
+  byClass: (classId: string) =>
+    [...studentCompositionKeys.all, "byClass", classId] as const,
   byStudent: (studentId: string) =>
     [...studentCompositionKeys.all, "byStudent", studentId] as const,
 };
 
 // Queries
 export function useStudentCompositions(filters?: {
-  class_student_id?: string;
+  class_id?: string;
   composition_id?: string;
   student_id?: string;
 }) {
@@ -30,12 +30,11 @@ export function useStudentCompositions(filters?: {
   });
 }
 
-export function useCompositionsByClassStudent(classStudentId: string) {
+export function useCompositionsByClass(classId: string) {
   return useQuery({
-    queryKey: studentCompositionKeys.byClassStudent(classStudentId),
-    queryFn: () =>
-      studentCompositionApi.getCompositionsByClassStudent(classStudentId),
-    enabled: !!classStudentId,
+    queryKey: studentCompositionKeys.byClass(classId),
+    queryFn: () => studentCompositionApi.getCompositionsByClass(classId),
+    enabled: !!classId,
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -54,18 +53,21 @@ export function useEnrollComposition() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: TablesInsert<"student_compositions">) =>
+    mutationFn: (data: TablesInsert<"compositions_students">) =>
       studentCompositionApi.enrollComposition(data),
     onSuccess: (newComposition) => {
       // 관련 쿼리들 무효화
       queryClient.invalidateQueries({
         queryKey: studentCompositionKeys.lists(),
       });
-      if (newComposition.class_student_id) {
+      if (newComposition.class_id) {
         queryClient.invalidateQueries({
-          queryKey: studentCompositionKeys.byClassStudent(
-            newComposition.class_student_id
-          ),
+          queryKey: studentCompositionKeys.byClass(newComposition.class_id),
+        });
+      }
+      if (newComposition.student_id) {
+        queryClient.invalidateQueries({
+          queryKey: studentCompositionKeys.byStudent(newComposition.student_id),
         });
       }
 
@@ -87,11 +89,14 @@ export function useUnenrollComposition() {
       queryClient.invalidateQueries({
         queryKey: studentCompositionKeys.lists(),
       });
-      if (updatedComposition.class_student_id) {
+      if (updatedComposition.class_id) {
         queryClient.invalidateQueries({
-          queryKey: studentCompositionKeys.byClassStudent(
-            updatedComposition.class_student_id
-          ),
+          queryKey: studentCompositionKeys.byClass(updatedComposition.class_id),
+        });
+      }
+      if (updatedComposition.student_id) {
+        queryClient.invalidateQueries({
+          queryKey: studentCompositionKeys.byStudent(updatedComposition.student_id),
         });
       }
 

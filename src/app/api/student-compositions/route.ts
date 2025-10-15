@@ -6,24 +6,27 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createAdminSupabaseClient();
     const { searchParams } = new URL(request.url);
-    const classStudentId = searchParams.get("class_student_id");
+    const classId = searchParams.get("class_id");
     const compositionId = searchParams.get("composition_id");
     const studentId = searchParams.get("student_id");
 
     let query = supabase
-      .from("student_compositions")
+      .from("compositions_students")
       .select(`
         *,
-        class_student:class_students(
+        class:classes(
           id,
-          enrolled_date,
-          class:classes(
-            id,
-            title,
-            subject:subjects(id, subject_name),
-            teacher:teachers(id, name)
-          ),
-          student:students(id, name, grade)
+          title,
+          subject:subjects(id, subject_name),
+          teacher:teachers(id, name)
+        ),
+        student:students(
+          id,
+          name,
+          grade,
+          phone,
+          email,
+          school:schools(id, name)
         ),
         composition:class_composition(
           id,
@@ -36,9 +39,9 @@ export async function GET(request: NextRequest) {
       `)
       .eq("status", "active");
 
-    // 특정 class_student의 compositions만 조회
-    if (classStudentId) {
-      query = query.eq("class_student_id", classStudentId);
+    // 특정 수업의 compositions만 조회
+    if (classId) {
+      query = query.eq("class_id", classId);
     }
 
     // 특정 composition만 조회
@@ -48,7 +51,7 @@ export async function GET(request: NextRequest) {
 
     // 특정 학생의 모든 compositions 조회
     if (studentId) {
-      query = query.eq("class_student.student_id", studentId);
+      query = query.eq("student_id", studentId);
     }
 
     const { data: studentCompositions, error } = await query.order("enrolled_date", { ascending: false });
@@ -77,8 +80,9 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminSupabaseClient();
 
     // 입력 데이터 검증
-    const studentCompositionData: TablesInsert<"student_compositions"> = {
-      class_student_id: body.class_student_id,
+    const studentCompositionData: TablesInsert<"compositions_students"> = {
+      class_id: body.class_id,
+      student_id: body.student_id,
       composition_id: body.composition_id,
       enrolled_date: body.enrolled_date || new Date().toISOString().split('T')[0],
       status: body.status || "active",
@@ -86,9 +90,10 @@ export async function POST(request: NextRequest) {
 
     // 중복 등록 체크
     const { data: existing } = await supabase
-      .from("student_compositions")
+      .from("compositions_students")
       .select("id")
-      .eq("class_student_id", body.class_student_id)
+      .eq("class_id", body.class_id)
+      .eq("student_id", body.student_id)
       .eq("composition_id", body.composition_id)
       .eq("status", "active")
       .maybeSingle();
@@ -101,20 +106,23 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: studentComposition, error } = await supabase
-      .from("student_compositions")
+      .from("compositions_students")
       .insert([studentCompositionData])
       .select(`
         *,
-        class_student:class_students(
+        class:classes(
           id,
-          enrolled_date,
-          class:classes(
-            id,
-            title,
-            subject:subjects(id, subject_name),
-            teacher:teachers(id, name)
-          ),
-          student:students(id, name, grade)
+          title,
+          subject:subjects(id, subject_name),
+          teacher:teachers(id, name)
+        ),
+        student:students(
+          id,
+          name,
+          grade,
+          phone,
+          email,
+          school:schools(id, name)
         ),
         composition:class_composition(
           id,
@@ -170,7 +178,7 @@ export async function DELETE(request: NextRequest) {
 
     // soft delete: status를 inactive로 변경
     const { data: studentComposition, error } = await supabase
-      .from("student_compositions")
+      .from("compositions_students")
       .update({ status: "inactive" })
       .eq("id", id)
       .select()

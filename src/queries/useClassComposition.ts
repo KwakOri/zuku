@@ -1,11 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  getClassCompositions,
   createClassComposition,
-  updateClassComposition,
   deleteClassComposition,
+  getClassCompositions,
+  updateClassComposition,
 } from "@/services/client/classCompositionApi";
-import { ClassComposition } from "@/types/schedule";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { classKeys } from "./useClasses";
 
@@ -49,7 +48,7 @@ export function useUpdateClassComposition() {
     onSuccess: (updatedComposition) => {
       // 해당 수업의 시간 구성 목록 무효화
       queryClient.invalidateQueries({
-        queryKey: ["classCompositions", updatedComposition.classId],
+        queryKey: ["classCompositions", updatedComposition.class_id],
       });
       // 전체 시간 구성 목록도 무효화
       queryClient.invalidateQueries({

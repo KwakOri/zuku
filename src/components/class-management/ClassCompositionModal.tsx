@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { DAYS_OF_WEEK_FULL } from "@/constants/schedule";
 import { X } from "lucide-react";
+import { useState } from "react";
 
 interface ClassCompositionModalProps {
   isOpen: boolean;
@@ -22,7 +23,7 @@ export interface ClassCompositionFormData {
   type?: "class" | "clinic" | null;
 }
 
-const DAYS = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
+const DAYS = DAYS_OF_WEEK_FULL;
 
 export default function ClassCompositionModal({
   isOpen,
@@ -77,7 +78,7 @@ export default function ClassCompositionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-md p-6 bg-white rounded-2xl shadow-xl">
+      <div className="w-full max-w-md p-6 bg-white shadow-xl rounded-2xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-800">시간표 추가</h2>
@@ -90,7 +91,7 @@ export default function ClassCompositionModal({
         </div>
 
         {/* Class Info */}
-        <div className="mb-6 p-4 bg-primary-50 rounded-lg">
+        <div className="p-4 mb-6 rounded-lg bg-primary-50">
           <p className="text-sm text-gray-600">수업</p>
           <p className="font-semibold text-gray-800">{classData.title}</p>
         </div>
@@ -187,14 +188,14 @@ export default function ClassCompositionModal({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 text-gray-700 transition-colors bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               취소
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 px-4 py-2 text-white bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg hover:from-primary-600 hover:to-primary-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 text-white transition-all rounded-lg bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? "추가 중..." : "추가"}
             </button>

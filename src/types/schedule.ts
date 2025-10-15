@@ -49,7 +49,7 @@ export interface ScheduleConfig {
   endHour: number; // 종료 시간 (기본: 22)
   timeSlotMinutes: number; // 시간 슬롯 단위 (기본: 30분)
   showWeekend: boolean; // 주말 표시 여부
-  firstDayOfWeek: number; // 주의 시작일 (0: 일요일, 1: 월요일)
+  firstDayOfWeek: number; // 주의 시작일 (0: 월요일)
 }
 
 // 학생 개인 일정
@@ -106,21 +106,6 @@ export interface MiddleSchoolRecord {
   notes: string; // 특이사항
   createdDate: string; // YYYY-MM-DD
   lastModified: string; // YYYY-MM-DD
-}
-
-// 고등 숙제 검사 기록 (조교 작성)
-export interface HighSchoolHomeworkRecord {
-  id: string;
-  studentId: Student["id"];
-  assistantId: Assistant["id"];
-  classId: Class["id"];
-  date: string; // YYYY-MM-DD
-  homeworkRange: string; // 숙제 범위 (예: "교재 p.45-67, 문제 1-20")
-  achievement: "excellent" | "good" | "fair" | "poor" | "not_submitted"; // 성취도
-  completionRate: number; // 완성도 (0-100%)
-  accuracy: number; // 정확도 (0-100%)
-  notes?: string; // 특이사항
-  createdDate: string; // YYYY-MM-DD
 }
 
 // 시간표 가용 시간 분석 결과

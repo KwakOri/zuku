@@ -336,6 +336,61 @@ export type Database = {
           },
         ]
       }
+      compositions_students: {
+        Row: {
+          class_id: string | null
+          composition_id: string
+          created_at: string | null
+          enrolled_date: string
+          id: string
+          status: string
+          student_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          class_id?: string | null
+          composition_id: string
+          created_at?: string | null
+          enrolled_date?: string
+          id?: string
+          status?: string
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          class_id?: string | null
+          composition_id?: string
+          created_at?: string | null
+          enrolled_date?: string
+          id?: string
+          status?: string
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compositions_students_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compositions_students_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_compositions_composition_id_fkey"
+            columns: ["composition_id"]
+            isOneToOne: false
+            referencedRelation: "class_composition"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       homework_records_high: {
         Row: {
           accuracy: number
@@ -409,6 +464,7 @@ export type Database = {
       homework_records_middle: {
         Row: {
           attendance: string
+          class_id: string
           created_at: string | null
           created_date: string
           homework: string
@@ -417,13 +473,13 @@ export type Database = {
           notes: string
           participation: number
           student_id: string
-          teacher_id: string
           understanding: number
           updated_at: string | null
           week_of: string
         }
         Insert: {
           attendance: string
+          class_id: string
           created_at?: string | null
           created_date?: string
           homework: string
@@ -432,13 +488,13 @@ export type Database = {
           notes?: string
           participation: number
           student_id: string
-          teacher_id: string
           understanding: number
           updated_at?: string | null
           week_of: string
         }
         Update: {
           attendance?: string
+          class_id?: string
           created_at?: string | null
           created_date?: string
           homework?: string
@@ -447,24 +503,23 @@ export type Database = {
           notes?: string
           participation?: number
           student_id?: string
-          teacher_id?: string
           understanding?: number
           updated_at?: string | null
           week_of?: string
         }
         Relationships: [
           {
+            foreignKeyName: "homework_records_middle_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "homework_records_middle_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "homework_records_middle_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "teachers"
             referencedColumns: ["id"]
           },
         ]
@@ -530,51 +585,6 @@ export type Database = {
             columns: ["invited_by"]
             isOneToOne: false
             referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      student_compositions: {
-        Row: {
-          class_student_id: string
-          composition_id: string
-          created_at: string | null
-          enrolled_date: string
-          id: string
-          status: string
-          updated_at: string | null
-        }
-        Insert: {
-          class_student_id: string
-          composition_id: string
-          created_at?: string | null
-          enrolled_date?: string
-          id?: string
-          status?: string
-          updated_at?: string | null
-        }
-        Update: {
-          class_student_id?: string
-          composition_id?: string
-          created_at?: string | null
-          enrolled_date?: string
-          id?: string
-          status?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "student_compositions_class_student_id_fkey"
-            columns: ["class_student_id"]
-            isOneToOne: false
-            referencedRelation: "class_students"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "student_compositions_composition_id_fkey"
-            columns: ["composition_id"]
-            isOneToOne: false
-            referencedRelation: "class_composition"
             referencedColumns: ["id"]
           },
         ]

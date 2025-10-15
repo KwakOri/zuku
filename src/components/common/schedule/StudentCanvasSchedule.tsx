@@ -1,21 +1,23 @@
 "use client";
 
+import { DAYS_OF_WEEK } from "@/constants/schedule";
+import { defaultScheduleConfig } from "@/lib/utils";
 import {
-  defaultScheduleConfig,
-} from "@/lib/utils";
+  useCreateStudentSchedule,
+  useDeleteStudentSchedule,
+  useStudentSchedules,
+  useUpdateStudentSchedule,
+} from "@/queries/useStudentSchedules";
+import {
+  CreateStudentScheduleRequest,
+  StudentScheduleRow,
+} from "@/services/client/studentScheduleApi";
 import { ScheduleConfig } from "@/types/schedule";
 import { Tables } from "@/types/supabase";
 import { Check, Clock, Plus, X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  useStudentSchedules,
-  useCreateStudentSchedule,
-  useUpdateStudentSchedule,
-  useDeleteStudentSchedule,
-} from "@/queries/useStudentSchedules";
-import { StudentScheduleRow, CreateStudentScheduleRequest } from "@/services/client/studentScheduleApi";
 
-const days = ["월", "화", "수", "목", "금", "토", "일"];
+const days = DAYS_OF_WEEK;
 
 interface StudentCanvasScheduleProps {
   student: Tables<"students">;
@@ -26,14 +28,17 @@ interface ScheduleModalProps {
   schedule: StudentScheduleRow | null;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (scheduleId: string | null, updatedData: CreateStudentScheduleRequest) => void;
+  onSave: (
+    scheduleId: string | null,
+    updatedData: CreateStudentScheduleRequest
+  ) => void;
   onDelete?: (scheduleId: string) => void;
   isNew?: boolean;
   initialPosition?: {
     dayOfWeek: number;
     startTime: string;
     endTime: string;
-  };
+  } | null;
 }
 
 function ScheduleModal({
@@ -67,7 +72,7 @@ function ScheduleModal({
         color: schedule.color,
       });
     } else if (initialPosition) {
-      setEditData(prev => ({
+      setEditData((prev) => ({
         ...prev,
         start_time: initialPosition.startTime,
         end_time: initialPosition.endTime,
@@ -82,12 +87,12 @@ function ScheduleModal({
       alert("일정 제목을 입력해주세요.");
       return;
     }
-    
+
     const scheduleData = {
       ...editData,
       day_of_week: initialPosition?.dayOfWeek || schedule?.day_of_week || 0,
     };
-    
+
     onSave(schedule?.id || null, scheduleData);
     onClose();
   };
@@ -110,8 +115,14 @@ function ScheduleModal({
   ];
 
   const colorOptions = [
-    "#3b82f6", "#ef4444", "#10b981", "#f59e0b", 
-    "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"
+    "#3b82f6",
+    "#ef4444",
+    "#10b981",
+    "#f59e0b",
+    "#8b5cf6",
+    "#ec4899",
+    "#06b6d4",
+    "#84cc16",
   ];
 
   return (
@@ -120,7 +131,7 @@ function ScheduleModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+        className="w-full max-w-md p-6 mx-4 bg-white rounded-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
@@ -137,7 +148,7 @@ function ScheduleModal({
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block mb-1 text-sm font-medium text-gray-700">
               일정 제목 *
             </label>
             <input
@@ -146,13 +157,13 @@ function ScheduleModal({
               onChange={(e) =>
                 setEditData({ ...editData, title: e.target.value })
               }
-              className="w-full border rounded-md px-3 py-2"
+              className="w-full px-3 py-2 border rounded-md"
               placeholder="일정 제목을 입력하세요"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block mb-1 text-sm font-medium text-gray-700">
               설명
             </label>
             <textarea
@@ -160,21 +171,24 @@ function ScheduleModal({
               onChange={(e) =>
                 setEditData({ ...editData, description: e.target.value })
               }
-              className="w-full border rounded-md px-3 py-2 h-20 resize-none"
+              className="w-full h-20 px-3 py-2 border rounded-md resize-none"
               placeholder="일정 설명을 입력하세요"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block mb-1 text-sm font-medium text-gray-700">
               일정 유형
             </label>
             <select
               value={editData.type}
               onChange={(e) =>
-                setEditData({ ...editData, type: e.target.value as StudentSchedule["type"] })
+                setEditData({
+                  ...editData,
+                  type: e.target.value as Tables<"student_schedules">["type"],
+                })
               }
-              className="w-full border rounded-md px-3 py-2"
+              className="w-full px-3 py-2 border rounded-md"
             >
               {typeOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -185,7 +199,7 @@ function ScheduleModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block mb-1 text-sm font-medium text-gray-700">
               장소
             </label>
             <input
@@ -194,14 +208,14 @@ function ScheduleModal({
               onChange={(e) =>
                 setEditData({ ...editData, location: e.target.value })
               }
-              className="w-full border rounded-md px-3 py-2"
+              className="w-full px-3 py-2 border rounded-md"
               placeholder="장소를 입력하세요"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">
                 시작 시간
               </label>
               <input
@@ -210,11 +224,11 @@ function ScheduleModal({
                 onChange={(e) =>
                   setEditData({ ...editData, start_time: e.target.value })
                 }
-                className="w-full border rounded-md px-3 py-2"
+                className="w-full px-3 py-2 border rounded-md"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">
                 종료 시간
               </label>
               <input
@@ -223,22 +237,24 @@ function ScheduleModal({
                 onChange={(e) =>
                   setEditData({ ...editData, end_time: e.target.value })
                 }
-                className="w-full border rounded-md px-3 py-2"
+                className="w-full px-3 py-2 border rounded-md"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block mb-1 text-sm font-medium text-gray-700">
               색상
             </label>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex flex-wrap gap-2">
               {colorOptions.map((color) => (
                 <button
                   key={color}
                   onClick={() => setEditData({ ...editData, color })}
                   className={`w-8 h-8 rounded-full border-2 ${
-                    editData.color === color ? "border-gray-800" : "border-gray-300"
+                    editData.color === color
+                      ? "border-gray-800"
+                      : "border-gray-300"
                   }`}
                   style={{ backgroundColor: color }}
                 />
@@ -250,7 +266,7 @@ function ScheduleModal({
             {!isNew && onDelete && (
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 flex items-center gap-2"
+                className="flex items-center gap-2 px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-600"
               >
                 <X className="w-4 h-4" />
                 삭제
@@ -258,14 +274,14 @@ function ScheduleModal({
             )}
             <button
               onClick={handleSave}
-              className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 flex items-center justify-center gap-2"
+              className="flex items-center justify-center flex-1 gap-2 px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600"
             >
               <Check className="w-4 h-4" />
               {isNew ? "추가" : "저장"}
             </button>
             <button
               onClick={onClose}
-              className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400"
+              className="flex-1 px-4 py-2 text-gray-700 bg-gray-300 rounded-md hover:bg-gray-400"
             >
               취소
             </button>
@@ -287,14 +303,20 @@ export default function StudentCanvasSchedule({
   const timeContainerRef = useRef<HTMLDivElement>(null);
   const headerContainerRef = useRef<HTMLDivElement>(null);
   const scheduleContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // API hooks
-  const { data: studentSchedules = [], isLoading, error } = useStudentSchedules(student.id);
+  const {
+    data: studentSchedules = [],
+    isLoading,
+    error,
+  } = useStudentSchedules(student.id);
   const createScheduleMutation = useCreateStudentSchedule(student.id);
   const updateScheduleMutation = useUpdateStudentSchedule(student.id);
   const deleteScheduleMutation = useDeleteStudentSchedule(student.id);
-  
-  const [modalSchedule, setModalSchedule] = useState<StudentScheduleRow | null>(null);
+
+  const [modalSchedule, setModalSchedule] = useState<StudentScheduleRow | null>(
+    null
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isNewSchedule, setIsNewSchedule] = useState(false);
   const [newSchedulePosition, setNewSchedulePosition] = useState<{
@@ -303,13 +325,13 @@ export default function StudentCanvasSchedule({
     endTime: string;
   } | null>(null);
   const [containerWidth, setContainerWidth] = useState(1000);
-  
+
   // 동적 캔버스 설정
   const MIN_DAY_COLUMN_WIDTH = 120;
   const HEADER_HEIGHT = 60;
   const TIME_COLUMN_WIDTH = 80;
   const SLOT_HEIGHT = 10; // 10분당 10px
-  
+
   // 표시할 요일 수 계산
   const availableWidth = containerWidth - TIME_COLUMN_WIDTH;
   const visibleDays = Math.min(
@@ -317,7 +339,7 @@ export default function StudentCanvasSchedule({
     Math.max(1, Math.floor(availableWidth / MIN_DAY_COLUMN_WIDTH))
   );
   const DAY_COLUMN_WIDTH = availableWidth / visibleDays;
-  
+
   // 동적 크기 계산
   const TIME_CANVAS_WIDTH = TIME_COLUMN_WIDTH;
   const HEADER_CANVAS_WIDTH = DAY_COLUMN_WIDTH * 7;
@@ -556,7 +578,10 @@ export default function StudentCanvasSchedule({
   };
 
   // 위치에 있는 일정 찾기
-  const getScheduleAtPosition = (x: number, y: number): StudentScheduleRow | null => {
+  const getScheduleAtPosition = (
+    x: number,
+    y: number
+  ): StudentScheduleRow | null => {
     for (const schedule of studentSchedules) {
       const startMinutes = parseTime(schedule.start_time);
       const endMinutes = parseTime(schedule.end_time);
@@ -591,7 +616,8 @@ export default function StudentCanvasSchedule({
     if (dayIndex < 0 || dayIndex >= 7) return null;
 
     const slotIndex = Math.floor((y - 20) / SLOT_HEIGHT);
-    const startMinutes = config.startHour * 60 + slotIndex * config.timeSlotMinutes;
+    const startMinutes =
+      config.startHour * 60 + slotIndex * config.timeSlotMinutes;
     const endMinutes = startMinutes + 60; // 기본 1시간
 
     return {
@@ -602,7 +628,10 @@ export default function StudentCanvasSchedule({
   };
 
   // 일정 저장 핸들러
-  const handleSaveSchedule = (scheduleId: string | null, updatedData: CreateStudentScheduleRequest) => {
+  const handleSaveSchedule = (
+    scheduleId: string | null,
+    updatedData: CreateStudentScheduleRequest
+  ) => {
     if (scheduleId) {
       // 기존 일정 수정
       updateScheduleMutation.mutate({
@@ -693,7 +722,10 @@ export default function StudentCanvasSchedule({
 
     return () => {
       timeContainer.removeEventListener("scroll", syncVerticalTimeToSchedule);
-      headerContainer.removeEventListener("scroll", syncHorizontalHeaderToSchedule);
+      headerContainer.removeEventListener(
+        "scroll",
+        syncHorizontalHeaderToSchedule
+      );
       scheduleContainer.removeEventListener("scroll", handleScheduleScroll);
     };
   }, []);
@@ -708,9 +740,9 @@ export default function StudentCanvasSchedule({
   // 로딩 상태
   if (isLoading) {
     return (
-      <div className="w-full max-w-7xl mx-auto">
+      <div className="w-full mx-auto max-w-7xl">
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin"></div>
           <span className="ml-2 text-gray-600">시간표를 불러오는 중...</span>
         </div>
       </div>
@@ -720,11 +752,11 @@ export default function StudentCanvasSchedule({
   // 에러 상태
   if (error) {
     return (
-      <div className="w-full max-w-7xl mx-auto">
+      <div className="w-full mx-auto max-w-7xl">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <p className="text-red-600">시간표를 불러오는데 실패했습니다.</p>
-            <p className="text-gray-600 mt-1">{error.message}</p>
+            <p className="mt-1 text-gray-600">{error.message}</p>
           </div>
         </div>
       </div>
@@ -732,7 +764,7 @@ export default function StudentCanvasSchedule({
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto">
+    <div className="w-full mx-auto max-w-7xl">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">
           {student.name}의 개인 시간표
@@ -808,11 +840,12 @@ export default function StudentCanvasSchedule({
         initialPosition={newSchedulePosition}
       />
 
-      <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+      <div className="p-4 mt-6 rounded-lg bg-blue-50">
         <div className="flex items-center gap-2 text-sm text-blue-800">
           <Clock className="w-4 h-4" />
           <span>
-            빈 공간을 클릭하여 새 일정을 추가하거나, 기존 일정을 클릭하여 수정할 수 있습니다.
+            빈 공간을 클릭하여 새 일정을 추가하거나, 기존 일정을 클릭하여 수정할
+            수 있습니다.
           </span>
         </div>
       </div>

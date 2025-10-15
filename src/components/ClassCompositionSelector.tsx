@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { DAYS_OF_WEEK } from "@/constants/schedule";
+import {
+  useClassCompositions,
+  useCreateClassComposition,
+  useDeleteClassComposition,
+} from "@/queries/useClassComposition";
 import { ClassComposition } from "@/types/schedule";
 import { Clock, Plus, Trash2 } from "lucide-react";
-import { useClassCompositions, useCreateClassComposition, useDeleteClassComposition } from "@/queries/useClassComposition";
+import { useState } from "react";
 
 interface ClassCompositionSelectorProps {
   classId: string;
@@ -12,8 +17,6 @@ interface ClassCompositionSelectorProps {
   onSelect?: (compositionId: string) => void;
   editMode?: boolean;
 }
-
-const DAYS_OF_WEEK = ["일", "월", "화", "수", "목", "금", "토"];
 
 export default function ClassCompositionSelector({
   classId,
@@ -29,23 +32,23 @@ export default function ClassCompositionSelector({
   const [showAddForm, setShowAddForm] = useState(false);
   const [newComposition, setNewComposition] = useState({
     type: "class" as "class" | "clinic",
-    dayOfWeek: 1,
-    startTime: "16:00",
-    endTime: "18:00",
+    day_of_week: 1,
+    start_time: "16:00",
+    end_time: "18:00",
   });
 
   const handleAddComposition = async () => {
     try {
       await createComposition.mutateAsync({
-        classId,
+        class_id: classId,
         ...newComposition,
       });
       setShowAddForm(false);
       setNewComposition({
         type: "class",
-        dayOfWeek: 1,
-        startTime: "16:00",
-        endTime: "18:00",
+        day_of_week: 1,
+        start_time: "16:00",
+        end_time: "18:00",
       });
     } catch (error) {
       console.error("Failed to create composition:", error);
@@ -81,7 +84,7 @@ export default function ClassCompositionSelector({
         {editMode && (
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="flex items-center gap-1 px-2 py-1 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded"
+            className="flex items-center gap-1 px-2 py-1 text-xs text-blue-600 rounded hover:text-blue-700 hover:bg-blue-50"
           >
             <Plus className="w-3 h-3" />
             시간대 추가
@@ -91,7 +94,7 @@ export default function ClassCompositionSelector({
 
       {/* 앞타임 (class) */}
       <div>
-        <h5 className="text-xs font-medium text-gray-600 mb-2">앞타임</h5>
+        <h5 className="mb-2 text-xs font-medium text-gray-600">앞타임</h5>
         <div className="space-y-2">
           {classCompositions.map((comp) => (
             <CompositionItem
@@ -103,14 +106,16 @@ export default function ClassCompositionSelector({
             />
           ))}
           {classCompositions.length === 0 && (
-            <p className="text-xs text-gray-400">앞타임이 설정되지 않았습니다.</p>
+            <p className="text-xs text-gray-400">
+              앞타임이 설정되지 않았습니다.
+            </p>
           )}
         </div>
       </div>
 
       {/* 뒤타임 (clinic) */}
       <div>
-        <h5 className="text-xs font-medium text-gray-600 mb-2">뒤타임</h5>
+        <h5 className="mb-2 text-xs font-medium text-gray-600">뒤타임</h5>
         <div className="space-y-2">
           {clinicCompositions.map((comp) => (
             <CompositionItem
@@ -122,16 +127,18 @@ export default function ClassCompositionSelector({
             />
           ))}
           {clinicCompositions.length === 0 && (
-            <p className="text-xs text-gray-400">뒤타임이 설정되지 않았습니다.</p>
+            <p className="text-xs text-gray-400">
+              뒤타임이 설정되지 않았습니다.
+            </p>
           )}
         </div>
       </div>
 
       {/* 시간대 추가 폼 */}
       {showAddForm && editMode && (
-        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
+        <div className="p-3 space-y-3 border border-gray-200 rounded-lg bg-gray-50">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label className="block mb-1 text-xs font-medium text-gray-700">
               타입
             </label>
             <select
@@ -150,15 +157,15 @@ export default function ClassCompositionSelector({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label className="block mb-1 text-xs font-medium text-gray-700">
               요일
             </label>
             <select
-              value={newComposition.dayOfWeek}
+              value={newComposition.day_of_week}
               onChange={(e) =>
                 setNewComposition({
                   ...newComposition,
-                  dayOfWeek: parseInt(e.target.value),
+                  day_of_week: parseInt(e.target.value),
                 })
               }
               className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -173,32 +180,32 @@ export default function ClassCompositionSelector({
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block mb-1 text-xs font-medium text-gray-700">
                 시작 시간
               </label>
               <input
                 type="time"
-                value={newComposition.startTime}
+                value={newComposition.start_time}
                 onChange={(e) =>
                   setNewComposition({
                     ...newComposition,
-                    startTime: e.target.value,
+                    start_time: e.target.value,
                   })
                 }
                 className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block mb-1 text-xs font-medium text-gray-700">
                 종료 시간
               </label>
               <input
                 type="time"
-                value={newComposition.endTime}
+                value={newComposition.end_time}
                 onChange={(e) =>
                   setNewComposition({
                     ...newComposition,
-                    endTime: e.target.value,
+                    end_time: e.target.value,
                   })
                 }
                 className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -253,10 +260,10 @@ function CompositionItem({
         <Clock className="w-4 h-4 text-gray-400" />
         <div>
           <p className="text-sm font-medium text-gray-900">
-            {DAYS_OF_WEEK[composition.dayOfWeek]}요일
+            {DAYS_OF_WEEK[composition.day_of_week]}요일
           </p>
           <p className="text-xs text-gray-500">
-            {composition.startTime} - {composition.endTime}
+            {composition.start_time} - {composition.end_time}
           </p>
         </div>
       </div>
@@ -266,7 +273,7 @@ function CompositionItem({
             e.stopPropagation();
             onDelete(composition.id);
           }}
-          className="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded"
+          className="p-1 text-red-600 rounded hover:text-red-700 hover:bg-red-50"
         >
           <Trash2 className="w-4 h-4" />
         </button>

@@ -4,9 +4,7 @@ import { useAuthState, useLogout } from "@/queries/useAuth";
 import {
   ArrowRight,
   BarChart3,
-  BookCheck,
   BookOpen,
-  Clock,
   GraduationCap,
   Grid3X3,
   Loader2,
@@ -111,27 +109,6 @@ export default function HomePage() {
       features: ["출석 체크", "참여도 평가", "이해도 측정", "숙제 상태"],
     },
     {
-      id: "high-homework",
-      title: "고등 숙제 검사",
-      description: "고등학생들의 숙제를 체계적으로 검사하고 기록을 관리합니다",
-      icon: BookCheck,
-      color: "bg-orange-50 text-orange-600 border-orange-200",
-      href: "/high-homework",
-      stats: "조교 전용",
-      features: ["숙제 범위 설정", "성취도 평가", "완성도 측정", "정확도 분석"],
-    },
-    {
-      id: "class-scheduling",
-      title: "수업 시간 추천",
-      description:
-        "학생들의 개인 일정을 고려하여 최적의 수업 시간을 추천합니다",
-      icon: Clock,
-      color: "bg-yellow-50 text-yellow-600 border-yellow-200",
-      href: "/class-scheduling",
-      stats: "스마트 추천",
-      features: ["충돌 검사", "가용 시간 분석", "자동 추천", "공통 시간 찾기"],
-    },
-    {
       id: "admin-invites",
       title: "초대 관리",
       description: "새로운 사용자를 초대하고 계정 권한을 관리합니다",
@@ -163,11 +140,11 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 헤더 */}
-      <header className="flat-surface bg-gray-50 border-0 shadow-sm">
+      <header className="border-0 shadow-sm flat-surface bg-gray-50">
         <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 flat-card rounded-2xl flex items-center justify-center bg-gradient-to-br from-primary-500 to-primary-600">
+              <div className="flex items-center justify-center w-10 h-10 flat-card rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600">
                 <GraduationCap className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -187,7 +164,7 @@ export default function HomePage() {
                 <>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2 px-4 py-2 flat-card bg-gradient-to-r from-neu-200 to-neu-300 text-gray-700 rounded-2xl hover:flat-pressed transition-all duration-200"
+                    className="flex items-center gap-2 px-4 py-2 text-gray-700 transition-all duration-200 flat-card bg-gradient-to-r from-neu-200 to-neu-300 rounded-2xl hover:flat-pressed"
                   >
                     <LogOut className="w-4 h-4" />
                     로그아웃
@@ -197,13 +174,13 @@ export default function HomePage() {
                 <>
                   <Link
                     href="/glassmorphism-test"
-                    className="px-4 py-2 flat-card bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl hover:from-green-600 hover:to-green-700 transition-all duration-200"
+                    className="px-4 py-2 text-white transition-all duration-200 flat-card bg-gradient-to-r from-green-500 to-green-600 rounded-2xl hover:from-green-600 hover:to-green-700"
                   >
                     Glass Demo
                   </Link>
                   <Link
                     href="/login"
-                    className="px-4 py-2 flat-card bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-2xl hover:from-primary-600 hover:to-primary-700 transition-all duration-200"
+                    className="px-4 py-2 text-white transition-all duration-200 flat-card bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl hover:from-primary-600 hover:to-primary-700"
                   >
                     로그인
                   </Link>
@@ -234,7 +211,7 @@ export default function HomePage() {
               return (
                 <div
                   key={index}
-                  className="p-6 flat-card rounded-2xl border-0 shadow-neu-lg hover:shadow-neu-xl transition-all duration-300 hover:-translate-y-1"
+                  className="p-6 transition-all duration-300 border-0 flat-card rounded-2xl shadow-neu-lg hover:shadow-neu-xl hover:-translate-y-1"
                 >
                   <IconComponent className="w-8 h-8 mx-auto mb-3 text-primary-600" />
                   <div className="mb-1 text-2xl font-bold text-gray-800">
@@ -269,10 +246,10 @@ export default function HomePage() {
                 const IconComponent = feature.icon;
                 return (
                   <Link key={feature.id} href={feature.href} className="group">
-                    <div className="h-full p-8 transition-all duration-300 flat-card rounded-3xl border-0 shadow-neu-lg hover:shadow-neu-xl hover:flat-pressed hover:-translate-y-2">
+                    <div className="h-full p-8 transition-all duration-300 border-0 flat-card rounded-3xl shadow-neu-lg hover:shadow-neu-xl hover:flat-pressed hover:-translate-y-2">
                       {/* 아이콘과 제목 */}
                       <div className="flex items-center gap-4 mb-6">
-                        <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-primary-500 to-primary-600 shadow-sm">
+                        <div className="flex items-center justify-center w-12 h-12 shadow-sm rounded-xl bg-gradient-to-br from-primary-500 to-primary-600">
                           <IconComponent className="w-6 h-6 text-white" />
                         </div>
                         <div>
@@ -304,7 +281,7 @@ export default function HomePage() {
                       </div>
 
                       {/* 이동 버튼 */}
-                      <div className="flex items-center gap-2 font-medium text-primary-600 transition-all group-hover:gap-3">
+                      <div className="flex items-center gap-2 font-medium transition-all text-primary-600 group-hover:gap-3">
                         <span>자세히 보기</span>
                         <ArrowRight className="w-4 h-4" />
                       </div>
@@ -316,14 +293,14 @@ export default function HomePage() {
         </div>
 
         {/* 빠른 시작 가이드 */}
-        <div className="p-8 flat-card rounded-3xl border-0 shadow-neu-lg">
+        <div className="p-8 border-0 flat-card rounded-3xl shadow-neu-lg">
           <h2 className="mb-6 text-2xl font-bold text-center text-gray-800">
             빠른 시작 가이드
           </h2>
 
           <div className="grid gap-8 md:grid-cols-3">
             <div className="text-center">
-              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-md">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 text-white rounded-full shadow-md bg-gradient-to-br from-primary-500 to-primary-600">
                 <span className="font-bold">1</span>
               </div>
               <h3 className="mb-2 font-semibold text-gray-800">
@@ -335,7 +312,7 @@ export default function HomePage() {
             </div>
 
             <div className="text-center">
-              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-gradient-to-br from-success-500 to-success-600 text-white shadow-md">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 text-white rounded-full shadow-md bg-gradient-to-br from-success-500 to-success-600">
                 <span className="font-bold">2</span>
               </div>
               <h3 className="mb-2 font-semibold text-gray-800">시간표 설정</h3>
@@ -345,7 +322,7 @@ export default function HomePage() {
             </div>
 
             <div className="text-center">
-              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-gradient-to-br from-violet-500 to-violet-600 text-white shadow-md">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 text-white rounded-full shadow-md bg-gradient-to-br from-violet-500 to-violet-600">
                 <span className="font-bold">3</span>
               </div>
               <h3 className="mb-2 font-semibold text-gray-800">
@@ -361,7 +338,7 @@ export default function HomePage() {
           <div className="mt-8 text-center">
             <Link
               href="/students"
-              className="inline-flex items-center gap-2 px-6 py-3 flat-card bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-2xl hover:from-primary-600 hover:to-primary-700 transition-all duration-200"
+              className="inline-flex items-center gap-2 px-6 py-3 text-white transition-all duration-200 flat-card bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl hover:from-primary-600 hover:to-primary-700"
             >
               <Users className="w-5 h-5" />
               학생 관리로 시작하기
@@ -371,11 +348,11 @@ export default function HomePage() {
       </main>
 
       {/* 푸터 */}
-      <footer className="mt-16 flat-surface bg-gray-50 border-0">
+      <footer className="mt-16 border-0 flat-surface bg-gray-50">
         <div className="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 flat-card rounded-2xl flex items-center justify-center bg-gradient-to-br from-primary-500 to-primary-600">
+              <div className="flex items-center justify-center w-8 h-8 flat-card rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600">
                 <GraduationCap className="w-5 h-5 text-white" />
               </div>
               <div>

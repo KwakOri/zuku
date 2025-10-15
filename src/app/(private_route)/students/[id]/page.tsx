@@ -1,20 +1,18 @@
 "use client";
 
 import CanvasSchedule from "@/components/common/schedule/CanvasSchedule";
+import ClassCompositionEditModal from "@/components/students/ClassCompositionEditModal";
+import ClassEnrollmentModal from "@/components/students/ClassEnrollmentModal";
 import {
   convertBlockToStudentSchedule,
-  convertStudentSchedulesToBlocks,
   findBlockChanges,
-  isNewBlock,
   getSubjectColor,
+  isNewBlock,
 } from "@/lib/scheduleUtils";
 import { getGrade } from "@/lib/utils";
+import { fullScheduleKeys, useFullSchedule } from "@/queries/useFullSchedule";
+import { useSendKakaoNotification } from "@/queries/useNotifications";
 import { useStudents } from "@/queries/useStudents";
-import {
-  studentScheduleKeys,
-  useStudentSchedules,
-} from "@/queries/useStudentSchedules";
-import { useFullSchedule, fullScheduleKeys } from "@/queries/useFullSchedule";
 import {
   createStudentSchedule,
   CreateStudentScheduleRequest,
@@ -37,9 +35,6 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useRef, useState } from "react";
-import { useSendKakaoNotification } from "@/queries/useNotifications";
-import ClassEnrollmentModal from "@/components/students/ClassEnrollmentModal";
-import ClassCompositionEditModal from "@/components/students/ClassCompositionEditModal";
 
 interface StudentDetailPageProps {
   params: Promise<{
@@ -76,20 +71,27 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   // 일반 수업: 밝은 파스텔톤
   // 클리닉: 진한 색상
   // 앞타임/뒷타임 구분: composition_order로 판단
-  const scheduleBlocks = allSchedules.map((schedule: any) => {
+  const scheduleBlocks = allSchedules.map((schedule) => {
     const isPersonal = schedule.type !== "class";
-    const isFrontTime = schedule.composition_order === 0 || !schedule.composition_order;
+    const isFrontTime =
+      schedule.composition_order === 0 || !schedule.composition_order;
     const compositionType = schedule.composition_type || "class";
-    const color = getSubjectColor(schedule.subject_name, isPersonal, isFrontTime, compositionType);
+    const color = getSubjectColor(
+      schedule.subject_name,
+      isPersonal,
+      isFrontTime,
+      compositionType
+    );
 
     return {
       id: schedule.id,
       classId: schedule.class_id || schedule.id,
       title: schedule.title,
-      subject: schedule.type === "class" ? schedule.subject_name || "" : schedule.type,
+      subject:
+        schedule.type === "class" ? schedule.subject_name || "" : schedule.type,
       teacherName: schedule.teacher_name || "",
       startTime: schedule.start_time.substring(0, 5), // HH:MM:SS → HH:MM
-      endTime: schedule.end_time.substring(0, 5),     // HH:MM:SS → HH:MM
+      endTime: schedule.end_time.substring(0, 5), // HH:MM:SS → HH:MM
       dayOfWeek: schedule.day_of_week,
       color: color,
       room: schedule.location || "",
@@ -99,25 +101,19 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
     };
   });
 
-  // 디버깅을 위한 로그
-  useEffect(() => {
-    console.log("Full schedule data:", fullScheduleData);
-    console.log("Converted schedule blocks:", scheduleBlocks);
-  }, [fullScheduleData, scheduleBlocks]);
-
   // 원본 블록 데이터를 참조로 저장 (변경 감지용)
   const originalBlocksRef = useRef<ClassBlock[]>([]);
 
   // scheduleBlocks가 변경될 때마다 원본 참조 업데이트
   useEffect(() => {
-    console.log("ScheduleBlocks updated:", scheduleBlocks);
     originalBlocksRef.current = scheduleBlocks;
   }, [scheduleBlocks]);
 
   // 일정 관리 UI 상태
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
-  const [showCompositionEditModal, setShowCompositionEditModal] = useState(false);
+  const [showCompositionEditModal, setShowCompositionEditModal] =
+    useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"all" | "personal" | "class">(
     "all"
@@ -132,7 +128,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
     classColor: string;
     subjectName?: string;
     teacherName?: string;
-    allCompositions: any[];
+    allCompositions: Tables<"class_composition">[];
   } | null>(null);
 
   // 새로운 일정 추가 폼 상태
@@ -153,8 +149,6 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
     mutationFn: (scheduleData: CreateStudentScheduleRequest) =>
       createStudentSchedule(studentId, scheduleData),
     onSuccess: (newSchedule) => {
-      console.log("New schedule created:", newSchedule);
-
       // 전체 시간표 캐시 무효화
       queryClient.invalidateQueries({
         queryKey: fullScheduleKeys.byStudent(studentId),
@@ -203,8 +197,6 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
         originalBlocksRef.current,
         updatedBlocks
       );
-
-      console.log("Schedule changes detected:", changes);
 
       // 병렬로 모든 변경사항 처리
       const promises: Promise<Tables<"student_schedules">>[] = [];
@@ -269,10 +261,6 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
         queryClient.invalidateQueries({
           queryKey: fullScheduleKeys.byStudent(studentId),
         });
-
-        console.log(
-          `Successfully processed ${promises.length} schedule changes`
-        );
       }
 
       // 원본 참조 업데이트
@@ -297,7 +285,10 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
   // 알림톡 전송 핸들러
   const handleSendNotification = () => {
-    if (student && confirm(`${student.name} 학생의 학부모에게 알림톡을 전송하시겠습니까?`)) {
+    if (
+      student &&
+      confirm(`${student.name} 학생의 학부모에게 알림톡을 전송하시겠습니까?`)
+    ) {
       sendNotification.mutate(student.id);
     }
   };
@@ -340,20 +331,22 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   // 블록 클릭 핸들러 - 수업 블록 클릭 시 구성 편집 모달 열기
   const handleBlockClick = async (block: ClassBlock) => {
     // 수업 블록인지 확인: 전체 시간표에서 type으로 판단
-    const originalSchedule = allSchedules.find((s: any) => s.id === block.id);
+    const originalSchedule = allSchedules.find((s) => s.id === block.id);
     const isClassBlock = originalSchedule?.type === "class";
 
-    if (isClassBlock && originalSchedule && originalSchedule.class_student_id && originalSchedule.class_id) {
+    if (isClassBlock && originalSchedule && originalSchedule.class_id) {
       try {
         // 해당 class의 모든 composition을 API에서 가져오기
-        const response = await fetch(`/api/class-composition?classId=${originalSchedule.class_id}`);
+        const response = await fetch(
+          `/api/class-composition?classId=${originalSchedule.class_id}`
+        );
         if (!response.ok) {
           throw new Error("Failed to fetch class compositions");
         }
         const allClassCompositions = await response.json();
 
         setSelectedClassForEdit({
-          classStudentId: originalSchedule.class_student_id,
+          classStudentId: studentId, // class_student_id 대신 studentId 사용
           classId: originalSchedule.class_id,
           className: originalSchedule.title,
           classColor: originalSchedule.color,
@@ -377,7 +370,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
         schedule.subject.toLowerCase().includes(searchTerm.toLowerCase()));
 
     // type 기반으로 필터링 (개인 일정 vs 수업)
-    const originalSchedule = allSchedules.find((s: any) => s.id === schedule.id);
+    const originalSchedule = allSchedules.find((s) => s.id === schedule.id);
     const isPersonal = originalSchedule?.type !== "class";
     const matchesFilter =
       filterType === "all" ||
@@ -387,8 +380,8 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   });
 
   // 요일별 일정 통계
-  const personalCount = allSchedules.filter((s: any) => s.type !== "class").length;
-  const classCount = allSchedules.filter((s: any) => s.type === "class").length;
+  const personalCount = allSchedules.filter((s) => s.type !== "class").length;
+  const classCount = allSchedules.filter((s) => s.type === "class").length;
 
   const scheduleStats = {
     total: scheduleBlocks.length,
@@ -402,9 +395,9 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   // 로딩 상태
   if (isLoading || isScheduleLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="w-8 h-8 mx-auto border-b-2 border-blue-600 rounded-full animate-spin"></div>
           <p className="mt-2 text-gray-600">
             {isLoading
               ? "학생 정보를 불러오는 중..."
@@ -418,19 +411,19 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   // 에러 상태
   if (error || scheduleError) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
           <p className="text-red-600">
             {error
               ? "학생 정보를 불러오는데 실패했습니다."
               : "시간표를 불러오는데 실패했습니다."}
           </p>
-          <p className="text-gray-600 mt-1">
+          <p className="mt-1 text-gray-600">
             {(error || scheduleError)?.message}
           </p>
           <button
             onClick={handleBack}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 mt-4 text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
           >
             돌아가기
           </button>
@@ -442,18 +435,18 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   // 학생을 찾지 못한 경우
   if (!student) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
-          <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <User className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+          <h3 className="mb-2 text-lg font-medium text-gray-900">
             학생을 찾을 수 없습니다
           </h3>
-          <p className="text-gray-500 mb-4">
+          <p className="mb-4 text-gray-500">
             요청하신 학생 정보가 존재하지 않습니다.
           </p>
           <button
             onClick={handleBack}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
           >
             돌아가기
           </button>
@@ -465,24 +458,28 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 헤더 */}
-      <header className="flat-surface bg-gray-50 border-0 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="border-0 shadow-sm flat-surface bg-gray-50">
+        <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <Link
                 href="/"
-                className="p-2 flat-card text-gray-500 hover:text-gray-700 rounded-2xl hover:flat-pressed transition-all duration-200"
+                className="p-2 text-gray-500 transition-all duration-200 flat-card hover:text-gray-700 rounded-2xl hover:flat-pressed"
               >
                 <Home className="w-5 h-5" />
               </Link>
 
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl shadow-md">
+                <div className="p-3 shadow-md bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl">
                   <User className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-gray-800">{student.name} 시간표 관리</h1>
-                  <p className="text-sm text-gray-600">개별 학생의 시간표를 수정할 수 있습니다</p>
+                  <h1 className="text-xl font-bold text-gray-800">
+                    {student.name} 시간표 관리
+                  </h1>
+                  <p className="text-sm text-gray-600">
+                    개별 학생의 시간표를 수정할 수 있습니다
+                  </p>
                 </div>
               </div>
             </div>
@@ -492,7 +489,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
               {/* 수업 등록 버튼 */}
               <button
                 onClick={() => setShowEnrollModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700"
               >
                 <Plus className="w-4 h-4" />
                 수업 등록
@@ -501,7 +498,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
               {/* 일정 추가 버튼 */}
               <button
                 onClick={() => setShowAddModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
               >
                 <Plus className="w-4 h-4" />
                 일정 추가
@@ -512,7 +509,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                 <button
                   onClick={handleSendNotification}
                   disabled={sendNotification.isPending}
-                  className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-4 py-2 text-white transition-colors bg-orange-600 rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <MessageSquare className="w-4 h-4" />
                   {sendNotification.isPending ? "전송 중..." : "알림톡 전송"}
@@ -520,8 +517,8 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
               )}
 
               {/* 학생 정보 카드 */}
-              <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full">
                   <User className="w-5 h-5 text-blue-600" />
                 </div>
                 <div className="text-sm">
@@ -537,29 +534,29 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
       </header>
 
       {/* 메인 콘텐츠 */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <main className="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
           {/* 좌측 패널 - 일정 관리 */}
           <div className="lg:col-span-1">
             {/* 일정 통계 */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="p-4 mb-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+              <h3 className="mb-4 text-lg font-semibold text-gray-900">
                 일정 통계
               </h3>
               <div className="space-y-3">
-                <div className="flex justify-between items-center">
+                <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">전체 일정</span>
                   <span className="font-medium text-gray-900">
                     {scheduleStats.total}개
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">개인 일정</span>
                   <span className="font-medium text-blue-600">
                     {scheduleStats.personal}개
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">수업 일정</span>
                   <span className="font-medium text-green-600">
                     {scheduleStats.class}개
@@ -569,20 +566,20 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
             </div>
 
             {/* 검색 및 필터 */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="p-4 mb-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+              <h3 className="mb-4 text-lg font-semibold text-gray-900">
                 일정 검색
               </h3>
 
               {/* 검색 입력 */}
               <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute w-4 h-4 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
                 <input
                   type="text"
                   placeholder="일정 검색..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
@@ -618,7 +615,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                           : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                       }`}
                     >
-                      <div className="flex justify-between items-center">
+                      <div className="flex items-center justify-between">
                         <span>{filter.label}</span>
                         <span className="text-xs">{filter.count}</span>
                       </div>
@@ -629,20 +626,20 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
             </div>
 
             {/* 일정 목록 */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
+              <h3 className="mb-4 text-lg font-semibold text-gray-900">
                 일정 목록
               </h3>
-              <div className="space-y-2 max-h-64 overflow-y-auto">
+              <div className="space-y-2 overflow-y-auto max-h-64">
                 {filteredSchedules.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-4">
+                  <p className="py-4 text-sm text-center text-gray-500">
                     {searchTerm ? "검색 결과가 없습니다." : "일정이 없습니다."}
                   </p>
                 ) : (
                   filteredSchedules.map((schedule) => (
                     <div
                       key={schedule.id}
-                      className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                      className="p-3 transition-colors rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
                       onClick={() => setSelectedSchedule(schedule)}
                     >
                       <div className="flex items-start justify-between">
@@ -652,11 +649,11 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                               className="w-3 h-3 rounded-full"
                               style={{ backgroundColor: schedule.color }}
                             />
-                            <span className="font-medium text-sm text-gray-900">
+                            <span className="text-sm font-medium text-gray-900">
                               {schedule.title}
                             </span>
                           </div>
-                          <div className="text-xs text-gray-600 space-y-1">
+                          <div className="space-y-1 text-xs text-gray-600">
                             <div className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
                               {schedule.startTime} - {schedule.endTime}
@@ -674,7 +671,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                             e.stopPropagation();
                             handleDeleteSchedule(schedule.id);
                           }}
-                          className="text-red-500 hover:text-red-700 p-1"
+                          className="p-1 text-red-500 hover:text-red-700"
                         >
                           ×
                         </button>
@@ -704,7 +701,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
       {/* 일정 추가 모달 */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
@@ -740,7 +737,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
               >
                 {/* 제목 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
                     제목 *
                   </label>
                   <input
@@ -760,7 +757,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
                 {/* 설명 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
                     설명
                   </label>
                   <textarea
@@ -779,7 +776,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
                 {/* 요일 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
                     요일 *
                   </label>
                   <select
@@ -806,7 +803,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                 {/* 시간 */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block mb-1 text-sm font-medium text-gray-700">
                       시작 시간 *
                     </label>
                     <input
@@ -823,7 +820,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block mb-1 text-sm font-medium text-gray-700">
                       종료 시간 *
                     </label>
                     <input
@@ -843,7 +840,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
                 {/* 유형 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
                     유형
                   </label>
                   <select
@@ -866,7 +863,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
                 {/* 장소 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
                     장소
                   </label>
                   <input
@@ -885,10 +882,10 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
                 {/* 색상 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
                     색상
                   </label>
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex flex-wrap gap-2">
                     {[
                       "#3b82f6",
                       "#ef4444",
@@ -928,11 +925,11 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                         recurring: e.target.checked,
                       }))
                     }
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
                   <label
                     htmlFor="recurring"
-                    className="ml-2 block text-sm text-gray-700"
+                    className="block ml-2 text-sm text-gray-700"
                   >
                     반복 일정
                   </label>
@@ -943,14 +940,14 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                   <button
                     type="button"
                     onClick={() => setShowAddModal(false)}
-                    className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    className="flex-1 px-4 py-2 text-gray-700 transition-colors bg-gray-100 rounded-lg hover:bg-gray-200"
                   >
                     취소
                   </button>
                   <button
                     type="submit"
                     disabled={createScheduleMutation.isPending}
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    className="flex-1 px-4 py-2 text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
                   >
                     {createScheduleMutation.isPending ? "추가 중..." : "추가"}
                   </button>

@@ -37,7 +37,8 @@
       "Read(//Users/kwakori/projects/promotion/temis/src/app/(root)/time-table/_template/_components/**)",
       "Read(//Users/kwakori/projects/promotion/temis/src/app/**)",
       "Read(//private/tmp/**)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,8 +1,8 @@
 "use client";
 
 import Tooltip from "@/components/common/Tooltip";
-import { getGrade } from "@/lib/utils";
 import { getEventColor } from "@/lib/scheduleUtils";
+import { getGrade } from "@/lib/utils";
 import { useCombinedSchedule } from "@/queries/useCombinedSchedule";
 import { ArrowUpDown, Calendar, Clock, Search } from "lucide-react";
 import { Fragment, useMemo, useState } from "react";
@@ -69,14 +69,12 @@ interface TimelineEvent {
   dayOfWeek: number; // 0 for Mon, 1 for Tue, ..., 6 for Sun
   color: string;
   type: "class" | "schedule";
+  compositionType?: "class" | "clinic"; // 수업 타입 (수업 or 클리닉)
 }
 
 export default function CombinedStudentSchedule() {
   // Combined schedule API에서 모든 데이터 한번에 가져오기
   const { data: studentsWithSchedules = [], isLoading } = useCombinedSchedule();
-
-  console.log('🚀 [DEBUG] Combined schedule data loaded:', studentsWithSchedules.length);
-  console.log('📦 [DEBUG] Students with schedules:', studentsWithSchedules);
 
   // 검색어 상태
   const [searchQuery, setSearchQuery] = useState("");
@@ -128,10 +126,6 @@ export default function CombinedStudentSchedule() {
 
   // Process and merge class and schedule data for each student
   const studentData = useMemo(() => {
-    console.log('\n\n🚀 [DEBUG] ========== PROCESSING STUDENT DATA ==========');
-    console.log('📊 [DEBUG] Students with schedules:', studentsWithSchedules.length);
-    console.log('================================================\n');
-
     const filteredStudents = studentsWithSchedules
       .filter((s) => {
         // 선택된 학생만
@@ -145,7 +139,8 @@ export default function CombinedStudentSchedule() {
           if (s.name.toLowerCase().includes(query)) return true;
 
           // 학교 검색
-          if (s.school && s.school.name.toLowerCase().includes(query)) return true;
+          if (s.school && s.school.name.toLowerCase().includes(query))
+            return true;
 
           // 수업명 검색
           const hasMatchingClass = s.class_students.some(
@@ -159,30 +154,24 @@ export default function CombinedStudentSchedule() {
         return true;
       })
       .map((student) => {
-        console.log(`\n👤 [DEBUG] Processing student: ${student.name} (${student.id})`);
-        console.log(`📚 [DEBUG] Class students:`, student.class_students.length);
-        console.log(`📅 [DEBUG] Student schedules:`, student.student_schedules.length);
-
         // 수업 이벤트 생성
-        const classEvents: TimelineEvent[] = student.class_students
-          .flatMap((classStudent, index) => {
-            console.log(`\n  📖 [DEBUG] Processing class_student ${index + 1}/${student.class_students.length}`);
-
+        const classEvents: TimelineEvent[] = student.class_students.flatMap(
+          (classStudent, index) => {
             if (!classStudent.class) {
-              console.warn(`  ⚠️ [DEBUG] Class not found for class_student:`, classStudent.id);
+              console.warn(
+                `  ⚠️ [DEBUG] Class not found for class_student:`,
+                classStudent.id
+              );
               return [];
             }
 
             const classInfo = classStudent.class;
-            console.log(`  ✅ [DEBUG] Class: ${classInfo.title}`);
-            console.log(`  🎯 [DEBUG] Student compositions:`, classStudent.student_compositions.length);
 
             // student_compositions를 통해 시간표 생성
             const events = classStudent.student_compositions
               .filter((sc) => sc.composition !== null)
               .map((sc) => {
                 const composition = sc.composition!;
-                console.log(`    📅 [DEBUG] Creating event for composition:`, composition);
 
                 // 과목명 기반 색상 결정
                 const subjectName = classInfo.subject?.subject_name;
@@ -196,31 +185,28 @@ export default function CombinedStudentSchedule() {
                   dayOfWeek: composition.day_of_week,
                   color: eventColor,
                   type: "class" as const,
+                  compositionType: composition.type as "class" | "clinic",
                 };
               });
 
-            console.log(`  ✅ [DEBUG] Created ${events.length} events for ${classInfo.title}`);
             return events;
-          });
-
-        console.log(`🎉 [DEBUG] Total class events for ${student.name}:`, classEvents.length);
+          }
+        );
 
         // 개인 일정 이벤트 생성 (회색으로 표시)
-        const personalEvents: TimelineEvent[] = student.student_schedules.map((ss) => ({
-          id: `schedule-${ss.id}`,
-          title: ss.title,
-          startTime: ss.start_time,
-          endTime: ss.end_time,
-          dayOfWeek: ss.day_of_week,
-          color: getEventColor(null, true), // 개인 일정은 회색
-          type: "schedule" as const,
-        }));
-
-        console.log(`📅 [DEBUG] Personal events for ${student.name}:`, personalEvents.length);
+        const personalEvents: TimelineEvent[] = student.student_schedules.map(
+          (ss) => ({
+            id: `schedule-${ss.id}`,
+            title: ss.title,
+            startTime: ss.start_time,
+            endTime: ss.end_time,
+            dayOfWeek: ss.day_of_week,
+            color: getEventColor(null, true), // 개인 일정은 회색
+            type: "schedule" as const,
+          })
+        );
 
         const allEvents = [...classEvents, ...personalEvents];
-        console.log(`🎊 [DEBUG] Total events for ${student.name}:`, allEvents.length);
-        console.log(`-------------------------------------------\n`);
 
         return {
           ...student,
@@ -356,8 +342,13 @@ export default function CombinedStudentSchedule() {
       const event = events[0];
       return (
         <div className="text-left">
-          <div className="mb-2 text-base font-bold text-white">
-            {event.title}
+          <div className="flex items-center gap-2 mb-2 text-base font-bold text-white">
+            <span>{event.title}</span>
+            {event.type === "class" && event.compositionType && (
+              <span className="text-xs px-2 py-0.5 rounded font-medium bg-white/20">
+                {event.compositionType === "class" ? "수업" : "클리닉"}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2 mb-1 text-sm text-gray-200">
             <Clock className="w-4 h-4 text-blue-300" />
@@ -390,8 +381,13 @@ export default function CombinedStudentSchedule() {
               className="pl-2 border-l-2"
               style={{ borderColor: event.color }}
             >
-              <div className="text-sm font-medium text-white">
-                {event.title}
+              <div className="flex items-center gap-2 text-sm font-medium text-white">
+                <span>{event.title}</span>
+                {event.type === "class" && event.compositionType && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-white/20">
+                    {event.compositionType === "class" ? "수업" : "클리닉"}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-1 text-xs text-gray-200">
                 <Clock className="w-3 h-3 text-blue-300" />
@@ -400,7 +396,7 @@ export default function CombinedStudentSchedule() {
                 </span>
               </div>
               <div className="text-xs text-gray-300">
-                {event.type === "class" ? "정규 수업" : "개인 일정"}
+                {event.type === "class" ? "학원 수업" : "개인 일정"}
               </div>
             </div>
           ))}
@@ -584,6 +580,7 @@ export default function CombinedStudentSchedule() {
                       style={{
                         gridColumn: `${hourSlot} / span 24`,
                         gridRow: rowIndex + 3,
+                        height: "50px",
                       }}
                     />
                   );
@@ -608,7 +605,7 @@ export default function CombinedStudentSchedule() {
                       style={{
                         gridColumn: `${hourSlot}`,
                         gridRow: rowIndex + 3,
-                        height: "100%",
+                        height: "50px",
                         width: "1px",
                       }}
                     />
@@ -630,7 +627,11 @@ export default function CombinedStudentSchedule() {
               <Fragment key={student.id}>
                 <div
                   className="sticky left-0 px-4 py-3 text-sm text-gray-800 bg-gray-200 z-15"
-                  style={{ gridRow: rowIndex + 3, gridColumn: "1" }}
+                  style={{
+                    gridRow: rowIndex + 3,
+                    gridColumn: "1",
+                    height: "50px",
+                  }}
                 >
                   <div className="grid grid-cols-[48px_70px_36px] gap-2 items-center">
                     <span className="font-medium truncate">{student.name}</span>
@@ -682,6 +683,7 @@ export default function CombinedStudentSchedule() {
                       style={{
                         ...position,
                         gridRow: rowIndex + 3,
+                        height: "50px",
                         // 이벤트가 그리드 위에 표시되도록
                       }}
                       className="relative z-10 hover:z-20"
@@ -713,7 +715,7 @@ export default function CombinedStudentSchedule() {
 
                           {/* 메인 아이템 */}
                           <div
-                            className="relative rounded-lg my-0.5 text-white px-1.5 py-0.5 overflow-hidden whitespace-nowrap text-ellipsis text-xs leading-tight cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:transform hover:-translate-y-px border-2 border-white shadow-md"
+                            className="relative rounded-lg my-0.5 text-white px-1.5 py-0.5 cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:transform hover:-translate-y-px border-2 border-white shadow-md flex items-center gap-1"
                             style={{
                               backgroundColor: representativeEvent.color,
                               width: "100%",
@@ -723,13 +725,30 @@ export default function CombinedStudentSchedule() {
                               textShadow: "0 1px 2px rgba(0, 0, 0, 0.3)",
                             }}
                           >
-                            <span className="pointer-events-none">
+                            <span className="flex-1 overflow-hidden text-xs leading-tight pointer-events-none whitespace-nowrap text-ellipsis">
                               {isStacked
                                 ? `${representativeEvent.title} +${
                                     eventGroup.length - 1
                                   }`
                                 : representativeEvent.title}
                             </span>
+                            {/* 수업 타입 뱃지 (학원 수업인 경우에만 표시) */}
+                            {representativeEvent.type === "class" &&
+                              representativeEvent.compositionType && (
+                                <span
+                                  className="pointer-events-none text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0"
+                                  style={{
+                                    backgroundColor:
+                                      "rgba(255, 255, 255, 0.25)",
+                                    backdropFilter: "blur(4px)",
+                                  }}
+                                >
+                                  {representativeEvent.compositionType ===
+                                  "class"
+                                    ? "수업"
+                                    : "클리닉"}
+                                </span>
+                              )}
                           </div>
                         </div>
                       </Tooltip>

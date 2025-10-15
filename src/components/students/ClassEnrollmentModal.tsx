@@ -122,17 +122,18 @@ export default function ClassEnrollmentModal({
 
     try {
       // 1단계: class_students 테이블에 학생-수업 관계 생성
-      const classStudent = await enrollStudent.mutateAsync({
+      await enrollStudent.mutateAsync({
         class_id: selectedClassId,
         student_id: studentId,
         enrolled_date: new Date().toISOString().split("T")[0],
         status: "active",
       });
 
-      // 2단계: student_compositions 테이블에 선택된 각 composition 등록
+      // 2단계: compositions_students 테이블에 선택된 각 composition 등록
       const compositionPromises = Array.from(selectedCompositions).map((compositionId) =>
         enrollComposition.mutateAsync({
-          class_student_id: classStudent.id,
+          class_id: selectedClassId,
+          student_id: studentId,
           composition_id: compositionId,
           enrolled_date: new Date().toISOString().split("T")[0],
           status: "active",

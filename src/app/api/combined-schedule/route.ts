@@ -1,5 +1,18 @@
 import { NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase-server";
+import { Tables } from "@/types/supabase";
+
+// Types for the nested query response
+interface ClassStudent extends Pick<Tables<"class_students">, "id" | "class_id" | "enrolled_date" | "status"> {
+  class?: Pick<Tables<"classes">, "id" | "title" | "color" | "split_type"> & {
+    subject?: Pick<Tables<"subjects">, "id" | "subject_name"> | null;
+    teacher?: Pick<Tables<"teachers">, "id" | "name"> | null;
+  } | null;
+}
+
+interface CompositionStudent extends Pick<Tables<"compositions_students">, "id" | "class_id" | "student_id" | "composition_id" | "enrolled_date" | "status"> {
+  composition?: Pick<Tables<"class_composition">, "id" | "class_id" | "day_of_week" | "start_time" | "end_time" | "type"> | null;
+}
 
 export async function GET() {
   try {
@@ -63,44 +76,53 @@ export async function GET() {
       );
     }
 
-    // 2. 모든 class_student_id 수집
-    const classStudentIds = students?.flatMap(student =>
-      student.class_students.map((cs: any) => cs.id)
+    // 2. 모든 student_id와 class_id 쌍 수집
+    const studentClassPairs = students?.flatMap(student =>
+      student.class_students.map((cs: ClassStudent) => ({
+        student_id: student.id,
+        class_id: cs.class_id
+      }))
     ) || [];
 
-    // 3. student_compositions 별도로 조회
-    const { data: studentCompositions, error: compositionsError } = await supabase
-      .from("student_compositions")
-      .select(`
-        id,
-        class_student_id,
-        composition_id,
-        enrolled_date,
-        status,
-        composition:class_composition(
+    // 3. compositions_students 별도로 조회 (새로운 테이블 구조)
+    let compositionsStudents: CompositionStudent[] = [];
+
+    if (studentClassPairs.length > 0) {
+      const { data, error: compositionsError } = await supabase
+        .from("compositions_students")
+        .select(`
           id,
           class_id,
-          day_of_week,
-          start_time,
-          end_time,
-          type
-        )
-      `)
-      .in("class_student_id", classStudentIds)
-      .eq("status", "active");
+          student_id,
+          composition_id,
+          enrolled_date,
+          status,
+          composition:class_composition(
+            id,
+            class_id,
+            day_of_week,
+            start_time,
+            end_time,
+            type
+          )
+        `)
+        .eq("status", "active");
 
-    if (compositionsError) {
-      console.error("Student compositions fetch error:", compositionsError);
+      if (compositionsError) {
+        console.error("Student compositions fetch error:", compositionsError);
+      } else {
+        compositionsStudents = data || [];
+      }
     }
 
-    // 4. student_compositions를 class_students에 매핑
+    // 4. compositions_students를 class_students에 매핑
     const enrichedStudents = students?.map(student => ({
       ...student,
-      class_students: student.class_students.map((cs: any) => ({
+      class_students: student.class_students.map((cs: ClassStudent) => ({
         ...cs,
-        student_compositions: studentCompositions?.filter(
-          sc => sc.class_student_id === cs.id
-        ) || []
+        student_compositions: compositionsStudents.filter(
+          sc => sc.student_id === student.id && sc.class_id === cs.class_id
+        )
       }))
     }));
 

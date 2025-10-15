@@ -23,13 +23,10 @@ export async function GET(
           parent_phone,
           email
         ),
-        teacher:teachers(
-          id,
-          name
-        ),
         class:classes(
           id,
-          title
+          title,
+          subject:subjects(id, subject_name)
         )
       `)
       .eq("id", id)
@@ -91,13 +88,10 @@ export async function PUT(
           parent_phone,
           email
         ),
-        teacher:teachers(
-          id,
-          name
-        ),
         class:classes(
           id,
-          title
+          title,
+          subject:subjects(id, subject_name)
         )
       `)
       .single();

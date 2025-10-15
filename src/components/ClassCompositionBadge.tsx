@@ -1,7 +1,8 @@
 "use client";
 
-import { Clock } from "lucide-react";
+import { DAYS_OF_WEEK } from "@/constants/schedule";
 import { useClassCompositions } from "@/queries/useClassComposition";
+import { Clock } from "lucide-react";
 
 interface ClassCompositionBadgeProps {
   classId: string;
@@ -9,8 +10,6 @@ interface ClassCompositionBadgeProps {
   splitType?: string; // "single" | "split"
   size?: "sm" | "md";
 }
-
-const DAYS_OF_WEEK = ["일", "월", "화", "수", "목", "금", "토"];
 
 export default function ClassCompositionBadge({
   classId,
@@ -31,20 +30,19 @@ export default function ClassCompositionBadge({
   }
 
   const isClass = composition.type === "class";
-  const sizeClasses = size === "sm" ? "text-xs px-2 py-0.5" : "text-sm px-3 py-1";
+  const sizeClasses =
+    size === "sm" ? "text-xs px-2 py-0.5" : "text-sm px-3 py-1";
 
   return (
     <div
       className={`inline-flex items-center gap-1 rounded-full font-medium ${sizeClasses} ${
-        isClass
-          ? "bg-blue-100 text-blue-700"
-          : "bg-purple-100 text-purple-700"
+        isClass ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
       }`}
     >
       <Clock className={size === "sm" ? "w-3 h-3" : "w-4 h-4"} />
       <span>
-        {isClass ? "앞타임" : "뒤타임"} ({DAYS_OF_WEEK[composition.dayOfWeek]}{" "}
-        {composition.startTime})
+        {isClass ? "앞타임" : "뒤타임"} ({DAYS_OF_WEEK[composition.day_of_week]}{" "}
+        {composition.start_time})
       </span>
     </div>
   );

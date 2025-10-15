@@ -18,13 +18,13 @@ interface HomeworkRecordMiddleWithDetails extends Tables<"homework_records_middl
     parent_phone: string | null;
     email: string | null;
   } | null;
-  teacher?: {
-    id: string;
-    name: string;
-  } | null;
   class?: {
     id: string;
     title: string;
+    subject?: {
+      id: string;
+      subject_name: string;
+    } | null;
   } | null;
 }
 
@@ -33,14 +33,14 @@ export class MiddleRecordApi {
 
   // 중등 기록 목록 조회
   async getMiddleRecords(params?: {
-    teacherId?: string;
+    classId?: string;
     studentId?: string;
     weekOf?: string;
   }): Promise<HomeworkRecordMiddleWithDetails[]> {
     const searchParams = new URLSearchParams();
 
-    if (params?.teacherId) {
-      searchParams.set("teacher_id", params.teacherId);
+    if (params?.classId) {
+      searchParams.set("class_id", params.classId);
     }
     if (params?.studentId) {
       searchParams.set("student_id", params.studentId);
@@ -138,13 +138,13 @@ export class MiddleRecordApi {
   }
 
   // 특정 주차의 기록들 조회 (편의 메서드)
-  async getWeeklyRecords(teacherId: string, weekOf: string): Promise<HomeworkRecordMiddleWithDetails[]> {
-    return this.getMiddleRecords({ teacherId, weekOf });
+  async getWeeklyRecords(classId: string, weekOf: string): Promise<HomeworkRecordMiddleWithDetails[]> {
+    return this.getMiddleRecords({ classId, weekOf });
   }
 
   // 특정 학생의 기록들 조회 (편의 메서드)
-  async getStudentRecords(studentId: string, teacherId?: string): Promise<HomeworkRecordMiddleWithDetails[]> {
-    return this.getMiddleRecords({ studentId, teacherId });
+  async getStudentRecords(studentId: string, classId?: string): Promise<HomeworkRecordMiddleWithDetails[]> {
+    return this.getMiddleRecords({ studentId, classId });
   }
 
 }

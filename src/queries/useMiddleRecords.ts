@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 
 interface FiltersProps {
-  teacherId?: string;
+  classId?: string;
   studentId?: string;
   weekOf?: string;
 }
@@ -17,12 +17,12 @@ export const middleRecordKeys = {
     [...middleRecordKeys.lists(), { filters }] as const,
   details: () => [...middleRecordKeys.all, "detail"] as const,
   detail: (id: string) => [...middleRecordKeys.details(), id] as const,
-  byTeacher: (teacherId: string) =>
-    [...middleRecordKeys.all, "byTeacher", teacherId] as const,
+  byClass: (classId: string) =>
+    [...middleRecordKeys.all, "byClass", classId] as const,
   byStudent: (studentId: string) =>
     [...middleRecordKeys.all, "byStudent", studentId] as const,
-  byWeek: (teacherId?: string, weekOf?: string) =>
-    [...middleRecordKeys.all, "byWeek", teacherId, weekOf] as const,
+  byWeek: (classId?: string, weekOf?: string) =>
+    [...middleRecordKeys.all, "byWeek", classId, weekOf] as const,
 };
 
 // 중등 기록 목록 조회
@@ -45,20 +45,20 @@ export function useMiddleRecord(id: string) {
 }
 
 // 특정 주차의 기록들 조회
-export function useWeeklyMiddleRecords(teacherId?: string, weekOf?: string) {
+export function useWeeklyMiddleRecords(classId?: string, weekOf?: string) {
   return useQuery({
-    queryKey: middleRecordKeys.byWeek(teacherId, weekOf),
-    queryFn: () => middleRecordApi.getWeeklyRecords(teacherId, weekOf),
-    enabled: !!teacherId && !!weekOf,
+    queryKey: middleRecordKeys.byWeek(classId, weekOf),
+    queryFn: () => middleRecordApi.getWeeklyRecords(classId!, weekOf!),
+    enabled: !!classId && !!weekOf,
     staleTime: 3 * 60 * 1000,
   });
 }
 
 // 특정 학생의 기록들 조회
-export function useStudentMiddleRecords(studentId: string, teacherId?: string) {
+export function useStudentMiddleRecords(studentId: string, classId?: string) {
   return useQuery({
     queryKey: middleRecordKeys.byStudent(studentId),
-    queryFn: () => middleRecordApi.getStudentRecords(studentId, teacherId),
+    queryFn: () => middleRecordApi.getStudentRecords(studentId, classId),
     enabled: !!studentId,
     staleTime: 3 * 60 * 1000,
   });
@@ -79,7 +79,7 @@ export function useCreateMiddleRecord() {
       });
 
       queryClient.invalidateQueries({
-        queryKey: middleRecordKeys.byTeacher(newRecord.teacher_id),
+        queryKey: middleRecordKeys.byClass(newRecord.class_id),
       });
 
       queryClient.invalidateQueries({
@@ -89,7 +89,7 @@ export function useCreateMiddleRecord() {
 
       queryClient.invalidateQueries({
         queryKey: middleRecordKeys.byWeek(
-          newRecord.teacher_id,
+          newRecord.class_id,
           newRecord.week_of
         ),
       });
@@ -127,7 +127,7 @@ export function useUpdateMiddleRecord() {
       });
 
       queryClient.invalidateQueries({
-        queryKey: middleRecordKeys.byTeacher(updatedRecord.teacher_id),
+        queryKey: middleRecordKeys.byClass(updatedRecord.class_id),
       });
 
       queryClient.invalidateQueries({
@@ -137,7 +137,7 @@ export function useUpdateMiddleRecord() {
 
       queryClient.invalidateQueries({
         queryKey: middleRecordKeys.byWeek(
-          updatedRecord.teacher_id,
+          updatedRecord.class_id,
           updatedRecord.week_of
         ),
       });

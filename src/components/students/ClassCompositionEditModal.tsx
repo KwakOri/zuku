@@ -1,12 +1,17 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { X, BookOpen, CheckCircle, AlertCircle, Trash2 } from "lucide-react";
-import { useStudentCompositions } from "@/queries/useStudentCompositions";
-import { useEnrollComposition, useUnenrollComposition } from "@/queries/useStudentCompositions";
-import { Tables } from "@/types/supabase";
 import CanvasSchedule from "@/components/common/schedule/CanvasSchedule";
+import {
+  useEnrollComposition,
+  useStudentCompositions,
+  useUnenrollComposition,
+} from "@/queries/useStudentCompositions";
 import { ClassBlock } from "@/types/schedule";
+import { Tables } from "@/types/supabase";
+import { BookOpen, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+
+type ClassComposition = Tables<"class_composition">;
 
 interface ClassCompositionEditModalProps {
   classStudentId: string;
@@ -16,7 +21,7 @@ interface ClassCompositionEditModalProps {
   subjectName?: string;
   teacherName?: string;
   studentName: string;
-  allCompositions: any[]; // class_composition 전체 목록
+  allCompositions: ClassComposition[]; // class_composition 전체 목록
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -33,12 +38,17 @@ export default function ClassCompositionEditModal({
   onClose,
   onSuccess,
 }: ClassCompositionEditModalProps) {
-  const [selectedCompositions, setSelectedCompositions] = useState<Set<string>>(new Set());
+  const [selectedCompositions, setSelectedCompositions] = useState<Set<string>>(
+    new Set()
+  );
 
   // 현재 학생이 등록한 구성들 조회
-  const { data: enrolledCompositions = [], isLoading } = useStudentCompositions({
-    class_student_id: classStudentId,
-  });
+  const { data: enrolledCompositions = [], isLoading } = useStudentCompositions(
+    {
+      class_id: classId,
+      student_id: classStudentId, // classStudentId는 이제 studentId를 의미
+    }
+  );
 
   const enrollComposition = useEnrollComposition();
   const unenrollComposition = useUnenrollComposition();
@@ -47,7 +57,7 @@ export default function ClassCompositionEditModal({
   useEffect(() => {
     if (enrolledCompositions.length > 0) {
       const initialSet = new Set(
-        enrolledCompositions.map((ec: any) => ec.composition_id)
+        enrolledCompositions.map((ec) => ec.composition_id)
       );
       setSelectedCompositions(initialSet);
     }
@@ -105,7 +115,7 @@ export default function ClassCompositionEditModal({
   // 변경 사항이 있는지 확인
   const hasChanges = useMemo(() => {
     const currentSet = new Set(
-      enrolledCompositions.map((ec: any) => ec.composition_id)
+      enrolledCompositions.map((ec) => ec.composition_id)
     );
     if (currentSet.size !== selectedCompositions.size) return true;
     for (const id of selectedCompositions) {
@@ -122,7 +132,13 @@ export default function ClassCompositionEditModal({
       return hasSelectedClassComposition && hasSelectedClinicComposition;
     }
     return true;
-  }, [hasChanges, selectedCompositions, isSplitClass, hasSelectedClassComposition, hasSelectedClinicComposition]);
+  }, [
+    hasChanges,
+    selectedCompositions,
+    isSplitClass,
+    hasSelectedClassComposition,
+    hasSelectedClinicComposition,
+  ]);
 
   const handleCompositionToggle = (compositionId: string) => {
     setSelectedCompositions((prev) => {
@@ -145,7 +161,7 @@ export default function ClassCompositionEditModal({
 
     try {
       const currentSet = new Set(
-        enrolledCompositions.map((ec: any) => ec.composition_id)
+        enrolledCompositions.map((ec) => ec.composition_id)
       );
 
       // 추가할 구성들
@@ -155,16 +171,17 @@ export default function ClassCompositionEditModal({
 
       // 제거할 구성들
       const toRemove = enrolledCompositions.filter(
-        (ec: any) => !selectedCompositions.has(ec.composition_id)
+        (ec) => !selectedCompositions.has(ec.composition_id)
       );
 
-      const promises: Promise<any>[] = [];
+      const promises: Promise<unknown>[] = [];
 
       // 추가
       toAdd.forEach((compositionId) => {
         promises.push(
           enrollComposition.mutateAsync({
-            class_student_id: classStudentId,
+            class_id: classId,
+            student_id: classStudentId, // classStudentId는 이제 studentId를 의미
             composition_id: compositionId,
             enrolled_date: new Date().toISOString().split("T")[0],
             status: "active",
@@ -173,7 +190,7 @@ export default function ClassCompositionEditModal({
       });
 
       // 제거
-      toRemove.forEach((ec: any) => {
+      toRemove.forEach((ec) => {
         promises.push(unenrollComposition.mutateAsync(ec.id));
       });
 
@@ -186,13 +203,17 @@ export default function ClassCompositionEditModal({
   };
 
   const handleRemoveFromClass = async () => {
-    if (!confirm(`${studentName} 학생을 "${className}" 수업에서 제거하시겠습니까?`)) {
+    if (
+      !confirm(
+        `${studentName} 학생을 "${className}" 수업에서 제거하시겠습니까?`
+      )
+    ) {
       return;
     }
 
     try {
       // 모든 등록된 구성 제거
-      const promises = enrolledCompositions.map((ec: any) =>
+      const promises = enrolledCompositions.map((ec) =>
         unenrollComposition.mutateAsync(ec.id)
       );
       await Promise.all(promises);
@@ -209,9 +230,11 @@ export default function ClassCompositionEditModal({
         {/* Header */}
         <div className="flex items-center justify-between flex-shrink-0 p-6 border-b border-gray-200">
           <div>
-            <h2 className="text-xl font-semibold text-gray-800">수업 구성 변경</h2>
+            <h2 className="text-xl font-semibold text-gray-800">
+              수업 구성 변경
+            </h2>
             <p className="mt-1 text-sm text-gray-600">
-              {studentName} 학생의 "{className}" 수업 시간대를 변경합니다
+              {`${studentName} 학생의 "${className}" 수업 시간대를 변경합니다`}
             </p>
           </div>
           <button
@@ -246,12 +269,20 @@ export default function ClassCompositionEditModal({
               {/* 앞타임 카드 */}
               <div className="relative p-4 border-2 border-red-300 rounded-lg bg-red-50">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-sm font-semibold text-red-800">앞타임 (정규)</h4>
-                  <div className="w-5 h-5 rounded" style={{ backgroundColor: "#ef4444" }}></div>
+                  <h4 className="text-sm font-semibold text-red-800">
+                    앞타임 (정규)
+                  </h4>
+                  <div
+                    className="w-5 h-5 rounded"
+                    style={{ backgroundColor: "#ef4444" }}
+                  ></div>
                 </div>
                 <div className="min-h-[60px] space-y-1">
                   {allCompositions
-                    .filter((c) => c.type === "class" && selectedCompositions.has(c.id))
+                    .filter(
+                      (c) =>
+                        c.type === "class" && selectedCompositions.has(c.id)
+                    )
                     .map((composition) => {
                       const days = ["일", "월", "화", "수", "목", "금", "토"];
                       return (
@@ -259,12 +290,16 @@ export default function ClassCompositionEditModal({
                           key={composition.id}
                           className="px-2 py-1 text-xs font-medium text-red-900 bg-red-100 rounded"
                         >
-                          {days[composition.day_of_week]} {composition.start_time.substring(0, 5)} ~ {composition.end_time.substring(0, 5)}
+                          {days[composition.day_of_week]}{" "}
+                          {composition.start_time.substring(0, 5)} ~{" "}
+                          {composition.end_time.substring(0, 5)}
                         </div>
                       );
                     })}
                   {!hasSelectedClassComposition && (
-                    <p className="text-xs text-red-600 italic">선택된 시간이 없습니다</p>
+                    <p className="text-xs italic text-red-600">
+                      선택된 시간이 없습니다
+                    </p>
                   )}
                 </div>
               </div>
@@ -272,12 +307,20 @@ export default function ClassCompositionEditModal({
               {/* 뒤타임 카드 */}
               <div className="relative p-4 border-2 border-blue-300 rounded-lg bg-blue-50">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-sm font-semibold text-blue-800">뒤타임 (클리닉)</h4>
-                  <div className="w-5 h-5 rounded" style={{ backgroundColor: "#3b82f6" }}></div>
+                  <h4 className="text-sm font-semibold text-blue-800">
+                    뒤타임 (클리닉)
+                  </h4>
+                  <div
+                    className="w-5 h-5 rounded"
+                    style={{ backgroundColor: "#3b82f6" }}
+                  ></div>
                 </div>
                 <div className="min-h-[60px] space-y-1">
                   {allCompositions
-                    .filter((c) => c.type === "clinic" && selectedCompositions.has(c.id))
+                    .filter(
+                      (c) =>
+                        c.type === "clinic" && selectedCompositions.has(c.id)
+                    )
                     .map((composition) => {
                       const days = ["일", "월", "화", "수", "목", "금", "토"];
                       return (
@@ -285,12 +328,16 @@ export default function ClassCompositionEditModal({
                           key={composition.id}
                           className="px-2 py-1 text-xs font-medium text-blue-900 bg-blue-100 rounded"
                         >
-                          {days[composition.day_of_week]} {composition.start_time.substring(0, 5)} ~ {composition.end_time.substring(0, 5)}
+                          {days[composition.day_of_week]}{" "}
+                          {composition.start_time.substring(0, 5)} ~{" "}
+                          {composition.end_time.substring(0, 5)}
                         </div>
                       );
                     })}
                   {!hasSelectedClinicComposition && (
-                    <p className="text-xs text-blue-600 italic">선택된 시간이 없습니다</p>
+                    <p className="text-xs italic text-blue-600">
+                      선택된 시간이 없습니다
+                    </p>
                   )}
                 </div>
               </div>
@@ -298,7 +345,10 @@ export default function ClassCompositionEditModal({
           )}
 
           {/* 시간표 */}
-          <div className="overflow-hidden border border-gray-200 rounded-lg" style={{ height: "450px", minHeight: "450px" }}>
+          <div
+            className="overflow-hidden border border-gray-200 rounded-lg"
+            style={{ height: "450px", minHeight: "450px" }}
+          >
             {isLoading ? (
               <div className="flex items-center justify-center h-full">
                 <div className="w-6 h-6 border-b-2 rounded-full animate-spin border-primary-600"></div>
@@ -343,8 +393,12 @@ export default function ClassCompositionEditModal({
             </button>
             <button
               onClick={handleSave}
-              disabled={!canSave || enrollComposition.isPending || unenrollComposition.isPending}
-              className="px-4 py-2 text-white transition-all duration-200 bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg hover:from-primary-600 hover:to-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={
+                !canSave ||
+                enrollComposition.isPending ||
+                unenrollComposition.isPending
+              }
+              className="px-4 py-2 text-white transition-all duration-200 rounded-lg bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {enrollComposition.isPending || unenrollComposition.isPending
                 ? "저장 중..."

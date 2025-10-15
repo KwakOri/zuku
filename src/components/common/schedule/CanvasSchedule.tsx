@@ -1,12 +1,13 @@
 "use client";
 
+import { DAYS_OF_WEEK } from "@/constants/schedule";
 import { defaultScheduleConfig, getDensityColor } from "@/lib/utils";
 import { formatDisplayTime } from "@/lib/utils/time";
 import { ClassBlock, EditMode, ScheduleConfig } from "@/types/schedule";
 import { Check, Clock, Users, X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
-const days = ["월", "화", "수", "목", "금", "토", "일"];
+const days = DAYS_OF_WEEK;
 
 interface CanvasScheduleProps {
   editMode?: EditMode;
@@ -642,8 +643,13 @@ export default function CanvasSchedule({
       ctx.stroke();
 
       // 뱃지 (수업/클리닉) - 오른쪽 아래 내부 디자인 (수업만 표시)
-      if (block.compositionType && height > 25 && block.subject !== "personal") {
-        const badgeText = block.compositionType === "clinic" ? "클리닉" : "수업";
+      if (
+        block.compositionType &&
+        height > 25 &&
+        block.subject !== "personal"
+      ) {
+        const badgeText =
+          block.compositionType === "clinic" ? "클리닉" : "수업";
         const badgeWidth = 44; // 가로 길이
         const badgeHeight = 24; // 세로 높이 줄임
         const badgeX = x + width - badgeWidth - 8; // 카드 안쪽 오른쪽
@@ -658,13 +664,27 @@ export default function CanvasSchedule({
 
         // 뱃지 배경 (흰색)
         ctx.fillStyle = "#ffffff";
-        drawRoundedRect(ctx, badgeX, badgeY, badgeWidth, badgeHeight, badgeRadius);
+        drawRoundedRect(
+          ctx,
+          badgeX,
+          badgeY,
+          badgeWidth,
+          badgeHeight,
+          badgeRadius
+        );
         ctx.fill();
 
         // 뱃지 테두리
         ctx.strokeStyle = "rgba(0, 0, 0, 0.1)";
         ctx.lineWidth = 1;
-        drawRoundedRect(ctx, badgeX, badgeY, badgeWidth, badgeHeight, badgeRadius);
+        drawRoundedRect(
+          ctx,
+          badgeX,
+          badgeY,
+          badgeWidth,
+          badgeHeight,
+          badgeRadius
+        );
         ctx.stroke();
 
         // 그림자 리셋
@@ -939,7 +959,8 @@ export default function CanvasSchedule({
       } else if (onBlockClick) {
         // onBlockClick이 제공된 경우 (선택 모드) - 콜백 호출
         onBlockClick(clickedBlock);
-      } else if (editMode === "admin" && clickedBlock.isEditable !== false) {
+        // } else if (editMode === "admin" && clickedBlock.isEditable !== false) {
+      } else if (editMode === "admin") {
         // 관리자 모드에서 편집 가능한 블록의 다른 부분 클릭 - 드래그 시작
         setDragState({
           isDragging: true,
