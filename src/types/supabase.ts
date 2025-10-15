@@ -280,6 +280,7 @@ export type Database = {
           max_students: number | null
           room: string | null
           rrule: string | null
+          school_tags: string | null
           split_type: string | null
           subject_id: string | null
           teacher_id: string | null
@@ -296,6 +297,7 @@ export type Database = {
           max_students?: number | null
           room?: string | null
           rrule?: string | null
+          school_tags?: string | null
           split_type?: string | null
           subject_id?: string | null
           teacher_id?: string | null
@@ -312,6 +314,7 @@ export type Database = {
           max_students?: number | null
           room?: string | null
           rrule?: string | null
+          school_tags?: string | null
           split_type?: string | null
           subject_id?: string | null
           teacher_id?: string | null
