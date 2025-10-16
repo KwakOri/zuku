@@ -1,10 +1,15 @@
 "use client";
 
+import {
+  addSchoolTag,
+  removeSchoolTag,
+  serializeSchoolTags,
+} from "@/lib/schoolTags";
 import { useCreateClass } from "@/queries/useClasses";
+import { useSchools } from "@/queries/useSchools";
 import { useSubjects } from "@/queries/useSubjects";
 import { useTeachers } from "@/queries/useTeachers";
-import { addSchoolTag, removeSchoolTag, validateSchoolTag, serializeSchoolTags } from "@/lib/schoolTags";
-import { BookOpen, Check, Save, Search, X, Hash, Plus } from "lucide-react";
+import { BookOpen, Check, Hash, Plus, Save, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -36,9 +41,13 @@ export default function SimpleClassForm({
   const [isTeacherSearchOpen, setIsTeacherSearchOpen] = useState(false);
   const teacherSearchRef = useRef<HTMLDivElement>(null);
 
-  // School tags state (for school_exam type)
-  const [schoolTags, setSchoolTags] = useState<string[]>([]);
-  const [schoolTagInput, setSchoolTagInput] = useState("");
+  // School tags state (for school_exam type) - stores school IDs
+  const [schoolTagIds, setSchoolTagIds] = useState<string[]>([]);
+  const [schoolSearchInput, setSchoolSearchInput] = useState("");
+  const [isSchoolSearchOpen, setIsSchoolSearchOpen] = useState(false);
+  const [selectedSchoolIndex, setSelectedSchoolIndex] = useState(-1);
+  const schoolSearchRef = useRef<HTMLDivElement>(null);
+  const schoolListRef = useRef<HTMLDivElement>(null);
 
   const {
     register,
@@ -58,6 +67,7 @@ export default function SimpleClassForm({
   const createClassMutation = useCreateClass();
   const { data: teachers = [], isLoading: teachersLoading } = useTeachers();
   const { data: subjects = [], isLoading: subjectsLoading } = useSubjects();
+  const { data: schools = [], isLoading: schoolsLoading } = useSchools();
 
   // Watch form values
   const selectedSubjectId = watch("subjectId");
@@ -88,8 +98,26 @@ export default function SimpleClassForm({
       .slice(0, 3);
   }, [teachers, teacherSearch]);
 
+  // Filter schools based on search
+  const filteredSchools = useMemo(() => {
+    if (!schoolSearchInput) return schools.slice(0, 5);
+    return schools
+      .filter((school) =>
+        school.name.toLowerCase().includes(schoolSearchInput.toLowerCase())
+      )
+      .filter((school) => !schoolTagIds.includes(school.id)) // Exclude already selected schools
+      .slice(0, 5);
+  }, [schools, schoolSearchInput, schoolTagIds]);
+
   // Get selected teacher
   const selectedTeacher = teachers.find((t) => t.id === selectedTeacherId);
+
+  // Get selected schools (for display)
+  const selectedSchools = useMemo(() => {
+    return schoolTagIds
+      .map((id) => schools.find((s) => s.id === id))
+      .filter((school) => school !== undefined);
+  }, [schoolTagIds, schools]);
 
   // Click outside handler for teacher search
   useEffect(() => {
@@ -100,6 +128,12 @@ export default function SimpleClassForm({
       ) {
         setIsTeacherSearchOpen(false);
       }
+      if (
+        schoolSearchRef.current &&
+        !schoolSearchRef.current.contains(event.target as Node)
+      ) {
+        setIsSchoolSearchOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -108,45 +142,83 @@ export default function SimpleClassForm({
     };
   }, []);
 
-  // Handle school tag input
-  const handleAddSchoolTag = () => {
-    const validation = validateSchoolTag(schoolTagInput);
+  // Handle school selection
+  const handleSelectSchool = (schoolId: string) => {
+    const updatedIds = addSchoolTag(schoolTagIds, schoolId);
 
-    if (!validation.isValid) {
-      toast.error(validation.error || "유효하지 않은 학교명입니다");
+    if (updatedIds.length === schoolTagIds.length) {
+      toast.error("이미 추가된 학교입니다");
       return;
     }
 
-    const updatedTags = addSchoolTag(schoolTags, schoolTagInput);
+    setSchoolTagIds(updatedIds);
+    setSchoolSearchInput("");
+    setIsSchoolSearchOpen(false);
+    setSelectedSchoolIndex(-1);
+  };
 
-    if (updatedTags.length === schoolTags.length) {
-      toast.error("이미 추가된 학교명입니다");
+  const handleRemoveSchoolTag = (schoolId: string) => {
+    setSchoolTagIds(removeSchoolTag(schoolTagIds, schoolId));
+  };
+
+  // Handle keyboard navigation for school search
+  const handleSchoolSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!isSchoolSearchOpen || filteredSchools.length === 0) {
       return;
     }
 
-    setSchoolTags(updatedTags);
-    setSchoolTagInput("");
-  };
-
-  const handleRemoveSchoolTag = (tagToRemove: string) => {
-    setSchoolTags(removeSchoolTag(schoolTags, tagToRemove));
-  };
-
-  const handleSchoolTagKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddSchoolTag();
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setSelectedSchoolIndex((prev) =>
+          prev < filteredSchools.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setSelectedSchoolIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (selectedSchoolIndex >= 0 && selectedSchoolIndex < filteredSchools.length) {
+          handleSelectSchool(filteredSchools[selectedSchoolIndex].id);
+        }
+        break;
+      case "Escape":
+        e.preventDefault();
+        setIsSchoolSearchOpen(false);
+        setSelectedSchoolIndex(-1);
+        break;
     }
   };
+
+  // Reset selected index when search input or filtered results change
+  useEffect(() => {
+    setSelectedSchoolIndex(-1);
+  }, [schoolSearchInput, filteredSchools.length]);
+
+  // Scroll selected item into view
+  useEffect(() => {
+    if (selectedSchoolIndex >= 0 && schoolListRef.current) {
+      const selectedElement = schoolListRef.current.children[selectedSchoolIndex] as HTMLElement;
+      if (selectedElement) {
+        selectedElement.scrollIntoView({
+          block: "nearest",
+          behavior: "smooth"
+        });
+      }
+    }
+  }, [selectedSchoolIndex]);
 
   const onSubmit = async (data: SimpleClassFormData) => {
     setIsSubmitting(true);
 
     try {
-      // Serialize school tags for school_exam type
-      const schoolTagsData = data.courseType === "school_exam"
-        ? serializeSchoolTags(schoolTags)
-        : null;
+      // Serialize school IDs for school_exam type
+      const schoolTagsData =
+        data.courseType === "school_exam"
+          ? serializeSchoolTags(schoolTagIds)
+          : null;
 
       await createClassMutation.mutateAsync({
         ...data,
@@ -158,8 +230,8 @@ export default function SimpleClassForm({
         "수업이 성공적으로 개설되었습니다! 시간 배정 탭에서 수업 시간을 설정하세요."
       );
       reset();
-      setSchoolTags([]);
-      setSchoolTagInput("");
+      setSchoolTagIds([]);
+      setSchoolSearchInput("");
     } catch (error) {
       toast.error("수업 개설 중 오류가 발생했습니다.");
       console.error(error);
@@ -293,48 +365,80 @@ export default function SimpleClassForm({
 
           {/* 학교 태그 - School Exam Only */}
           {selectedCourseType === "school_exam" && (
-            <div className="p-4 border-2 border-primary-200 rounded-lg bg-primary-25">
+            <div className="p-4 border-2 rounded-lg border-primary-200 bg-primary-25">
               <label className="block mb-2 text-sm font-medium text-gray-700">
                 <Hash className="inline w-4 h-4 mr-1" />
                 학교명 태그
               </label>
               <p className="mb-3 text-xs text-gray-500">
-                학교내신 수업의 대상 학교들을 입력하세요 (예: 서울고, 강남고)
+                학교내신 수업의 대상 학교들을 선택하세요
               </p>
 
-              {/* Tag Input */}
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="text"
-                  value={schoolTagInput}
-                  onChange={(e) => setSchoolTagInput(e.target.value)}
-                  onKeyPress={handleSchoolTagKeyPress}
-                  placeholder="학교명을 입력하고 Enter..."
-                  className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddSchoolTag}
-                  className="flex items-center gap-1 px-3 py-2 text-sm text-white transition-all duration-200 bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg hover:from-primary-600 hover:to-primary-700"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>추가</span>
-                </button>
+              {/* School Search Input */}
+              <div className="relative mb-3" ref={schoolSearchRef}>
+                <div className="relative">
+                  <Search className="absolute w-4 h-4 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
+                  <input
+                    type="text"
+                    value={schoolSearchInput}
+                    onChange={(e) => {
+                      setSchoolSearchInput(e.target.value);
+                      setIsSchoolSearchOpen(true);
+                    }}
+                    onFocus={() => setIsSchoolSearchOpen(true)}
+                    onKeyDown={handleSchoolSearchKeyDown}
+                    placeholder="학교명으로 검색... (↑↓ 이동, Enter 선택)"
+                    className="w-full py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    disabled={schoolsLoading}
+                  />
+                </div>
+
+                {/* School Search Results Dropdown */}
+                {isSchoolSearchOpen && !schoolsLoading && (
+                  <div className="absolute z-10 w-full mt-1 overflow-hidden bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-40">
+                    {filteredSchools.length > 0 ? (
+                      <div ref={schoolListRef} className="overflow-y-auto max-h-40">
+                        {filteredSchools.map((school, index) => (
+                          <button
+                            key={school.id}
+                            type="button"
+                            onClick={() => handleSelectSchool(school.id)}
+                            className={`w-full px-4 py-2 text-left transition-colors ${
+                              index === selectedSchoolIndex
+                                ? "bg-primary-100 text-primary-800"
+                                : "hover:bg-primary-50"
+                            }`}
+                          >
+                            <span className="text-sm font-medium">
+                              {school.name}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="px-4 py-3 text-sm text-center text-gray-500">
+                        {schoolSearchInput
+                          ? "검색 결과가 없습니다"
+                          : "학교명을 입력하세요"}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
-              {/* Tag Display */}
-              {schoolTags.length > 0 && (
+              {/* Selected Schools Display */}
+              {selectedSchools.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {schoolTags.map((tag, index) => (
+                  {selectedSchools.map((school) => (
                     <div
-                      key={index}
-                      className="flex items-center gap-1 px-3 py-1 text-sm font-medium text-primary-700 bg-primary-100 rounded-full"
+                      key={school!.id}
+                      className="flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-full text-primary-700 bg-primary-100"
                     >
                       <Hash className="w-3 h-3" />
-                      <span>{tag}</span>
+                      <span>{school!.name}</span>
                       <button
                         type="button"
-                        onClick={() => handleRemoveSchoolTag(tag)}
+                        onClick={() => handleRemoveSchoolTag(school!.id)}
                         className="p-0.5 transition-colors rounded-full hover:bg-primary-200"
                       >
                         <X className="w-3 h-3" />

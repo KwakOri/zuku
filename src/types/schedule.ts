@@ -6,6 +6,8 @@ export type Teacher = Tables<"teachers">;
 export type Class = Tables<"classes">;
 export type ClassComposition = Tables<"class_composition">;
 export type Subject = Tables<"subjects">;
+export type School = Tables<"schools">;
+export type ExamPeriod = Tables<"exam_periods">;
 
 // Supabase 타입 사용
 export type ClassStudent = Tables<"class_students">;

@@ -5,17 +5,18 @@ import ClassCompositionModal, {
 } from "@/components/class-management/ClassCompositionModal";
 import ClassStudentPanel from "@/components/class-management/ClassStudentPanel";
 import SimpleClassForm from "@/components/class-management/SimpleClassForm";
+import ExamPeriodManagement from "@/components/class-management/ExamPeriodManagement";
 import { PageHeader, PageLayout } from "@/components/common/layout";
 import CanvasSchedule from "@/components/common/schedule/CanvasSchedule";
 import { DAYS_OF_WEEK } from "@/constants/schedule";
 import { useCreateClassComposition } from "@/queries/useClassComposition";
 import { useClasses } from "@/queries/useClasses";
 import type { ClassBlock } from "@/types/schedule";
-import { Calendar, Clock, Plus, Settings } from "lucide-react";
+import { Calendar, Clock, Plus, Settings, BookOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
-type TabType = "create" | "assign" | "manage";
+type TabType = "create" | "assign" | "manage" | "exam-periods";
 
 export default function ClassManagementPage() {
   const router = useRouter();
@@ -223,6 +224,19 @@ export default function ClassManagementPage() {
             <div className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
               <span>기존 수업 관리</span>
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab("exam-periods")}
+            className={`px-6 py-3 font-medium transition-all duration-200 border-b-2 ${
+              activeTab === "exam-periods"
+                ? "border-primary-600 text-primary-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              <span>내신기간 관리</span>
             </div>
           </button>
         </div>
@@ -578,7 +592,7 @@ export default function ClassManagementPage() {
               )}
             </div>
           )
-        ) : (
+        ) : activeTab === "manage" ? (
           /* MANAGE TAB - Existing Class Management */
           <div className="p-8 text-center border-0 flat-card rounded-2xl">
             <Settings className="w-12 h-12 mx-auto mb-4 text-gray-400" />
@@ -586,6 +600,11 @@ export default function ClassManagementPage() {
               기존 수업 관리
             </h3>
             <p className="text-gray-500">이 탭은 추후 구현될 예정입니다.</p>
+          </div>
+        ) : (
+          /* EXAM PERIODS TAB - Exam Period Management */
+          <div className="flex flex-col flex-1 min-h-0 border-0 flat-card rounded-2xl">
+            <ExamPeriodManagement />
           </div>
         )}
       </PageLayout>

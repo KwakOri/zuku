@@ -32,6 +32,7 @@ export interface CreateClassData {
   studentIds: string[];
   courseType?: "regular" | "school_exam"; // 수업 유형
   splitType?: "single" | "split"; // 수업 구성 타입
+  schoolTags?: string | null; // 학교 태그 (JSON 문자열 또는 null)
 }
 
 export class ClassApi {
