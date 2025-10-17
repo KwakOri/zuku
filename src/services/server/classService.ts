@@ -12,7 +12,7 @@ interface ClassWithTeacher extends Tables<"classes"> {
 
 interface ClassWithStudents extends Tables<"classes"> {
   students?: {
-    id: number;
+    id: string;
     name: string;
     grade: number;
     enrolled_date: string;
@@ -21,7 +21,7 @@ interface ClassWithStudents extends Tables<"classes"> {
 
 interface ClassStudentRelation {
   student: {
-    id: number;
+    id: string;
     name: string;
     grade: number;
   };
@@ -34,10 +34,12 @@ export class ClassService {
   async getClasses(): Promise<ClassWithTeacher[]> {
     const { data, error } = await this.supabase
       .from("classes")
-      .select(`
+      .select(
+        `
         *,
         teacher:teachers(id, name)
-      `)
+      `
+      )
       .order("day_of_week")
       .order("start_time");
 
@@ -51,10 +53,12 @@ export class ClassService {
   async getClassById(id: string): Promise<ClassWithTeacher> {
     const { data, error } = await this.supabase
       .from("classes")
-      .select(`
+      .select(
+        `
         *,
         teacher:teachers(id, name)
-      `)
+      `
+      )
       .eq("id", id)
       .single();
 
@@ -71,13 +75,15 @@ export class ClassService {
   async getClassWithStudents(id: string): Promise<ClassWithStudents> {
     const { data, error } = await this.supabase
       .from("classes")
-      .select(`
+      .select(
+        `
         *,
         class_students!inner(
           enrolled_date,
           student:students(id, name, grade)
         )
-      `)
+      `
+      )
       .eq("id", id)
       .eq("class_students.status", "active")
       .single();
@@ -92,28 +98,33 @@ export class ClassService {
     // 데이터 구조 변환
     const classData = {
       ...data,
-      students: data.class_students?.map((cs: ClassStudentRelation) => ({
-        id: cs.student.id,
-        name: cs.student.name,
-        grade: cs.student.grade,
-        enrolled_date: cs.enrolled_date,
-      })) || []
+      students:
+        data.class_students?.map((cs: ClassStudentRelation) => ({
+          id: cs.student.id,
+          name: cs.student.name,
+          grade: cs.student.grade,
+          enrolled_date: cs.enrolled_date,
+        })) || [],
     } as ClassWithStudents;
 
     // class_students 속성 제거
-    delete (classData as Record<string, unknown>).class_students;
+    // delete (classData as unknown as Record<string, unknown>).class_students;
 
     return classData;
   }
 
-  async createClass(classData: TablesInsert<"classes">): Promise<ClassWithTeacher> {
+  async createClass(
+    classData: TablesInsert<"classes">
+  ): Promise<ClassWithTeacher> {
     const { data, error } = await this.supabase
       .from("classes")
       .insert([classData])
-      .select(`
+      .select(
+        `
         *,
         teacher:teachers(id, name)
-      `)
+      `
+      )
       .single();
 
     if (error) {
@@ -123,15 +134,20 @@ export class ClassService {
     return data;
   }
 
-  async updateClass(id: string, updateData: TablesUpdate<"classes">): Promise<ClassWithTeacher> {
+  async updateClass(
+    id: string,
+    updateData: TablesUpdate<"classes">
+  ): Promise<ClassWithTeacher> {
     const { data, error } = await this.supabase
       .from("classes")
       .update(updateData)
       .eq("id", id)
-      .select(`
+      .select(
+        `
         *,
         teacher:teachers(id, name)
-      `)
+      `
+      )
       .single();
 
     if (error) {
@@ -142,10 +158,7 @@ export class ClassService {
   }
 
   async deleteClass(id: string): Promise<void> {
-    const { error } = await this.supabase
-      .from("classes")
-      .delete()
-      .eq("id", id);
+    const { error } = await this.supabase.from("classes").delete().eq("id", id);
 
     if (error) {
       throw new Error(`Failed to delete class: ${error.message}`);
@@ -155,10 +168,12 @@ export class ClassService {
   async getClassesByTeacher(teacherId: string): Promise<ClassWithTeacher[]> {
     const { data, error } = await this.supabase
       .from("classes")
-      .select(`
+      .select(
+        `
         *,
         teacher:teachers(id, name)
-      `)
+      `
+      )
       .eq("teacher_id", teacherId)
       .order("day_of_week")
       .order("start_time");
@@ -173,10 +188,12 @@ export class ClassService {
   async getClassesByDayOfWeek(dayOfWeek: number): Promise<ClassWithTeacher[]> {
     const { data, error } = await this.supabase
       .from("classes")
-      .select(`
+      .select(
+        `
         *,
         teacher:teachers(id, name)
-      `)
+      `
+      )
       .eq("day_of_week", dayOfWeek)
       .order("start_time");
 
@@ -190,10 +207,12 @@ export class ClassService {
   async getClassesBySubject(subject: string): Promise<ClassWithTeacher[]> {
     const { data, error } = await this.supabase
       .from("classes")
-      .select(`
+      .select(
+        `
         *,
         teacher:teachers(id, name)
-      `)
+      `
+      )
       .eq("subject", subject)
       .order("day_of_week")
       .order("start_time");

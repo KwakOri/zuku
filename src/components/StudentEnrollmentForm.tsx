@@ -108,7 +108,7 @@ export default function StudentEnrollmentForm({ onSuccess }: StudentEnrollmentFo
           <option value="">수업을 선택하세요</option>
           {classes.map((cls) => (
             <option key={cls.id} value={cls.id}>
-              {cls.title} - {cls.subject} ({cls.teacherName})
+              {cls.title} - {cls.subject?.subject_name} ({cls.teacher?.name})
             </option>
           ))}
         </select>

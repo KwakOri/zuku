@@ -5,13 +5,13 @@ import { createAdminSupabaseClient } from "@/lib/supabase-server";
 // Body: { start_date?: string, end_date?: string }
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = createAdminSupabaseClient();
     const body = await request.json();
     const { start_date, end_date } = body;
-    const { id } = params;
+    const { id } = await params;
 
     // At least one field must be provided
     if (!start_date && end_date === undefined) {
@@ -22,7 +22,11 @@ export async function PUT(
     }
 
     // Build update object
-    const updateData: any = {};
+    const updateData: {
+      start_date?: string;
+      end_date?: string | null;
+      updated_at?: string;
+    } = {};
 
     if (start_date) {
       const startDateObj = new Date(start_date);
@@ -99,11 +103,11 @@ export async function PUT(
 // DELETE /api/exam-periods/[id]
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = createAdminSupabaseClient();
-    const { id } = params;
+    const { id } = await params;
 
     const { error } = await supabase
       .from("exam_periods")

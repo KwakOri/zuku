@@ -368,7 +368,7 @@ export async function applyChanges(
   // 배치로 삽입 (한 번에 처리)
   if (newStudentInserts.length > 0) {
     insertPromises.push(
-      supabase.from('students').insert(newStudentInserts)
+      Promise.resolve(supabase.from('students').insert(newStudentInserts))
         .then(({ error }) => {
           if (error) throw new Error(`학생 추가 실패: ${error.message}`);
         })
@@ -384,19 +384,20 @@ export async function applyChanges(
     console.log('[applyChanges] Matched school_id:', school?.id || 'null');
 
     updatePromises.push(
-      supabase
-        .from('students')
-        .update({
-          class_name: student.newData.className,
-          school_id: school?.id || null,
-          grade: student.newData.grade,
-          phone: student.newData.phone,
-          gender: student.newData.gender,
-        })
-        .eq('id', student.id)
-        .then(({ error }) => {
-          if (error) throw new Error(`학생 업데이트 실패 (${student.name}): ${error.message}`);
-        })
+      Promise.resolve(
+        supabase
+          .from('students')
+          .update({
+            class_name: student.newData.className,
+            school_id: school?.id || null,
+            grade: student.newData.grade,
+            phone: student.newData.phone,
+            gender: student.newData.gender,
+          })
+          .eq('id', student.id)
+      ).then(({ error }) => {
+        if (error) throw new Error(`학생 업데이트 실패 (${student.name}): ${error.message}`);
+      })
     );
   }
 
@@ -407,13 +408,14 @@ export async function applyChanges(
 
   if (withdrawnIds.length > 0) {
     withdrawPromises.push(
-      supabase
-        .from('students')
-        .update({ enrollment_status: 'withdrawn' as const })
-        .in('id', withdrawnIds)
-        .then(({ error }) => {
-          if (error) throw new Error(`학생 퇴원 처리 실패: ${error.message}`);
-        })
+      Promise.resolve(
+        supabase
+          .from('students')
+          .update({ enrollment_status: 'withdrawn' as const })
+          .in('id', withdrawnIds)
+      ).then(({ error }) => {
+        if (error) throw new Error(`학생 퇴원 처리 실패: ${error.message}`);
+      })
     );
   }
 

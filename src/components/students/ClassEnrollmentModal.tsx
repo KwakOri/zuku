@@ -49,6 +49,7 @@ export default function ClassEnrollmentModal({
 
     return selectedClass.class_composition.map((composition) => ({
       id: composition.id,
+      classId: selectedClass.id,
       title: selectedClass.title,
       subject: selectedClass.subject?.subject_name || "",
       teacherName: selectedClass.teacher?.name || "",
@@ -59,6 +60,7 @@ export default function ClassEnrollmentModal({
       room: selectedClass.room || "",
       type: composition.type || undefined,
       isEditable: false,
+      studentCount: 0,
     }));
   }, [selectedClass]);
 

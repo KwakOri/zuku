@@ -22,6 +22,7 @@ interface ClassSchedule {
   class_id: string;
   composition_id?: string;
   composition_type?: string | null; // "class" or "clinic"
+  composition_order?: number | null; // 0: front time, 1+: back time
   subject_name: string | null;
   teacher_name: string | null;
 }

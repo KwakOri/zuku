@@ -36,7 +36,7 @@ export const useTooltipPosition = (
   const [gridPosition, setGridPosition] = useState<GridPosition>({ row: 2, col: 2, section: 5 });
   const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition>("top");
   
-  const debounceTimeoutRef = useRef<NodeJS.Timeout>();
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // 마우스 위치를 9분면으로 변환하는 함수
   const calculateGridPosition = useCallback((

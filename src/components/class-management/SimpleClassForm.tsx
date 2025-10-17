@@ -9,7 +9,7 @@ import { useCreateClass } from "@/queries/useClasses";
 import { useSchools } from "@/queries/useSchools";
 import { useSubjects } from "@/queries/useSubjects";
 import { useTeachers } from "@/queries/useTeachers";
-import { BookOpen, Check, Hash, Plus, Save, Search, X } from "lucide-react";
+import { BookOpen, Check, Hash, Save, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -20,7 +20,6 @@ interface SimpleClassFormData {
   teacherId: string;
   description?: string;
   room?: string;
-  maxStudents?: number;
   courseType: "regular" | "school_exam";
   splitType: "single" | "split";
 }
@@ -162,7 +161,9 @@ export default function SimpleClassForm({
   };
 
   // Handle keyboard navigation for school search
-  const handleSchoolSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleSchoolSearchKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
     if (!isSchoolSearchOpen || filteredSchools.length === 0) {
       return;
     }
@@ -180,7 +181,10 @@ export default function SimpleClassForm({
         break;
       case "Enter":
         e.preventDefault();
-        if (selectedSchoolIndex >= 0 && selectedSchoolIndex < filteredSchools.length) {
+        if (
+          selectedSchoolIndex >= 0 &&
+          selectedSchoolIndex < filteredSchools.length
+        ) {
           handleSelectSchool(filteredSchools[selectedSchoolIndex].id);
         }
         break;
@@ -200,11 +204,13 @@ export default function SimpleClassForm({
   // Scroll selected item into view
   useEffect(() => {
     if (selectedSchoolIndex >= 0 && schoolListRef.current) {
-      const selectedElement = schoolListRef.current.children[selectedSchoolIndex] as HTMLElement;
+      const selectedElement = schoolListRef.current.children[
+        selectedSchoolIndex
+      ] as HTMLElement;
       if (selectedElement) {
         selectedElement.scrollIntoView({
           block: "nearest",
-          behavior: "smooth"
+          behavior: "smooth",
         });
       }
     }
@@ -397,7 +403,10 @@ export default function SimpleClassForm({
                 {isSchoolSearchOpen && !schoolsLoading && (
                   <div className="absolute z-10 w-full mt-1 overflow-hidden bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-40">
                     {filteredSchools.length > 0 ? (
-                      <div ref={schoolListRef} className="overflow-y-auto max-h-40">
+                      <div
+                        ref={schoolListRef}
+                        className="overflow-y-auto max-h-40"
+                      >
                         {filteredSchools.map((school, index) => (
                           <button
                             key={school.id}
@@ -600,29 +609,6 @@ export default function SimpleClassForm({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="예: 301호"
             />
-          </div>
-
-          {/* 최대 수강 인원 */}
-          <div>
-            <label className="block mb-2 text-sm font-medium text-gray-700">
-              최대 수강 인원
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="50"
-              {...register("maxStudents", {
-                min: { value: 1, message: "최소 1명 이상이어야 합니다" },
-                max: { value: 50, message: "최대 50명까지 가능합니다" },
-              })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="예: 15"
-            />
-            {errors.maxStudents && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.maxStudents.message}
-              </p>
-            )}
           </div>
 
           {/* 수업 설명 */}

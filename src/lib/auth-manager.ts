@@ -163,10 +163,10 @@ export class AuthManager {
     }
 
     return {
-      userId: payload.userId,
-      email: payload.email,
-      name: payload.name,
-      role: payload.role,
+      userId: payload.userId as string,
+      email: payload.email as string,
+      name: payload.name as string,
+      role: payload.role as string,
     };
   }
 

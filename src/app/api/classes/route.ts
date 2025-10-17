@@ -119,7 +119,6 @@ export async function POST(request: NextRequest) {
       description: description || null,
       teacher_id: teacherId,
       room: room || null,
-      max_students: maxStudents || null,
       color: subjectColors[subject.subject_name || ''] || "#6b7280", // 기본값: gray-500
       course_type: courseType || "regular", // 기본값: regular
       split_type: splitType || "single", // 기본값: single

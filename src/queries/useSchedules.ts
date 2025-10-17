@@ -30,10 +30,10 @@ export const scheduleKeys = {
 // 학생 개인 일정 Queries
 export function useStudentSchedules(studentId?: number) {
   return useQuery({
-    queryKey: studentId 
-      ? scheduleKeys.studentSchedulesByStudent(studentId)
+    queryKey: studentId
+      ? scheduleKeys.studentSchedulesByStudent(String(studentId))
       : scheduleKeys.studentSchedulesList(),
-    queryFn: () => scheduleApi.getStudentSchedules(studentId),
+    queryFn: () => scheduleApi.getStudentSchedules(studentId ? String(studentId) : undefined),
     staleTime: 3 * 60 * 1000, // 3분
   });
 }
@@ -49,15 +49,15 @@ export function useStudentSchedule(id: string) {
 
 // 수업-학생 관계 Queries
 export function useClassStudents(classId?: string, studentId?: number) {
-  const queryKey = classId 
+  const queryKey = classId
     ? scheduleKeys.classStudentsByClass(classId)
-    : studentId 
-      ? scheduleKeys.classStudentsByStudent(studentId)
+    : studentId
+      ? scheduleKeys.classStudentsByStudent(String(studentId))
       : scheduleKeys.classStudentsList();
 
   return useQuery({
     queryKey,
-    queryFn: () => scheduleApi.getClassStudents(classId, studentId),
+    queryFn: () => scheduleApi.getClassStudents(classId, studentId ? String(studentId) : undefined),
     staleTime: 3 * 60 * 1000,
   });
 }

@@ -39,17 +39,17 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/exam-periods
-// Body: { school_id: string, start_date: string, end_date?: string }
+// Body: { school_id: string, start_date: string, end_date?: string, year: number, semester: number, exam_round: number }
 export async function POST(request: NextRequest) {
   try {
     const supabase = createAdminSupabaseClient();
     const body = await request.json();
-    const { school_id, start_date, end_date } = body;
+    const { school_id, start_date, end_date, year, semester, exam_round } = body;
 
     // Validation
-    if (!school_id || !start_date) {
+    if (!school_id || !start_date || !year || !semester || !exam_round) {
       return NextResponse.json(
-        { error: "school_id and start_date are required" },
+        { error: "school_id, start_date, year, semester, and exam_round are required" },
         { status: 400 }
       );
     }
@@ -85,6 +85,9 @@ export async function POST(request: NextRequest) {
         school_id,
         start_date,
         end_date: end_date || null,
+        year,
+        semester,
+        exam_round,
       })
       .select("*, schools(id, name)")
       .single();

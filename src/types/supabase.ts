@@ -225,6 +225,38 @@ export type Database = {
           },
         ]
       }
+      class_school_meta: {
+        Row: {
+          class_id: string
+          created_at: string | null
+          id: string
+          school_tags: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          class_id: string
+          created_at?: string | null
+          id?: string
+          school_tags?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          class_id?: string
+          created_at?: string | null
+          id?: string
+          school_tags?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_school_meta_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: true
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_students: {
         Row: {
           class_id: string
@@ -277,15 +309,12 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string
-          max_students: number | null
           room: string | null
           rrule: string | null
-          school_tags: string | null
           split_type: string | null
           subject_id: string | null
           teacher_id: string | null
           title: string
-          type: string | null
           updated_at: string | null
         }
         Insert: {
@@ -294,15 +323,12 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
-          max_students?: number | null
           room?: string | null
           rrule?: string | null
-          school_tags?: string | null
           split_type?: string | null
           subject_id?: string | null
           teacher_id?: string | null
           title: string
-          type?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -311,15 +337,12 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
-          max_students?: number | null
           room?: string | null
           rrule?: string | null
-          school_tags?: string | null
           split_type?: string | null
           subject_id?: string | null
           teacher_id?: string | null
           title?: string
-          type?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -398,26 +421,35 @@ export type Database = {
         Row: {
           created_at: string
           end_date: string | null
+          exam_round: number
           id: string
           school_id: string
+          semester: number
           start_date: string
           updated_at: string
+          year: number
         }
         Insert: {
           created_at?: string
           end_date?: string | null
+          exam_round: number
           id?: string
           school_id: string
+          semester: number
           start_date: string
           updated_at?: string
+          year: number
         }
         Update: {
           created_at?: string
           end_date?: string | null
+          exam_round?: number
           id?: string
           school_id?: string
+          semester?: number
           start_date?: string
           updated_at?: string
+          year?: number
         }
         Relationships: [
           {
@@ -885,7 +917,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      school_level: "middle" | "high"
+      school_level: "middle" | "high" | "elementary"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1013,7 +1045,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      school_level: ["middle", "high"],
+      school_level: ["middle", "high", "elementary"],
     },
   },
 } as const

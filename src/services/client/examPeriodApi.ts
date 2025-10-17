@@ -11,11 +11,17 @@ export interface CreateExamPeriodParams {
   school_id: string;
   start_date: string; // YYYY-MM-DD format
   end_date?: string | null; // YYYY-MM-DD format
+  year: number; // 연도 (예: 2025)
+  semester: 1 | 2; // 학기 (1: 1학기, 2: 2학기)
+  exam_round: 1 | 2; // 지필평가 차수 (1: 1차, 2: 2차)
 }
 
 export interface UpdateExamPeriodParams {
   start_date?: string; // YYYY-MM-DD format
   end_date?: string | null; // YYYY-MM-DD format
+  year?: number; // 연도 (예: 2025)
+  semester?: 1 | 2; // 학기 (1: 1학기, 2: 2학기)
+  exam_round?: 1 | 2; // 지필평가 차수 (1: 1차, 2: 2차)
 }
 
 /**

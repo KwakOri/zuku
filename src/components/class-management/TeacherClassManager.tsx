@@ -8,10 +8,7 @@ import { useSubjects } from "@/queries/useSubjects";
 import { useTeacherClasses } from "@/queries/useTeacherClasses";
 import { useTeachers } from "@/queries/useTeachers";
 import {
-  BookOpen,
-  Calendar,
   ChevronRight,
-  Clock,
   Plus,
   Save,
   Users,
@@ -37,7 +34,6 @@ interface CreateClassFormData {
   teacherId: string;
   description?: string;
   room?: string;
-  maxStudents?: number;
   studentIds: string[];
 }
 
@@ -79,7 +75,7 @@ export default function TeacherClassManager() {
       <div className="w-full space-y-6">
         <Card size="lg" variant="flat" className="border-warning-200">
           <div className="text-center">
-            <Icon name="alert-triangle" size="3xl" color="warning" className="mx-auto mb-4" />
+            <Icon name="alert-triangle" size="2xl" color="warning" className="mx-auto mb-4" />
             <h3 className="text-lg font-medium text-warning-900 mb-2">
               로그인이 필요합니다
             </h3>
@@ -164,7 +160,7 @@ export default function TeacherClassManager() {
       <div className="w-full space-y-6">
         <Card size="lg" variant="flat" className="border-error-200">
           <div className="text-center">
-            <Icon name="alert-triangle" size="3xl" color="error" className="mx-auto mb-4" />
+            <Icon name="alert-triangle" size="2xl" color="error" className="mx-auto mb-4" />
             <h3 className="text-lg font-medium text-error-900 mb-2">
               담당 수업을 불러오는 중 오류가 발생했습니다
             </h3>
@@ -184,14 +180,14 @@ export default function TeacherClassManager() {
             size="md"
             variant="flat"
             className="bg-secondary-100"
-            fallback={<Icon name="users" size="sm" color="secondary" />}
+            fallback="강"
           />
           <h2 className="text-xl font-bold text-gray-900">강사 선택</h2>
         </div>
 
         {teachersLoading ? (
           <div className="text-center py-4">
-            <Icon name="loader" size="lg" color="secondary" className="mx-auto mb-4 animate-spin" />
+            <Icon name="clock" size="lg" color="secondary" className="mx-auto mb-4 animate-spin" />
             <p className="mt-2 text-sm text-gray-500">강사 목록을 불러오는 중...</p>
           </div>
         ) : (
@@ -244,7 +240,7 @@ export default function TeacherClassManager() {
               size="md"
               variant="flat"
               className="bg-primary-100"
-              fallback={<Icon name="plus" size="sm" color="primary" />}
+              fallback="수"
             />
             <h2 className="text-xl font-bold text-gray-900">새 수업 개설</h2>
           </div>
@@ -354,24 +350,14 @@ export default function TeacherClassManager() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  최대 수강 인원
+                  강의실
                 </label>
                 <input
-                  type="number"
-                  min="1"
-                  max="50"
-                  {...register("maxStudents", {
-                    min: { value: 1, message: "최소 1명 이상이어야 합니다" },
-                    max: { value: 50, message: "최대 50명까지 가능합니다" },
-                  })}
+                  type="text"
+                  {...register("room")}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="예: 15"
+                  placeholder="예: 301호"
                 />
-                {errors.maxStudents && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {errors.maxStudents.message}
-                  </p>
-                )}
               </div>
             </div>
 
@@ -399,7 +385,7 @@ export default function TeacherClassManager() {
               </div>
               {studentsLoading ? (
                 <div className="text-center py-4">
-                  <Icon name="loader" size="lg" color="primary" className="mx-auto animate-spin" />
+                  <Icon name="clock" size="lg" color="primary" className="mx-auto animate-spin" />
                 </div>
               ) : (
                 <Card variant="flat" className="max-h-40 overflow-y-auto">
@@ -489,7 +475,7 @@ export default function TeacherClassManager() {
                 size="md"
                 variant="flat"
                 className="bg-success-100"
-                fallback={<Icon name="book-open" size="sm" color="success" />}
+                fallback="목"
               />
               <h2 className="text-xl font-bold text-gray-900">
                 {teachers.find(t => t.id === selectedTeacherId)?.name} 강사의 수업 목록
@@ -502,7 +488,7 @@ export default function TeacherClassManager() {
 
           {classes.length === 0 ? (
             <div className="text-center py-12">
-              <Icon name="calendar" size="3xl" color="neutral" className="mx-auto mb-4" />
+              <Icon name="calendar" size="2xl" color="muted" className="mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 담당 수업이 없습니다
               </h3>
@@ -532,36 +518,9 @@ export default function TeacherClassManager() {
                     </div>
 
                     <div className="space-y-2">
-                      {classItem.day_of_week !== null && classItem.start_time && classItem.end_time ? (
-                        <>
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Calendar className="w-4 h-4" />
-                            <span>
-                              {["일", "월", "화", "수", "목", "금", "토"][classItem.day_of_week]}요일
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Clock className="w-4 h-4" />
-                            <span>
-                              {classItem.start_time.substring(0, 5)} - {classItem.end_time.substring(0, 5)}
-                            </span>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="flex items-center gap-2 text-sm text-warning-600">
-                          <Clock className="w-4 h-4" />
-                          <span>시간표 미설정</span>
-                        </div>
-                      )}
-
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Users className="w-4 h-4" />
                         <span>학생 {classItem.student_count}명</span>
-                        {classItem.max_students && (
-                          <span className="text-gray-400">
-                            / {classItem.max_students}명
-                          </span>
-                        )}
                       </div>
 
                       {classItem.room && (

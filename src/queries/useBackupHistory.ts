@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { Tables } from '@/types/supabase';
 
 interface BackupRecord {
   id: string;
@@ -7,7 +8,7 @@ interface BackupRecord {
   created_by: string | null;
   notes: string | null;
   backup_data: {
-    students: Record<string, unknown>[];
+    students: Tables<'students'>[];
     timestamp: string;
   };
 }

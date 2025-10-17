@@ -124,20 +124,7 @@ export default function AddStudentModal({ isOpen, onClose }: AddStudentModalProp
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title={
-        <div className="flex items-center gap-3">
-          <Avatar
-            size="md"
-            variant="flat"
-            className="bg-primary-100"
-            fallback={<Icon name="user-plus" size="sm" color="primary" />}
-          />
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">새 학생 추가</h2>
-            <p className="text-sm text-gray-500">학생 정보를 입력해주세요</p>
-          </div>
-        </div>
-      }
+      title="새 학생 추가"
       size="md"
       footerContent={
         <div className="flex gap-3 w-full">
@@ -179,41 +166,44 @@ export default function AddStudentModal({ isOpen, onClose }: AddStudentModalProp
           onChange={(e) => handleFieldChange("name", e.target.value)}
           startIcon={<User className="w-4 h-4" />}
           required
-          error={errors.name}
+          errorMessage={errors.name}
           disabled={createStudentMutation.isPending}
         />
 
         {/* 학년 */}
-        <FormField
-          label="학년"
-          type="select"
-          value={String(formData.grade)}
-          onChange={(e) => handleFieldChange("grade", parseInt(e.target.value))}
-          startIcon={<GraduationCap className="w-4 h-4" />}
-          required
-          error={errors.grade}
-          disabled={createStudentMutation.isPending}
-          options={[
-            { label: "중학교", options: [
-              { value: "7", label: "중1" },
-              { value: "8", label: "중2" },
-              { value: "9", label: "중3" },
-            ]},
-            { label: "고등학교", options: [
-              { value: "10", label: "고1" },
-              { value: "11", label: "고2" },
-              { value: "12", label: "고3" },
-            ]},
-            { label: "기타", options: [
-              { value: "1", label: "초1" },
-              { value: "2", label: "초2" },
-              { value: "3", label: "초3" },
-              { value: "4", label: "초4" },
-              { value: "5", label: "초5" },
-              { value: "6", label: "초6" },
-            ]}
-          ]}
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            학년 <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={String(formData.grade)}
+            onChange={(e) => handleFieldChange("grade", parseInt(e.target.value))}
+            disabled={createStudentMutation.isPending}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <optgroup label="중학교">
+              <option value="7">중1</option>
+              <option value="8">중2</option>
+              <option value="9">중3</option>
+            </optgroup>
+            <optgroup label="고등학교">
+              <option value="10">고1</option>
+              <option value="11">고2</option>
+              <option value="12">고3</option>
+            </optgroup>
+            <optgroup label="기타">
+              <option value="1">초1</option>
+              <option value="2">초2</option>
+              <option value="3">초3</option>
+              <option value="4">초4</option>
+              <option value="5">초5</option>
+              <option value="6">초6</option>
+            </optgroup>
+          </select>
+          {errors.grade && (
+            <p className="mt-1 text-sm text-red-600">{errors.grade}</p>
+          )}
+        </div>
 
         {/* 학생 연락처 */}
         <FormField
@@ -223,7 +213,7 @@ export default function AddStudentModal({ isOpen, onClose }: AddStudentModalProp
           value={formData.phone || ""}
           onChange={(e) => handleFieldChange("phone", e.target.value)}
           startIcon={<Phone className="w-4 h-4" />}
-          error={errors.phone}
+          errorMessage={errors.phone}
           disabled={createStudentMutation.isPending}
         />
 
@@ -235,7 +225,7 @@ export default function AddStudentModal({ isOpen, onClose }: AddStudentModalProp
           value={formData.parent_phone || ""}
           onChange={(e) => handleFieldChange("parent_phone", e.target.value)}
           startIcon={<Phone className="w-4 h-4" />}
-          error={errors.parent_phone}
+          errorMessage={errors.parent_phone}
           disabled={createStudentMutation.isPending}
         />
 
@@ -247,7 +237,7 @@ export default function AddStudentModal({ isOpen, onClose }: AddStudentModalProp
           value={formData.email || ""}
           onChange={(e) => handleFieldChange("email", e.target.value)}
           startIcon={<Mail className="w-4 h-4" />}
-          error={errors.email}
+          errorMessage={errors.email}
           disabled={createStudentMutation.isPending}
         />
       </form>

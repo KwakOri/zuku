@@ -83,6 +83,7 @@ export default function ClassCompositionEditModal({
 
       return {
         id: composition.id,
+        classId: classId,
         title: className,
         subject: subjectName || "",
         teacherName: teacherName || "",
@@ -93,6 +94,7 @@ export default function ClassCompositionEditModal({
         room: "",
         type: composition.type || undefined,
         isEditable: false,
+        studentCount: 0,
       };
     });
   }, [allCompositions, className, subjectName, teacherName, classColor]);

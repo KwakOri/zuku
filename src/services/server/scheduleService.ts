@@ -21,10 +21,6 @@ interface ClassStudentWithDetails extends Tables<"class_students"> {
   class?: {
     id: string;
     title: string;
-    teacher_name: string;
-    start_time: string;
-    end_time: string;
-    day_of_week: number;
   } | null;
 }
 
@@ -129,7 +125,7 @@ export class ScheduleService {
       .select(`
         *,
         student:students(id, name, grade, phone, parent_phone, email),
-        class:classes(id, title, teacher_name, start_time, end_time, day_of_week)
+        class:classes(id, title)
       `)
       .eq("status", "active");
 
@@ -170,7 +166,7 @@ export class ScheduleService {
       .select(`
         *,
         student:students(id, name, grade, phone, parent_phone, email),
-        class:classes(id, title, teacher_name, start_time, end_time, day_of_week)
+        class:classes(id, title)
       `)
       .single();
 

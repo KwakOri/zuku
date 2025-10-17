@@ -322,7 +322,7 @@ export default function HomePage() {
             </div>
 
             <div className="text-center">
-              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 text-white rounded-full shadow-md bg-gradient-to-br from-violet-500 to-violet-600">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 text-white rounded-full shadow-md bg-gradient-to-br from-success-500 to-success-600">
                 <span className="font-bold">3</span>
               </div>
               <h3 className="mb-2 font-semibold text-gray-800">

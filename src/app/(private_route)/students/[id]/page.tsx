@@ -73,11 +73,15 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   // 앞타임/뒷타임 구분: composition_order로 판단
   const scheduleBlocks = allSchedules.map((schedule) => {
     const isPersonal = schedule.type !== "class";
-    const isFrontTime =
-      schedule.composition_order === 0 || !schedule.composition_order;
-    const compositionType = schedule.composition_type || "class";
+    const compositionOrder = "composition_order" in schedule ? schedule.composition_order : null;
+    const isFrontTime = compositionOrder === 0 || !compositionOrder;
+    const compositionType = ("composition_type" in schedule ? schedule.composition_type : null) || "class";
+    const subjectName = "subject_name" in schedule ? schedule.subject_name : null;
+    const teacherName = "teacher_name" in schedule ? schedule.teacher_name : null;
+    const classId = "class_id" in schedule ? schedule.class_id : null;
+
     const color = getSubjectColor(
-      schedule.subject_name,
+      subjectName || undefined,
       isPersonal,
       isFrontTime,
       compositionType
@@ -85,11 +89,11 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
     return {
       id: schedule.id,
-      classId: schedule.class_id || schedule.id,
+      classId: classId || schedule.id,
       title: schedule.title,
       subject:
-        schedule.type === "class" ? schedule.subject_name || "" : schedule.type,
-      teacherName: schedule.teacher_name || "",
+        schedule.type === "class" ? subjectName || "" : schedule.type,
+      teacherName: teacherName || "",
       startTime: schedule.start_time.substring(0, 5), // HH:MM:SS → HH:MM
       endTime: schedule.end_time.substring(0, 5), // HH:MM:SS → HH:MM
       dayOfWeek: schedule.day_of_week,
@@ -333,12 +337,15 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
     // 수업 블록인지 확인: 전체 시간표에서 type으로 판단
     const originalSchedule = allSchedules.find((s) => s.id === block.id);
     const isClassBlock = originalSchedule?.type === "class";
+    const scheduleClassId = originalSchedule && "class_id" in originalSchedule ? originalSchedule.class_id : null;
+    const scheduleSubjectName = originalSchedule && "subject_name" in originalSchedule ? originalSchedule.subject_name : null;
+    const scheduleTeacherName = originalSchedule && "teacher_name" in originalSchedule ? originalSchedule.teacher_name : null;
 
-    if (isClassBlock && originalSchedule && originalSchedule.class_id) {
+    if (isClassBlock && originalSchedule && scheduleClassId) {
       try {
         // 해당 class의 모든 composition을 API에서 가져오기
         const response = await fetch(
-          `/api/class-composition?classId=${originalSchedule.class_id}`
+          `/api/class-composition?classId=${scheduleClassId}`
         );
         if (!response.ok) {
           throw new Error("Failed to fetch class compositions");
@@ -347,11 +354,11 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
         setSelectedClassForEdit({
           classStudentId: studentId, // class_student_id 대신 studentId 사용
-          classId: originalSchedule.class_id,
+          classId: scheduleClassId,
           className: originalSchedule.title,
           classColor: originalSchedule.color,
-          subjectName: originalSchedule.subject_name,
-          teacherName: originalSchedule.teacher_name,
+          subjectName: scheduleSubjectName || undefined,
+          teacherName: scheduleTeacherName || undefined,
           allCompositions: allClassCompositions,
         });
         setShowCompositionEditModal(true);

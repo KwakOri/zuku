@@ -140,7 +140,6 @@ export default function StudentList({
             onChange={(e) => setSearchTerm(e.target.value)}
             onSearch={(query) => setSearchTerm(query)}
             placeholder="이름, 이메일, 전화번호로 검색..."
-            variant="flat"
           />
 
           {/* 필터 섹션 */}
@@ -213,7 +212,7 @@ export default function StudentList({
         {filteredStudents.length === 0 ? (
           <Card size="lg">
             <div className="p-12 text-center">
-              <Icon name="user" size="3xl" color="neutral" className="mx-auto mb-4" />
+              <Icon name="user" size="2xl" color="muted" className="mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 검색 결과가 없습니다
               </h3>
