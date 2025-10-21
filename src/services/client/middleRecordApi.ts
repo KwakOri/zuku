@@ -147,6 +147,62 @@ export class MiddleRecordApi {
     return this.getMiddleRecords({ studentId, classId });
   }
 
+  // 미입력 학생 목록 조회
+  async getPendingStudents(params: {
+    teacherId: string;
+    weekOf?: string;
+  }): Promise<{
+    data: Array<{
+      id: string;
+      class_id: string;
+      student_id: string;
+      student?: {
+        id: string;
+        name: string;
+        grade: number;
+        phone: string | null;
+        parent_phone: string | null;
+        email: string | null;
+      } | null;
+      class?: {
+        id: string;
+        title: string;
+        subject?: {
+          id: string;
+          subject_name: string;
+        } | null;
+      } | null;
+    }>;
+    meta: {
+      weekOf: string;
+      totalStudents: number;
+      recordedStudents: number;
+      pendingStudents: number;
+    };
+  }> {
+    const searchParams = new URLSearchParams();
+    searchParams.set("teacher_id", params.teacherId);
+
+    if (params.weekOf) {
+      searchParams.set("week_of", params.weekOf);
+    }
+
+    const url = `${this.baseUrl}/pending?${searchParams}`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const error: ApiError = await response.json();
+      throw new Error(error.error || "Failed to fetch pending students");
+    }
+
+    return response.json();
+  }
+
 }
 
 // 싱글톤 인스턴스

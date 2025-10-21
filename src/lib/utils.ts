@@ -169,3 +169,38 @@ export function convertJsDayToMondayBased(jsDay: number): number {
 export function convertMondayBasedToJsDay(mondayBasedDay: number): number {
   return mondayBasedDay === 6 ? 0 : mondayBasedDay + 1;
 }
+
+/**
+ * 주어진 날짜가 속한 주의 월요일(시작일)을 계산
+ * @param date 기준 날짜 (기본값: 오늘)
+ * @returns 해당 주의 월요일 Date 객체
+ */
+export function getWeekStartDate(date: Date = new Date()): Date {
+  const result = new Date(date);
+  const dayOfWeek = convertJsDayToMondayBased(result.getDay());
+  result.setDate(result.getDate() - dayOfWeek);
+  result.setHours(0, 0, 0, 0);
+  return result;
+}
+
+/**
+ * 주어진 날짜가 속한 주의 일요일(종료일)을 계산
+ * @param date 기준 날짜 (기본값: 오늘)
+ * @returns 해당 주의 일요일 Date 객체
+ */
+export function getWeekEndDate(date: Date = new Date()): Date {
+  const weekStart = getWeekStartDate(date);
+  const result = new Date(weekStart);
+  result.setDate(weekStart.getDate() + 6);
+  result.setHours(23, 59, 59, 999);
+  return result;
+}
+
+/**
+ * 날짜를 YYYY-MM-DD 형식의 문자열로 변환
+ * @param date Date 객체
+ * @returns YYYY-MM-DD 형식 문자열
+ */
+export function formatDateToYYYYMMDD(date: Date): string {
+  return date.toISOString().split('T')[0];
+}

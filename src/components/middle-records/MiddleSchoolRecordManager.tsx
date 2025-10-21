@@ -1,14 +1,16 @@
 "use client";
 
-import { convertJsDayToMondayBased, getGrade } from "@/lib/utils";
+import { convertJsDayToMondayBased, formatDateToYYYYMMDD, getGrade, getWeekStartDate } from "@/lib/utils";
 import {
   useCreateMiddleRecord,
   useDeleteMiddleRecord,
   useUpdateMiddleRecord,
   useWeeklyMiddleRecords,
+  usePendingStudents,
 } from "@/queries/useMiddleRecords";
 import { useStudents } from "@/queries/useStudents";
 import { useClassesByStudent, useClassStudents } from "@/queries/useClassStudents";
+import { useAuthState } from "@/queries/useAuth";
 import { Tables, TablesInsert, TablesUpdate } from "@/types/supabase";
 import CascadingStudentSelector from "./CascadingStudentSelector";
 
@@ -28,6 +30,7 @@ interface ClassStudentWithRelations extends Tables<"class_students"> {
 
 import { Button, Card } from "@/components/design-system";
 import {
+  AlertCircle,
   BookOpen,
   Calendar,
   CheckCircle,
@@ -64,17 +67,15 @@ export default function MiddleSchoolRecordManager({
     string | undefined
   >(propClassId);
   const [selectedWeek, setSelectedWeek] = useState<string>(() => {
-    const today = new Date();
-    const monday = new Date(today);
-    // 월요일 기준으로 주의 시작일 계산
-    const dayOfWeek = convertJsDayToMondayBased(today.getDay());
-    monday.setDate(today.getDate() - dayOfWeek);
-    return monday.toISOString().split("T")[0];
+    return formatDateToYYYYMMDD(getWeekStartDate());
   });
 
   // Use prop values if provided, otherwise use local state
   const studentId = propStudentId || selectedStudentId;
   const classId = propClassId || selectedClassId;
+
+  // 현재 로그인한 사용자 정보
+  const { user } = useAuthState();
 
   // API에서 데이터 가져오기
   const { data: students = [] } = useStudents();
@@ -82,6 +83,12 @@ export default function MiddleSchoolRecordManager({
   const { data: allStudentClasses = [] } = useClassStudents();
   const { data: records = [], isLoading: recordsLoading } =
     useWeeklyMiddleRecords(classId, selectedWeek);
+
+  // 미입력 학생 목록 조회
+  const { data: pendingData, isLoading: pendingLoading } = usePendingStudents(
+    user?.id,
+    selectedWeek
+  );
 
   // Mutations
   const createRecordMutation = useCreateMiddleRecord();
@@ -470,17 +477,102 @@ export default function MiddleSchoolRecordManager({
           <div className="flex items-center gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-primary-500"></div>
-              <span>기록 완료: {records.length}명</span>
+              <span>기록 완료: {pendingData?.meta?.recordedStudents || 0}명</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
               <span>
-                미기록: {middleSchoolStudents.length - records.length}명
+                미기록: {pendingData?.meta?.pendingStudents || 0}명
               </span>
             </div>
           </div>
         </div>
       </Card>
+
+      {/* 미입력 학생 목록 */}
+      {!propStudentId && pendingData && pendingData.data.length > 0 && (
+        <Card size="lg" className="flex-shrink-0">
+          <div className="flex items-center gap-3 mb-4">
+            <AlertCircle className="w-5 h-5 text-orange-600" />
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                이번 주 미입력 학생 ({pendingData.data.length}명)
+              </h3>
+              <p className="text-sm text-gray-600">
+                기록을 작성하지 않은 학생들입니다
+              </p>
+            </div>
+          </div>
+
+          {pendingLoading ? (
+            <div className="p-6 text-center">
+              <Loader2 className="w-8 h-8 mx-auto mb-2 text-orange-600 animate-spin" />
+              <p className="text-xs text-gray-600">불러오는 중...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {pendingData.data.map((item) => {
+                const student = item.student;
+                const classInfo = item.class;
+
+                if (!student || !classInfo) return null;
+
+                return (
+                  <div
+                    key={`${item.student_id}-${item.class_id}`}
+                    className="p-4 border border-orange-200 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex-shrink-0">
+                          <span className="text-xs font-semibold text-white">
+                            {student.name.charAt(0)}
+                          </span>
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-sm text-gray-900">
+                            {student.name}
+                          </h4>
+                          <p className="text-xs text-gray-600">
+                            {getGrade(student.grade, "half")}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setNewRecord({
+                            student_id: student.id,
+                            class_id: classInfo.id,
+                            week_of: selectedWeek,
+                            attendance: "present",
+                            participation: 3,
+                            understanding: 3,
+                            homework: "good",
+                            notes: "",
+                            created_date: new Date().toISOString().split("T")[0],
+                            last_modified: new Date().toISOString().split("T")[0],
+                          });
+                          setIsAddingRecord(true);
+                        }}
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        작성
+                      </Button>
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      <p className="truncate">
+                        {classInfo.subject?.subject_name} - {classInfo.title}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Card>
+      )}
 
       {/* 학생 및 수업 필터 + 기록 목록 통합 */}
       {!propStudentId && (
