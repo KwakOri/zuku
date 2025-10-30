@@ -1,13 +1,11 @@
 "use client";
 
-import { BarChart3, Calendar, Shield } from "lucide-react";
-import { useState } from "react";
+import { Calendar, Shield } from "lucide-react";
 import CanvasSchedule from "./ClassroomScheduleCanvas";
 
 export default function EditableSchedule() {
   // 기본적으로 관리자 모드로 설정
   const editMode = "admin";
-  const [showDensity, setShowDensity] = useState(false);
 
   return (
     <div className="w-full space-y-6">
@@ -25,22 +23,6 @@ export default function EditableSchedule() {
               관리자 모드
             </div>
           </div>
-
-          {/* 학생 일정 밀집도 토글 */}
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showDensity}
-              onChange={(e) => setShowDensity(e.target.checked)}
-              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <div className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">
-                학생 일정 밀집도 표시
-              </span>
-            </div>
-          </label>
         </div>
 
         <p className="text-sm text-gray-600 mt-2">
@@ -50,7 +32,7 @@ export default function EditableSchedule() {
       </div>
 
       {/* 시간표 */}
-      <CanvasSchedule editMode={editMode} showDensity={showDensity} />
+      <CanvasSchedule editMode={editMode} />
 
       {/* 사용법 안내 */}
       <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">

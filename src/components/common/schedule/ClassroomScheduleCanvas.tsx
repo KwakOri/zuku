@@ -9,36 +9,39 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 // 강의실 목록 (1강의실 ~ 10강의실)
 const classrooms = Array.from({ length: 10 }, (_, i) => `${i + 1}강의실`);
 
+// 요일별 라벨
+const dayLabels = ["월", "화", "수", "목", "금", "토", "일"];
+
+// 요일별 시간 설정 (0=월요일, 6=일요일)
+const getDayTimeRange = (dayOfWeek: number): { startHour: number; endHour: number } => {
+  // 평일(월~금): 16시~22시
+  if (dayOfWeek >= 0 && dayOfWeek <= 4) {
+    return { startHour: 16, endHour: 22 };
+  }
+  // 주말(토~일): 10시~22시
+  return { startHour: 10, endHour: 22 };
+};
+
 interface CanvasScheduleProps {
   editMode?: EditMode;
   config?: ScheduleConfig;
-  showDensity?: boolean;
   customBlocks?: ClassBlock[]; // 커스텀 블록 데이터
   onBlocksChange?: (blocks: ClassBlock[]) => void; // 블록 변경 콜백
-  selectedClassId?: string; // 선택된 수업 ID (강사 모드용)
-  selectedClassStudents?: string[]; // 선택된 수업의 학생 ID 목록 (밀집도 계산용)
-  customDensityData?: { [key: string]: number }; // 외부에서 계산된 밀집도 데이터
-  densityTooltipData?: {
-    [key: string]: Array<{
-      studentId: string;
-      studentName: string;
-      scheduleName: string;
-    }>;
-  }; // 툴팁용 상세 데이터
-  onTimeSlotClick?: (timeSlot: {
-    dayOfWeek: number;
-    startTime: string;
-    endTime: string;
-  }) => void; // 시간대 클릭 콜백
-  onBlockClick?: (block: ClassBlock) => void; // 블록 클릭 콜백 (선택 모드용)
-  selectedBlockIds?: string[]; // 선택된 블록 ID 목록 (하이라이트 표시용)
-  // 드래그 앤 드롭 콜백
-  onClassDragStart?: (block: ClassBlock) => void; // 수업 카드 드래그 시작
-  onStudentDragStart?: (
+  // 클릭 기반 인터랙션 콜백
+  onStudentClick?: (
     student: { id: string; name: string; grade: number | null },
-    block: ClassBlock
-  ) => void; // 학생 블록 드래그 시작
-  onDrop?: (targetRoom: number, targetTime: string) => void; // 드롭
+    block: ClassBlock,
+    isShiftKey: boolean
+  ) => void; // 학생 클릭
+  onClassCardClick?: (block: ClassBlock) => void; // 수업 카드 클릭
+  // 선택된 학생들
+  selectedStudentIds?: string[];
+  // 초기 스크롤 위치 설정
+  initialScrollPosition?: {
+    dayOfWeek: number;
+    hour: number;
+    minute: number;
+  };
 }
 
 interface ClassModalProps {
@@ -287,19 +290,12 @@ function ClassModal({
 export default function CanvasSchedule({
   editMode = "view",
   config = defaultScheduleConfig,
-  showDensity = false,
   customBlocks,
   onBlocksChange,
-  selectedClassId,
-  selectedClassStudents,
-  customDensityData,
-  densityTooltipData,
-  onTimeSlotClick,
-  onBlockClick,
-  selectedBlockIds = [],
-  onClassDragStart,
-  onStudentDragStart,
-  onDrop,
+  onStudentClick,
+  onClassCardClick,
+  selectedStudentIds = [],
+  initialScrollPosition,
 }: CanvasScheduleProps) {
   const timeCanvasRef = useRef<HTMLCanvasElement>(null);
   const headerCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -308,60 +304,20 @@ export default function CanvasSchedule({
   const timeContainerRef = useRef<HTMLDivElement>(null);
   const headerContainerRef = useRef<HTMLDivElement>(null);
   const scheduleContainerRef = useRef<HTMLDivElement>(null);
-  // 강사 모드에서는 선택된 수업만 표시
-  const filteredBlocks = React.useMemo(() => {
-    if (selectedClassId && customBlocks) {
-      return customBlocks.filter((block) => block.id === selectedClassId);
-    }
-    return customBlocks || [];
-  }, [selectedClassId, customBlocks]);
 
   const [classBlocks, setClassBlocks] = useState<ClassBlock[]>(
-    () => filteredBlocks
+    () => customBlocks || []
   );
   const [modalBlock, setModalBlock] = useState<ClassBlock | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [containerWidth, setContainerWidth] = useState(1000);
-  const [dragState, setDragState] = useState<{
-    isDragging: boolean;
-    dragType: "class" | "student" | null;
-    draggedBlock: ClassBlock | null;
-    draggedStudent: { id: string; name: string; grade: number | null } | null;
-    startX: number;
-    startY: number;
-    offsetX: number;
-    offsetY: number;
-    previewPosition: {
-      dayOfWeek: number;
-      startTime: string;
-      endTime: string;
-    } | null;
-  }>({
-    isDragging: false,
-    dragType: null,
-    draggedBlock: null,
-    draggedStudent: null,
-    startX: 0,
-    startY: 0,
-    offsetX: 0,
-    offsetY: 0,
-    previewPosition: null,
-  });
-  const [tooltip, setTooltip] = useState<{
-    visible: boolean;
-    x: number;
-    y: number;
-    dayOfWeek: number;
-    time: string;
-    studentCount: number;
-  } | null>(null);
 
   // 동적 캔버스 설정
-  const MIN_DAY_COLUMN_WIDTH = 240; // 강의실당 최소 가로 길이 (기존 120의 2배)
-  const HEADER_HEIGHT = 60;
+  const MIN_DAY_COLUMN_WIDTH = 240; // 강의실당 최소 가로 길이
+  const DAY_HEADER_HEIGHT = 60; // 요일 헤더 높이
   const TIME_COLUMN_WIDTH = 80;
-  const SLOT_HEIGHT = 40; // 10분당 40px (기존 10px의 4배)
-  const GRID_START_Y = HEADER_HEIGHT + 20;
+  const SLOT_HEIGHT = 40; // 10분당 40px
+  const DAY_SPACING = 20; // 요일 사이 간격
 
   // 표시할 강의실 수 계산 (최소 1개, 최대 10개)
   const availableWidth = containerWidth - TIME_COLUMN_WIDTH;
@@ -377,13 +333,42 @@ export default function CanvasSchedule({
   const HEADER_CANVAS_WIDTH = DAY_COLUMN_WIDTH * 10; // 전체 10개 강의실 너비
   const SCHEDULE_CANVAS_WIDTH = DAY_COLUMN_WIDTH * 10; // 전체 10개 강의실 너비
 
-  // 캔버스 높이를 시간 범위에 맞게 동적 계산
-  const totalHours = config.endHour - config.startHour;
-  const totalMinutes = totalHours * 60;
-  const totalSlots = totalMinutes / config.timeSlotMinutes;
-  const TIME_CANVAS_HEIGHT = totalSlots * SLOT_HEIGHT + 40; // 상하 여백 40px
-  const SCHEDULE_CANVAS_HEIGHT = totalSlots * SLOT_HEIGHT + 40;
-  const CANVAS_HEIGHT = TIME_CANVAS_HEIGHT;
+  // 각 요일별 높이 계산 및 시작 Y 위치 계산 (메모이제이션)
+  const { dayStartY, TIME_CANVAS_HEIGHT, SCHEDULE_CANVAS_HEIGHT, CANVAS_HEIGHT } = React.useMemo(() => {
+    const dayHeights = dayLabels.map((_, dayIndex) => {
+      const { startHour, endHour } = getDayTimeRange(dayIndex);
+      const totalHours = endHour - startHour;
+      const totalMinutes = totalHours * 60;
+      const totalSlots = totalMinutes / config.timeSlotMinutes;
+      return {
+        dayOfWeek: dayIndex,
+        startHour,
+        endHour,
+        height: totalSlots * SLOT_HEIGHT,
+        headerHeight: DAY_HEADER_HEIGHT,
+      };
+    });
+
+    // 각 요일의 시작 Y 위치 계산
+    let cumulativeY = 0;
+    const dayStartY = dayHeights.map((day) => {
+      const startY = cumulativeY;
+      cumulativeY += day.headerHeight + day.height + DAY_SPACING;
+      return {
+        ...day,
+        startY,
+        endY: cumulativeY - DAY_SPACING,
+      };
+    });
+
+    // 전체 캔버스 높이
+    return {
+      dayStartY,
+      TIME_CANVAS_HEIGHT: cumulativeY,
+      SCHEDULE_CANVAS_HEIGHT: cumulativeY,
+      CANVAS_HEIGHT: cumulativeY,
+    };
+  }, [config.timeSlotMinutes, SLOT_HEIGHT, DAY_HEADER_HEIGHT, DAY_SPACING]);
 
   // 시간 파싱 유틸리티
   const parseTime = (time: string): number => {
@@ -423,7 +408,7 @@ export default function CanvasSchedule({
     ctx.closePath();
   };
 
-  // 시간 캔버스 그리기 함수 (고정, 세로 스크롤만)
+  // 시간 캔버스 그리기 함수 (요일별로 세로 연결)
   const drawTimeCanvas = useCallback(() => {
     const canvas = timeCanvasRef.current;
     if (!canvas) return;
@@ -439,24 +424,38 @@ export default function CanvasSchedule({
     canvas.style.height = `${TIME_CANVAS_HEIGHT}px`;
     ctx.scale(dpr, dpr);
 
-    // 배경 클리어 (neumorphism background)
-    ctx.fillStyle = "#fafbfa"; // neu-50 (much lighter)
+    // 배경 클리어
+    ctx.fillStyle = "#fafbfa";
     ctx.fillRect(0, 0, TIME_CANVAS_WIDTH, TIME_CANVAS_HEIGHT);
 
-    // 시간 레이블
-    ctx.fillStyle = "#6f756f"; // neu-700
-    ctx.font = "12px sans-serif";
-    ctx.textAlign = "right";
-    for (let hour = config.startHour; hour <= config.endHour; hour++) {
-      const y =
-        (((hour - config.startHour) * 60) / config.timeSlotMinutes) *
-          SLOT_HEIGHT +
-        20;
-      ctx.fillText(`${hour}:00`, TIME_CANVAS_WIDTH - 10, y + 5);
-    }
-  }, [config]);
+    // 각 요일별로 그리기
+    dayStartY.forEach((dayInfo) => {
+      const { dayOfWeek, startHour, endHour, startY, headerHeight } = dayInfo;
 
-  // 헤더 캔버스 그리기 함수 (고정, 가로 스크롤만)
+      // 요일 헤더
+      ctx.fillStyle = "#8a918a";
+      ctx.font = "bold 16px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(
+        dayLabels[dayOfWeek],
+        TIME_CANVAS_WIDTH / 2,
+        startY + headerHeight / 2 + 6
+      );
+
+      // 시간 레이블
+      ctx.fillStyle = "#6f756f";
+      ctx.font = "12px sans-serif";
+      ctx.textAlign = "right";
+
+      for (let hour = startHour; hour <= endHour; hour++) {
+        const minutesFromDayStart = (hour - startHour) * 60;
+        const y = startY + headerHeight + (minutesFromDayStart / config.timeSlotMinutes) * SLOT_HEIGHT;
+        ctx.fillText(`${hour}:00`, TIME_CANVAS_WIDTH - 10, y + 5);
+      }
+    });
+  }, [dayStartY, config.timeSlotMinutes, TIME_CANVAS_WIDTH, TIME_CANVAS_HEIGHT]);
+
+  // 헤더 캔버스 그리기 함수 (강의실 헤더만, 고정)
   const drawHeaderCanvas = useCallback(() => {
     const canvas = headerCanvasRef.current;
     if (!canvas) return;
@@ -467,42 +466,42 @@ export default function CanvasSchedule({
     // 고해상도 설정
     const dpr = window.devicePixelRatio || 1;
     canvas.width = HEADER_CANVAS_WIDTH * dpr;
-    canvas.height = HEADER_HEIGHT * dpr;
+    canvas.height = DAY_HEADER_HEIGHT * dpr;
     canvas.style.width = `${HEADER_CANVAS_WIDTH}px`;
-    canvas.style.height = `${HEADER_HEIGHT}px`;
+    canvas.style.height = `${DAY_HEADER_HEIGHT}px`;
     ctx.scale(dpr, dpr);
 
-    // 배경 클리어 (neumorphism background)
-    ctx.fillStyle = "#fafbfa"; // neu-50 (much lighter)
-    ctx.fillRect(0, 0, HEADER_CANVAS_WIDTH, HEADER_HEIGHT);
+    // 배경 클리어
+    ctx.fillStyle = "#fafbfa";
+    ctx.fillRect(0, 0, HEADER_CANVAS_WIDTH, DAY_HEADER_HEIGHT);
 
     // 헤더 하단 경계선
-    ctx.strokeStyle = "#e4e6e4"; // neu-300
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#d4d6d4";
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(0, HEADER_HEIGHT - 1);
-    ctx.lineTo(HEADER_CANVAS_WIDTH, HEADER_HEIGHT - 1);
+    ctx.moveTo(0, DAY_HEADER_HEIGHT - 1);
+    ctx.lineTo(HEADER_CANVAS_WIDTH, DAY_HEADER_HEIGHT - 1);
     ctx.stroke();
 
     // 강의실 헤더
-    ctx.fillStyle = "#4a504a"; // neu-800
+    ctx.fillStyle = "#4a504a";
     ctx.font = "bold 14px sans-serif";
     ctx.textAlign = "center";
 
     classrooms.forEach((classroom, index) => {
       const x = index * DAY_COLUMN_WIDTH + DAY_COLUMN_WIDTH / 2;
-      ctx.fillText(classroom, x, HEADER_HEIGHT / 2 + 5);
+      ctx.fillText(classroom, x, DAY_HEADER_HEIGHT / 2 + 5);
 
       // 세로 구분선
       if (index > 0) {
-        ctx.strokeStyle = "#e4e6e4"; // neu-300
+        ctx.strokeStyle = "#e4e6e4";
         ctx.beginPath();
         ctx.moveTo(index * DAY_COLUMN_WIDTH, 0);
-        ctx.lineTo(index * DAY_COLUMN_WIDTH, HEADER_HEIGHT);
+        ctx.lineTo(index * DAY_COLUMN_WIDTH, DAY_HEADER_HEIGHT);
         ctx.stroke();
       }
     });
-  }, [DAY_COLUMN_WIDTH]);
+  }, [DAY_COLUMN_WIDTH, HEADER_CANVAS_WIDTH, DAY_HEADER_HEIGHT]);
 
   // 스케줄 캔버스 그리기 함수 (세로 스크롤만)
   const drawScheduleCanvas = useCallback(() => {
@@ -520,91 +519,68 @@ export default function CanvasSchedule({
     canvas.style.height = `${SCHEDULE_CANVAS_HEIGHT}px`;
     ctx.scale(dpr, dpr);
 
-    // 배경 클리어 (neumorphism background)
-    ctx.fillStyle = "#fafbfa"; // neu-50 (much lighter)
+    // 배경 클리어
+    ctx.fillStyle = "#fafbfa";
     ctx.fillRect(0, 0, SCHEDULE_CANVAS_WIDTH, SCHEDULE_CANVAS_HEIGHT);
 
-    // 세로 구분선
-    ctx.strokeStyle = "#e4e6e4"; // neu-300
-    ctx.lineWidth = 1;
-    classrooms.forEach((classroom, index) => {
-      if (index > 0) {
+    // 각 요일별로 배경 및 그리드 그리기
+    dayStartY.forEach((dayInfo) => {
+      const { startHour, endHour, startY, headerHeight } = dayInfo;
+
+      // 요일 헤더 배경
+      ctx.fillStyle = "#f0f1f0";
+      ctx.fillRect(0, startY, SCHEDULE_CANVAS_WIDTH, headerHeight);
+
+      // 세로 구분선 (강의실)
+      ctx.strokeStyle = "#e4e6e4";
+      ctx.lineWidth = 1;
+      classrooms.forEach((_, index) => {
+        if (index > 0) {
+          ctx.beginPath();
+          ctx.moveTo(index * DAY_COLUMN_WIDTH, startY);
+          ctx.lineTo(index * DAY_COLUMN_WIDTH, startY + headerHeight + dayInfo.height);
+          ctx.stroke();
+        }
+      });
+
+      // 가로선 (시간)
+      ctx.strokeStyle = "#d1d4d1";
+      ctx.lineWidth = 1;
+      for (let hour = startHour; hour <= endHour; hour++) {
+        const minutesFromDayStart = (hour - startHour) * 60;
+        const y = startY + headerHeight + (minutesFromDayStart / config.timeSlotMinutes) * SLOT_HEIGHT;
         ctx.beginPath();
-        ctx.moveTo(index * DAY_COLUMN_WIDTH, 0);
-        ctx.lineTo(index * DAY_COLUMN_WIDTH, SCHEDULE_CANVAS_HEIGHT);
+        ctx.moveTo(0, y);
+        ctx.lineTo(SCHEDULE_CANVAS_WIDTH, y);
         ctx.stroke();
       }
     });
 
-    // 그리드 (가로선)
-    ctx.strokeStyle = "#d1d4d1"; // neu-400 (lighter grid lines)
-    ctx.lineWidth = 1;
-    for (let hour = config.startHour; hour <= config.endHour; hour++) {
-      const y =
-        (((hour - config.startHour) * 60) / config.timeSlotMinutes) *
-          SLOT_HEIGHT +
-        20;
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(SCHEDULE_CANVAS_WIDTH, y);
-      ctx.stroke();
-    }
-
-    // 학생 일정 밀집도 표시
-    if (showDensity && customDensityData) {
-      const densityData = customDensityData;
-      const maxDensity = Math.max(
-        ...Object.values(densityData).map((v) => Number(v))
-      );
-
-      for (let room = 0; room < 10; room++) {
-        for (let hour = config.startHour; hour <= config.endHour; hour++) {
-          for (let minute = 0; minute < 60; minute += config.timeSlotMinutes) {
-            const time = `${hour.toString().padStart(2, "0")}:${minute
-              .toString()
-              .padStart(2, "0")}`;
-            const key = `${room}-${time}`;
-            const density = densityData[key] || 0;
-
-            if (density > 0) {
-              const x = room * DAY_COLUMN_WIDTH;
-              const y =
-                (((hour - config.startHour) * 60 + minute) /
-                  config.timeSlotMinutes) *
-                  SLOT_HEIGHT +
-                20;
-              const width = DAY_COLUMN_WIDTH;
-              const height = SLOT_HEIGHT;
-
-              const color = getDensityColor(density, maxDensity);
-              ctx.fillStyle = color;
-              ctx.fillRect(x, y, width, height);
-            }
-          }
-        }
-      }
-    }
-
     // 수업 블록 그리기
     classBlocks.forEach((block) => {
-      if (dragState.isDragging && dragState.draggedBlock?.id === block.id)
-        return;
+      // 해당 요일의 정보 찾기
+      const dayInfo = dayStartY.find(d => d.dayOfWeek === block.dayOfWeek);
+      if (!dayInfo) return;
 
+      const { startHour, startY, headerHeight } = dayInfo;
       const startMinutes = parseTime(block.startTime);
       const endMinutes = parseTime(block.endTime);
-      const configStartMinutes = config.startHour * 60;
 
-      const x = block.dayOfWeek * DAY_COLUMN_WIDTH + 2;
-      const y =
-        ((startMinutes - configStartMinutes) / config.timeSlotMinutes) *
-          SLOT_HEIGHT +
-        20;
+      // 강의실 번호 추출 (room이 "1강의실" 형태거나 "1" 형태)
+      let roomIndex = 0;
+      if (block.room) {
+        const roomMatch = block.room.match(/^(\d+)/);
+        if (roomMatch) {
+          roomIndex = parseInt(roomMatch[1], 10) - 1; // 1강의실 = index 0
+        }
+      }
+
+      const x = roomIndex * DAY_COLUMN_WIDTH + 2;
+      const dayStartMinutes = startHour * 60;
+      const y = startY + headerHeight + ((startMinutes - dayStartMinutes) / config.timeSlotMinutes) * SLOT_HEIGHT;
       const width = DAY_COLUMN_WIDTH - 4;
-      const height =
-        ((endMinutes - startMinutes) / config.timeSlotMinutes) * SLOT_HEIGHT;
+      const height = ((endMinutes - startMinutes) / config.timeSlotMinutes) * SLOT_HEIGHT;
 
-      // 선택된 블록인지 확인
-      const isSelected = selectedBlockIds.includes(block.id);
 
       // 블록 배경 (neumorphism effect)
       const radius = 12;
@@ -636,28 +612,16 @@ export default function CanvasSchedule({
 
       // Color overlay with gradient - 선명한 색상
       const gradient = ctx.createLinearGradient(x, y, x, y + height);
-      if (isSelected) {
-        // 선택된 블록은 약간 밝게
-        gradient.addColorStop(0, block.color + "CC"); // 80% opacity
-        gradient.addColorStop(1, block.color + "B3"); // 70% opacity
-      } else {
-        // 선택되지 않은 블록은 선명하게
-        gradient.addColorStop(0, block.color + "FF"); // 100% opacity
-        gradient.addColorStop(1, block.color + "F2"); // 95% opacity
-      }
+      gradient.addColorStop(0, block.color + "FF"); // 100% opacity
+      gradient.addColorStop(1, block.color + "F2"); // 95% opacity
 
       ctx.fillStyle = gradient;
       drawRoundedRect(ctx, x + 2, y + 2, width - 4, height - 4, radius - 2);
       ctx.fill();
 
-      // Border - 선택된 블록은 강조 테두리
-      if (isSelected) {
-        ctx.strokeStyle = "#6b7c5d"; // primary-500
-        ctx.lineWidth = 3;
-      } else {
-        ctx.strokeStyle = "rgba(168, 173, 168, 0.2)";
-        ctx.lineWidth = 1;
-      }
+      // Border
+      ctx.strokeStyle = "rgba(168, 173, 168, 0.2)";
+      ctx.lineWidth = 1;
       drawRoundedRect(ctx, x, y, width, height, radius);
       ctx.stroke();
 
@@ -766,28 +730,20 @@ export default function CanvasSchedule({
         const studentBlockGap = 4;
 
         block.students.forEach((student, index) => {
-          // 드래그 중인 학생은 렌더링하지 않음
-          if (
-            dragState.isDragging &&
-            dragState.dragType === "student" &&
-            dragState.draggedStudent?.id === student.id &&
-            dragState.draggedBlock?.id === block.id
-          ) {
-            return;
-          }
-
           const row = Math.floor(index / studentsPerRow);
           const col = index % studentsPerRow;
 
-          const blockX =
-            x + 10 + col * (studentBlockWidth + studentBlockGap / studentsPerRow);
+          const blockX = x + 10 + col * studentBlockWidth;
           const blockY = currentY + row * (studentBlockHeight + studentBlockGap);
 
           // 학생 블록이 카드 영역을 벗어나는지 확인
           if (blockY + studentBlockHeight > y + height - 10) return;
 
-          // 학생 블록 배경 (반투명 흰색)
-          ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+          // 선택 여부 확인
+          const isSelected = selectedStudentIds.includes(student.id);
+
+          // 학생 블록 배경 (반투명 흰색, 선택된 경우 불투명)
+          ctx.fillStyle = isSelected ? "rgba(255, 255, 255, 1.0)" : "rgba(255, 255, 255, 0.25)";
           drawRoundedRect(
             ctx,
             blockX,
@@ -798,17 +754,19 @@ export default function CanvasSchedule({
           );
           ctx.fill();
 
-          // 학생 이름 텍스트
-          ctx.fillStyle = "#ffffff";
+          // 학생 이름 텍스트 (선택된 경우 검은색, 아니면 흰색)
+          ctx.fillStyle = isSelected ? "#1f2937" : "#ffffff";
           ctx.font = "bold 10px sans-serif";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
 
-          // Text shadow for better readability
-          ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
-          ctx.shadowOffsetX = 0.5;
-          ctx.shadowOffsetY = 0.5;
-          ctx.shadowBlur = 1;
+          // Text shadow for better readability (선택되지 않은 경우만)
+          if (!isSelected) {
+            ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
+            ctx.shadowOffsetX = 0.5;
+            ctx.shadowOffsetY = 0.5;
+            ctx.shadowBlur = 1;
+          }
 
           const textX = blockX + (studentBlockWidth - studentBlockGap) / 2;
           const textY = blockY + studentBlockHeight / 2;
@@ -908,181 +866,16 @@ export default function CanvasSchedule({
         ctx.fill();
       }
     });
-
-    // 드래그 중인 블록 그리기
-    if (dragState.isDragging && dragState.draggedBlock) {
-      const block = dragState.draggedBlock;
-
-      if (dragState.dragType === "student" && dragState.draggedStudent) {
-        // 학생 블록 드래그 중
-        const studentBlockWidth = 50;
-        const studentBlockHeight = 22;
-
-        const x = dragState.startX + dragState.offsetX - studentBlockWidth / 2;
-        const y = dragState.startY + dragState.offsetY - studentBlockHeight / 2;
-
-        // 학생 블록 렌더링
-        ctx.globalAlpha = 0.9;
-        ctx.shadowColor = "rgba(168, 173, 168, 0.4)";
-        ctx.shadowOffsetX = 4;
-        ctx.shadowOffsetY = 4;
-        ctx.shadowBlur = 8;
-
-        ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
-        drawRoundedRect(ctx, x, y, studentBlockWidth, studentBlockHeight, 4);
-        ctx.fill();
-
-        // Reset shadow
-        ctx.shadowColor = "transparent";
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
-        ctx.shadowBlur = 0;
-
-        // 학생 이름
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 10px sans-serif";
-        ctx.textAlign = "center";
-
-        const studentName = dragState.draggedStudent.name;
-        const displayName = studentName.length > 3 ? studentName.substring(0, 3) : studentName;
-
-        ctx.fillText(displayName, x + studentBlockWidth / 2, y + studentBlockHeight / 2 + 4);
-
-        ctx.globalAlpha = 1.0;
-      } else if (dragState.dragType === "class") {
-        // 수업 카드 드래그 중
-        const startMinutes = parseTime(block.startTime);
-        const endMinutes = parseTime(block.endTime);
-
-        const width = DAY_COLUMN_WIDTH - 4;
-        const height =
-          ((endMinutes - startMinutes) / config.timeSlotMinutes) * SLOT_HEIGHT;
-
-        const x = dragState.startX + dragState.offsetX - width / 2;
-        const y = dragState.startY + dragState.offsetY - height / 2;
-
-        // 드래그 중인 블록 (neumorphism effect with enhanced shadow)
-        const radius = 12;
-        ctx.globalAlpha = 0.9;
-
-        // Enhanced shadow for dragging
-        ctx.shadowColor = "rgba(168, 173, 168, 0.4)";
-        ctx.shadowOffsetX = 8;
-        ctx.shadowOffsetY = 8;
-        ctx.shadowBlur = 16;
-
-        ctx.fillStyle = "#f5f6f5"; // neu-100 base
-        drawRoundedRect(ctx, x, y, width, height, radius);
-        ctx.fill();
-
-        // Color overlay
-        const gradient = ctx.createLinearGradient(x, y, x, y + height);
-        gradient.addColorStop(0, block.color + "F0"); // Higher opacity for drag state
-        gradient.addColorStop(1, block.color + "E0");
-
-        ctx.fillStyle = gradient;
-        drawRoundedRect(ctx, x + 2, y + 2, width - 4, height - 4, radius - 2);
-        ctx.fill();
-
-        // Reset shadow
-        ctx.shadowColor = "transparent";
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
-        ctx.shadowBlur = 0;
-
-        // Border
-        ctx.strokeStyle = "rgba(168, 173, 168, 0.3)";
-        ctx.lineWidth = 2;
-        drawRoundedRect(ctx, x, y, width, height, radius);
-        ctx.stroke();
-
-        // 텍스트
-        ctx.fillStyle = "#ffffff"; // 흰색 텍스트
-        ctx.font = "bold 13px sans-serif";
-        ctx.textAlign = "left";
-
-        // Text shadow
-        ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-        ctx.shadowOffsetX = 1;
-        ctx.shadowOffsetY = 1;
-        ctx.shadowBlur = 2;
-
-        ctx.fillText(block.title, x + 12, y + 18);
-
-        // Reset effects
-        ctx.shadowColor = "transparent";
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
-        ctx.shadowBlur = 0;
-        ctx.globalAlpha = 1.0;
-      }
-
-      // 드롭 프리뷰 그리기
-      if (dragState.previewPosition) {
-        const { dayOfWeek, startTime, endTime } = dragState.previewPosition;
-        const startMinutes = parseTime(startTime);
-        const endMinutes = parseTime(endTime);
-        const configStartMinutes = config.startHour * 60;
-
-        const px = dayOfWeek * DAY_COLUMN_WIDTH + 2;
-        const py =
-          ((startMinutes - configStartMinutes) / config.timeSlotMinutes) *
-            SLOT_HEIGHT +
-          20;
-        const pwidth = DAY_COLUMN_WIDTH - 4;
-        const pheight =
-          ((endMinutes - startMinutes) / config.timeSlotMinutes) * SLOT_HEIGHT;
-
-        // 드롭 프리뷰 (neumorphism inset effect)
-        const radius = 12;
-        ctx.globalAlpha = 0.6;
-
-        // Inset shadow for drop preview
-        ctx.shadowColor = "rgba(168, 173, 168, 0.4)";
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
-        ctx.shadowBlur = 0;
-
-        // Create inset effect with darker background
-        ctx.fillStyle = "#e4e6e4"; // neu-300 for inset look
-        drawRoundedRect(ctx, px, py, pwidth, pheight, radius);
-        ctx.fill();
-
-        // Color overlay for preview
-        ctx.globalAlpha = 0.4;
-        ctx.fillStyle = dragState.draggedBlock.color;
-        drawRoundedRect(
-          ctx,
-          px + 2,
-          py + 2,
-          pwidth - 4,
-          pheight - 4,
-          radius - 2
-        );
-        ctx.fill();
-
-        // 점선 테두리
-        ctx.globalAlpha = 0.8;
-        ctx.strokeStyle = "#6b7c5d"; // primary-500
-        ctx.lineWidth = 2;
-        ctx.setLineDash([8, 4]);
-        drawRoundedRect(ctx, px, py, pwidth, pheight, radius);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        ctx.globalAlpha = 1.0;
-      }
-    }
   }, [
     classBlocks,
-    dragState,
-    config,
+    config.timeSlotMinutes,
     editMode,
-    showDensity,
     DAY_COLUMN_WIDTH,
-    selectedClassStudents,
-    customDensityData,
-    selectedBlockIds,
+    dayStartY,
+    SCHEDULE_CANVAS_WIDTH,
+    SCHEDULE_CANVAS_HEIGHT,
+    SLOT_HEIGHT,
+    selectedStudentIds,
   ]);
 
   // 마우스 이벤트 핸들러
@@ -1104,205 +897,52 @@ export default function CanvasSchedule({
         // 수정 아이콘 클릭 - 모달 열기
         setModalBlock(clickedBlock);
         setIsModalOpen(true);
-      } else if (onBlockClick) {
-        // onBlockClick이 제공된 경우 (선택 모드) - 콜백 호출
-        onBlockClick(clickedBlock);
-        // } else if (editMode === "admin" && clickedBlock.isEditable !== false) {
       } else if (editMode === "edit" || editMode === "admin") {
-        // 편집/관리자 모드에서 블록 클릭 - 드래그 시작 준비
+        // 편집/관리자 모드에서 블록 클릭 처리
         // 학생 블록 클릭 확인
         const studentAtPosition = getStudentAtPosition(x, y, clickedBlock);
 
-        if (studentAtPosition && onStudentDragStart) {
-          // 학생 블록 드래그 시작
-          onStudentDragStart(studentAtPosition, clickedBlock);
-          setDragState({
-            isDragging: true,
-            dragType: "student",
-            draggedBlock: clickedBlock,
-            draggedStudent: studentAtPosition,
-            startX: x,
-            startY: y,
-            offsetX: 0,
-            offsetY: 0,
-            previewPosition: null,
-          });
-        } else if (onClassDragStart) {
-          // 수업 카드 드래그 시작
-          onClassDragStart(clickedBlock);
-          setDragState({
-            isDragging: true,
-            dragType: "class",
-            draggedBlock: clickedBlock,
-            draggedStudent: null,
-            startX: x,
-            startY: y,
-            offsetX: 0,
-            offsetY: 0,
-            previewPosition: null,
-          });
+        if (studentAtPosition && onStudentClick) {
+          // 학생 클릭 - Shift 키 여부와 함께 콜백 호출
+          onStudentClick(studentAtPosition, clickedBlock, e.shiftKey);
+        } else if (onClassCardClick) {
+          // 수업 카드 클릭 - 콜백 호출
+          onClassCardClick(clickedBlock);
         }
       } else {
         // 조회 모드 또는 편집 불가능한 블록 - 모달 열기
         setModalBlock(clickedBlock);
         setIsModalOpen(true);
       }
-    } else if (onTimeSlotClick && editMode === "admin") {
-      // 빈 시간을 클릭했을 때 시간대 계산해서 콜백 호출
-      const roomIndex = Math.floor(x / DAY_COLUMN_WIDTH);
-      const slotIndex = Math.floor((y - 20) / SLOT_HEIGHT);
-
-      if (roomIndex >= 0 && roomIndex < 10 && slotIndex >= 0) {
-        const startHour =
-          Math.floor((slotIndex * config.timeSlotMinutes) / 60) +
-          config.startHour;
-        const startMinute = (slotIndex * config.timeSlotMinutes) % 60;
-        // 90분(1시간 30분) = 90 / timeSlotMinutes 슬롯
-        const slotsFor90Min = Math.ceil(90 / config.timeSlotMinutes);
-        const endHour =
-          Math.floor(
-            ((slotIndex + slotsFor90Min) * config.timeSlotMinutes) / 60
-          ) + config.startHour;
-        const endMinute =
-          ((slotIndex + slotsFor90Min) * config.timeSlotMinutes) % 60;
-
-        const startTime = `${startHour
-          .toString()
-          .padStart(2, "0")}:${startMinute.toString().padStart(2, "0")}`;
-        const endTime = `${endHour.toString().padStart(2, "0")}:${endMinute
-          .toString()
-          .padStart(2, "0")}`;
-
-        onTimeSlotClick({
-          dayOfWeek: roomIndex,
-          startTime,
-          endTime,
-        });
-      }
     }
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = scheduleCanvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    // 밀집도 모드에서 툴팁 표시
-    if (showDensity && !dragState.isDragging) {
-      const roomIndex = Math.floor(x / DAY_COLUMN_WIDTH);
-      const slotIndex = Math.floor((y - 20) / SLOT_HEIGHT);
-
-      if (roomIndex >= 0 && roomIndex < 10 && slotIndex >= 0) {
-        const hour =
-          Math.floor((slotIndex * config.timeSlotMinutes) / 60) +
-          config.startHour;
-        const minute = (slotIndex * config.timeSlotMinutes) % 60;
-        const time = `${hour.toString().padStart(2, "0")}:${minute
-          .toString()
-          .padStart(2, "0")}`;
-
-        // Use custom tooltip data if available
-        if (densityTooltipData) {
-          const key = `${roomIndex}-${time}`;
-          const schedules = densityTooltipData[key] || [];
-
-          if (schedules.length > 0) {
-            setTooltip({
-              visible: true,
-              x: e.clientX,
-              y: e.clientY,
-              dayOfWeek: roomIndex,
-              time,
-              studentCount: schedules.length,
-            });
-          } else {
-            setTooltip(null);
-          }
-        } else {
-          setTooltip(null);
-        }
-      } else {
-        setTooltip(null);
-      }
-    }
-
-    // 드래그 중일 때의 기존 로직
-    if (dragState.isDragging) {
-      // 드롭 프리뷰 위치 계산
-      const previewPosition = getDropPosition(x, y);
-
-      setDragState((prev) => ({
-        ...prev,
-        offsetX: x - prev.startX,
-        offsetY: y - prev.startY,
-        previewPosition,
-      }));
-    }
-  };
-
-  const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!dragState.isDragging || !dragState.draggedBlock) return;
-
-    const canvas = scheduleCanvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    // 드롭 위치 계산
-    const newPosition = getDropPosition(x, y);
-
-    if (newPosition && onDrop) {
-      // 외부 onDrop 콜백 호출 (모달 표시 등)
-      onDrop(newPosition.dayOfWeek, newPosition.startTime);
-    } else if (newPosition) {
-      // onDrop 콜백이 없으면 기존 로직 (내부 상태 업데이트)
-      const updatedBlocks = classBlocks.map((block) =>
-        block.id === dragState.draggedBlock?.id
-          ? {
-              ...block,
-              dayOfWeek: newPosition.dayOfWeek,
-              startTime: newPosition.startTime,
-              endTime: newPosition.endTime,
-            }
-          : block
-      );
-      setClassBlocks(updatedBlocks);
-      onBlocksChange?.(updatedBlocks);
-    }
-
-    setDragState({
-      isDragging: false,
-      dragType: null,
-      draggedBlock: null,
-      draggedStudent: null,
-      startX: 0,
-      startY: 0,
-      offsetX: 0,
-      offsetY: 0,
-      previewPosition: null,
-    });
-  };
 
   // 위치에 있는 블록 찾기 (스케줄 캔버스 좌표계)
   const getBlockAtPosition = (x: number, y: number): ClassBlock | null => {
     for (const block of classBlocks) {
+      // 해당 요일의 정보 찾기
+      const dayInfo = dayStartY.find(d => d.dayOfWeek === block.dayOfWeek);
+      if (!dayInfo) continue;
+
+      const { startHour, startY, headerHeight } = dayInfo;
       const startMinutes = parseTime(block.startTime);
       const endMinutes = parseTime(block.endTime);
-      const configStartMinutes = config.startHour * 60;
 
-      const blockX = block.dayOfWeek * DAY_COLUMN_WIDTH + 2;
-      const blockY =
-        ((startMinutes - configStartMinutes) / config.timeSlotMinutes) *
-          SLOT_HEIGHT +
-        20;
+      // 강의실 번호 추출
+      let roomIndex = 0;
+      if (block.room) {
+        const roomMatch = block.room.match(/^(\d+)/);
+        if (roomMatch) {
+          roomIndex = parseInt(roomMatch[1], 10) - 1;
+        }
+      }
+
+      const blockX = roomIndex * DAY_COLUMN_WIDTH + 2;
+      const dayStartMinutes = startHour * 60;
+      const blockY = startY + headerHeight + ((startMinutes - dayStartMinutes) / config.timeSlotMinutes) * SLOT_HEIGHT;
       const blockWidth = DAY_COLUMN_WIDTH - 4;
-      const blockHeight =
-        ((endMinutes - startMinutes) / config.timeSlotMinutes) * SLOT_HEIGHT;
+      const blockHeight = ((endMinutes - startMinutes) / config.timeSlotMinutes) * SLOT_HEIGHT;
 
       if (
         x >= blockX &&
@@ -1318,19 +958,30 @@ export default function CanvasSchedule({
 
   // 수정 아이콘 영역인지 확인 (스케줄 캔버스 좌표계)
   const isInEditIcon = (x: number, y: number, block: ClassBlock): boolean => {
-    const startMinutes = parseTime(block.startTime);
-    const configStartMinutes = config.startHour * 60;
+    // 해당 요일의 정보 찾기
+    const dayInfo = dayStartY.find(d => d.dayOfWeek === block.dayOfWeek);
+    if (!dayInfo) return false;
 
-    const blockX = block.dayOfWeek * DAY_COLUMN_WIDTH + 2;
-    const blockY =
-      ((startMinutes - configStartMinutes) / config.timeSlotMinutes) *
-        SLOT_HEIGHT +
-      20;
+    const { startHour, startY, headerHeight } = dayInfo;
+    const startMinutes = parseTime(block.startTime);
+
+    // 강의실 번호 추출
+    let roomIndex = 0;
+    if (block.room) {
+      const roomMatch = block.room.match(/^(\d+)/);
+      if (roomMatch) {
+        roomIndex = parseInt(roomMatch[1], 10) - 1;
+      }
+    }
+
+    const blockX = roomIndex * DAY_COLUMN_WIDTH + 2;
+    const dayStartMinutes = startHour * 60;
+    const blockY = startY + headerHeight + ((startMinutes - dayStartMinutes) / config.timeSlotMinutes) * SLOT_HEIGHT;
     const blockWidth = DAY_COLUMN_WIDTH - 4;
 
-    const iconSize = 20; // Updated to match the canvas drawing
-    const iconX = blockX + blockWidth - iconSize - 8; // Updated to match the canvas drawing
-    const iconY = blockY + 8; // Updated to match the canvas drawing
+    const iconSize = 20;
+    const iconX = blockX + blockWidth - iconSize - 8;
+    const iconY = blockY + 8;
 
     return (
       x >= iconX && x <= iconX + iconSize && y >= iconY && y <= iconY + iconSize
@@ -1345,21 +996,31 @@ export default function CanvasSchedule({
   ): { id: string; name: string; grade: number | null } | null => {
     if (!block.students || block.students.length === 0) return null;
 
+    // 해당 요일의 정보 찾기
+    const dayInfo = dayStartY.find(d => d.dayOfWeek === block.dayOfWeek);
+    if (!dayInfo) return null;
+
+    const { startHour, startY, headerHeight } = dayInfo;
     const startMinutes = parseTime(block.startTime);
     const endMinutes = parseTime(block.endTime);
-    const configStartMinutes = config.startHour * 60;
 
-    const blockX = block.dayOfWeek * DAY_COLUMN_WIDTH + 2;
-    const blockY =
-      ((startMinutes - configStartMinutes) / config.timeSlotMinutes) *
-        SLOT_HEIGHT +
-      20;
+    // 강의실 번호 추출
+    let roomIndex = 0;
+    if (block.room) {
+      const roomMatch = block.room.match(/^(\d+)/);
+      if (roomMatch) {
+        roomIndex = parseInt(roomMatch[1], 10) - 1;
+      }
+    }
+
+    const blockX = roomIndex * DAY_COLUMN_WIDTH + 2;
+    const dayStartMinutes = startHour * 60;
+    const blockY = startY + headerHeight + ((startMinutes - dayStartMinutes) / config.timeSlotMinutes) * SLOT_HEIGHT;
     const blockWidth = DAY_COLUMN_WIDTH - 4;
-    const blockHeight =
-      ((endMinutes - startMinutes) / config.timeSlotMinutes) * SLOT_HEIGHT;
+    const blockHeight = ((endMinutes - startMinutes) / config.timeSlotMinutes) * SLOT_HEIGHT;
 
     // 학생 블록은 수업 정보 아래에 표시됨
-    const studentsStartY = blockY + 44; // title(18) + subject(14) + teacher(12) + spacing
+    const studentsStartY = blockY + 44;
 
     // 블록 높이가 충분한지 확인
     if (blockHeight < 70 || y < studentsStartY) return null;
@@ -1402,37 +1063,6 @@ export default function CanvasSchedule({
     return null;
   };
 
-  // 드롭 위치 계산 (스케줄 캔버스 좌표계)
-  const getDropPosition = (x: number, y: number) => {
-    if (x < 0 || y < 20) return null;
-    if (!dragState.draggedBlock) return null;
-
-    // 드래그 중에 중앙 기준으로 표시되므로, 드롭할 때도 중앙 기준으로 계산
-    const blockStartMinutes = parseTime(dragState.draggedBlock.startTime);
-    const blockEndMinutes = parseTime(dragState.draggedBlock.endTime);
-    const blockHeight =
-      ((blockEndMinutes - blockStartMinutes) / config.timeSlotMinutes) *
-      SLOT_HEIGHT;
-
-    // 마우스 위치에서 블록 중앙까지의 오프셋을 고려
-    const adjustedY = y - blockHeight / 2;
-
-    const roomIndex = Math.floor(x / DAY_COLUMN_WIDTH);
-    if (roomIndex < 0 || roomIndex >= 10) return null;
-
-    const slotIndex = Math.floor((adjustedY - 20) / SLOT_HEIGHT);
-    const startMinutes =
-      config.startHour * 60 + slotIndex * config.timeSlotMinutes;
-
-    const originalDuration = blockEndMinutes - blockStartMinutes;
-    const endMinutes = startMinutes + originalDuration;
-
-    return {
-      dayOfWeek: roomIndex,
-      startTime: formatTime(startMinutes),
-      endTime: formatTime(endMinutes),
-    };
-  };
 
   // 모달 핸들러
   const handleCloseModal = () => {
@@ -1448,17 +1078,27 @@ export default function CanvasSchedule({
     onBlocksChange?.(updatedBlocks);
   };
 
-  // 컨테이너 크기 감지
+  // 컨테이너 크기 감지 (debounced)
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
     const updateSize = () => {
       if (containerRef.current) {
         setContainerWidth(containerRef.current.offsetWidth);
       }
     };
 
+    const debouncedUpdateSize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(updateSize, 100);
+    };
+
     updateSize();
-    window.addEventListener("resize", updateSize);
-    return () => window.removeEventListener("resize", updateSize);
+    window.addEventListener("resize", debouncedUpdateSize);
+    return () => {
+      window.removeEventListener("resize", debouncedUpdateSize);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   // 스크롤 동기화 (세로: 시간-스케줄, 가로: 헤더-스케줄)
@@ -1527,21 +1167,47 @@ export default function CanvasSchedule({
 
   // 커스텀 블록이 변경될 때 업데이트
   useEffect(() => {
-    setClassBlocks((prev) => {
-      // 깊은 비교를 통해 실제로 변경된 경우에만 업데이트
-      if (JSON.stringify(prev) !== JSON.stringify(filteredBlocks)) {
-        return filteredBlocks;
-      }
-      return prev;
-    });
-  }, [filteredBlocks]);
+    if (customBlocks) {
+      setClassBlocks(customBlocks);
+    }
+  }, [customBlocks]);
 
-  // Canvas 다시 그리기
+  // 초기 스크롤 위치 설정 (최초 마운트 시에만)
+  useEffect(() => {
+    if (initialScrollPosition && scheduleContainerRef.current && dayStartY.length > 0) {
+      const { dayOfWeek, hour, minute } = initialScrollPosition;
+      const container = scheduleContainerRef.current;
+
+      // 오늘 요일 정보 찾기
+      const todayInfo = dayStartY.find(d => d.dayOfWeek === dayOfWeek);
+      if (!todayInfo) return;
+
+      const { startHour, startY, headerHeight } = todayInfo;
+
+      // 세로 스크롤: 오늘 요일의 현재 시간으로 이동
+      const totalMinutes = hour * 60 + minute;
+      const dayStartMinutes = startHour * 60;
+      const scrollY = startY + headerHeight + ((totalMinutes - dayStartMinutes) / config.timeSlotMinutes) * SLOT_HEIGHT;
+
+      // 가로 스크롤은 0 유지 (맨 왼쪽)
+      container.scrollLeft = 0;
+      container.scrollTop = scrollY;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 빈 배열로 최초 마운트 시에만 실행
+
+  // Canvas 다시 그리기 - 각 draw 함수가 자체 의존성으로 관리됨
   useEffect(() => {
     drawTimeCanvas();
+  }, [drawTimeCanvas]);
+
+  useEffect(() => {
     drawHeaderCanvas();
+  }, [drawHeaderCanvas]);
+
+  useEffect(() => {
     drawScheduleCanvas();
-  }, [drawTimeCanvas, drawHeaderCanvas, drawScheduleCanvas]);
+  }, [drawScheduleCanvas]);
 
   return (
     <div className="flex-1 min-h-0 w-full h-full flex flex-col max-h-[960px]">
@@ -1591,80 +1257,10 @@ export default function CanvasSchedule({
               ref={scheduleCanvasRef}
               className="cursor-pointer bg-gray-50 flat-surface rounded-br-3xl"
               onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={(e) => {
-                handleMouseUp(e);
-                setTooltip(null);
-              }}
             />
           </div>
         </div>
       </div>
-
-      {/* 밀집도 툴팁 */}
-      {tooltip && showDensity && (
-        <div
-          className="fixed z-50 max-w-xs px-4 py-3 text-sm text-white border-2 shadow-2xl pointer-events-none rounded-2xl"
-          style={{
-            left: tooltip.x + 10,
-            top: tooltip.y - 40,
-            transform:
-              tooltip.x > window.innerWidth - 250
-                ? "translateX(-100%)"
-                : "none",
-            backgroundColor: "#111827", // gray-900
-            borderColor: "#4b5563", // gray-600
-            zIndex: 9999,
-          }}
-        >
-          <div className="mb-2 font-medium text-white">
-            {classrooms[tooltip.dayOfWeek]} {tooltip.time}
-          </div>
-          <div className="mb-3 text-xs text-gray-300">
-            일정 있는 학생: {tooltip.studentCount}명
-          </div>
-          <div className="space-y-1">
-            {(() => {
-              // Use custom tooltip data if available
-              if (densityTooltipData) {
-                const key = `${tooltip.dayOfWeek}-${tooltip.time}`;
-                const schedules = densityTooltipData[key] || [];
-
-                return (
-                  <>
-                    {schedules.slice(0, 5).map((schedule, idx) => (
-                      <div
-                        key={`${schedule.studentId}-${idx}`}
-                        className="text-xs"
-                      >
-                        <span className="font-medium text-white">
-                          {schedule.studentName}
-                        </span>
-                        <span className="ml-1 text-gray-300">
-                          - {schedule.scheduleName}
-                        </span>
-                      </div>
-                    ))}
-                    {schedules.length > 5 && (
-                      <div className="text-xs text-gray-400">
-                        +{schedules.length - 5}명 더...
-                      </div>
-                    )}
-                  </>
-                );
-              }
-
-              // No data available
-              return (
-                <div className="text-xs text-gray-400">
-                  일정 정보를 불러올 수 없습니다.
-                </div>
-              );
-            })()}
-          </div>
-        </div>
-      )}
 
       {/* 모달 */}
       <ClassModal

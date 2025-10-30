@@ -359,10 +359,7 @@ export default function ClassCompositionEditModal({
               <CanvasSchedule
                 key={`schedule-${classStudentId}`}
                 customBlocks={scheduleBlocks}
-                onBlockClick={handleBlockClick}
                 editMode="view"
-                showDensity={false}
-                selectedBlockIds={Array.from(selectedCompositions)}
               />
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center">

@@ -310,7 +310,6 @@ export default function ClassManagementPage() {
                     <CanvasSchedule
                       customBlocks={filteredClassBlocks}
                       editMode="view"
-                      showDensity={false}
                     />
                   </div>
                 ) : (
@@ -618,7 +617,6 @@ export default function ClassManagementPage() {
                         <CanvasSchedule
                           customBlocks={classBlocks}
                           editMode="view"
-                          showDensity={false}
                         />
                       </div>
                     )}

@@ -711,9 +711,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                 .join("-")}`}
               customBlocks={scheduleBlocks}
               onBlocksChange={handleBlocksChange}
-              onBlockClick={handleBlockClick}
               editMode={"view"}
-              showDensity={false}
             />
           </div>
         </div>
