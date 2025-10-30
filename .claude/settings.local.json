@@ -38,7 +38,9 @@
       "Read(//Users/kwakori/projects/promotion/temis/src/app/**)",
       "Read(//private/tmp/**)",
       "Bash(lsof:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(wait)",
+      "Bash(xargs sed:*)"
     ],
     "deny": [],
     "ask": []

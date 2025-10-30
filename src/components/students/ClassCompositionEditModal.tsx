@@ -1,6 +1,6 @@
 "use client";
 
-import CanvasSchedule from "@/components/common/schedule/CanvasSchedule";
+import CanvasSchedule from "@/components/common/schedule/ClassroomScheduleCanvas";
 import {
   useEnrollComposition,
   useStudentCompositions,

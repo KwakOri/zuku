@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useStudents } from "@/queries/useStudents";
 import { useSendKakaoNotification } from "@/queries/useNotifications";
+import { usePendingStudents } from "@/queries/useMiddleRecords";
+import { useAuthState } from "@/queries/useAuth";
 import { PageHeader, PageLayout } from "@/components/common/layout";
+import { formatDateToYYYYMMDD, getWeekStartDate } from "@/lib/utils";
 import {
   Send,
   CheckCircle,
@@ -14,7 +17,8 @@ import {
   Phone,
   User,
   BookOpen,
-  AlertTriangle
+  AlertTriangle,
+  FileText
 } from "lucide-react";
 
 interface StudentForNotification {
@@ -28,12 +32,44 @@ export default function NotificationsPage() {
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
   const [isSending, setIsSending] = useState(false);
   const [sentCount, setSentCount] = useState(0);
+  const [selectedWeek] = useState<string>(() => {
+    return formatDateToYYYYMMDD(getWeekStartDate());
+  });
 
+  const { user } = useAuthState();
   const { data: students = [], isLoading, error } = useStudents();
+  const { data: pendingData } = usePendingStudents(user?.id, selectedWeek);
   const sendNotification = useSendKakaoNotification();
 
-  // 학부모 연락처가 있는 학생들만 필터링
-  const studentsWithParentPhone = students.filter(student => student.parent_phone);
+  // 중등 학생만 필터링 (7-9학년) + 학부모 연락처가 있는 학생
+  const middleSchoolStudents = useMemo(() => {
+    return students.filter(student =>
+      student.grade >= 7 &&
+      student.grade <= 9 &&
+      student.parent_phone
+    );
+  }, [students]);
+
+  // 기록 작성된 학생 ID 목록
+  const recordedStudentIds = useMemo(() => {
+    if (!pendingData?.meta) return new Set<string>();
+
+    const pendingIds = new Set(pendingData.data.map(item => item.student_id));
+    return new Set(
+      middleSchoolStudents
+        .map(s => s.id)
+        .filter(id => !pendingIds.has(id))
+    );
+  }, [middleSchoolStudents, pendingData]);
+
+  // 기록 작성된 학생과 미작성 학생 분리
+  const studentsWithRecord = useMemo(() => {
+    return middleSchoolStudents.filter(s => recordedStudentIds.has(s.id));
+  }, [middleSchoolStudents, recordedStudentIds]);
+
+  const studentsWithoutRecord = useMemo(() => {
+    return middleSchoolStudents.filter(s => !recordedStudentIds.has(s.id));
+  }, [middleSchoolStudents, recordedStudentIds]);
 
   const handleStudentToggle = (studentId: string) => {
     const newSelected = new Set(selectedStudents);
@@ -46,10 +82,10 @@ export default function NotificationsPage() {
   };
 
   const handleSelectAll = () => {
-    if (selectedStudents.size === studentsWithParentPhone.length) {
+    if (selectedStudents.size === studentsWithRecord.length) {
       setSelectedStudents(new Set());
     } else {
-      setSelectedStudents(new Set(studentsWithParentPhone.map(s => s.id)));
+      setSelectedStudents(new Set(studentsWithRecord.map(s => s.id)));
     }
   };
 
@@ -58,7 +94,7 @@ export default function NotificationsPage() {
     setSentCount(0);
 
     try {
-      const selectedStudentData = studentsWithParentPhone.filter(student =>
+      const selectedStudentData = studentsWithRecord.filter(student =>
         selectedStudents.has(student.id)
       );
 
@@ -130,9 +166,9 @@ export default function NotificationsPage() {
   return (
     <>
       <PageHeader
-        icon={MessageSquare}
-        title="학부모 알림톡 발송"
-        description="학생들을 선택하고 학부모님께 알림톡을 발송하세요"
+        icon={FileText}
+        title="중등 주간보고서 관리"
+        description="중등 학생들의 주간 학습 기록을 학부모님께 전송하세요"
         actions={
           <div className="flex items-center gap-6">
             <div className="text-center">
@@ -140,8 +176,12 @@ export default function NotificationsPage() {
               <div className="text-xs text-gray-500">선택된 학생</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-success-600">{studentsWithParentPhone.length}</div>
-              <div className="text-xs text-gray-500">전체 학생</div>
+              <div className="text-lg font-bold text-success-600">{studentsWithRecord.length}</div>
+              <div className="text-xs text-gray-500">기록 완료</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-orange-600">{studentsWithoutRecord.length}</div>
+              <div className="text-xs text-gray-500">미작성</div>
             </div>
           </div>
         }
@@ -159,11 +199,11 @@ export default function NotificationsPage() {
               >
                 <Users className="h-4 w-4" />
                 <span>
-                  {selectedStudents.size === studentsWithParentPhone.length ? '전체 해제' : '전체 선택'}
+                  {selectedStudents.size === studentsWithRecord.length ? '전체 해제' : '전체 선택'}
                 </span>
               </button>
               <div className="text-sm text-gray-600">
-                연락처가 있는 학생: {studentsWithParentPhone.length}명
+                기록 완료: {studentsWithRecord.length}명 | 미작성: {studentsWithoutRecord.length}명
               </div>
             </div>
             <button
@@ -179,9 +219,15 @@ export default function NotificationsPage() {
           </div>
         </div>
 
-        {/* 학생 목록 */}
-        <div className="space-y-4">
-          {studentsWithParentPhone.map((student) => (
+        {/* 기록 완료된 학생 목록 */}
+        {studentsWithRecord.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-success-600" />
+              기록 완료 ({studentsWithRecord.length}명)
+            </h2>
+            <div className="space-y-4">
+              {studentsWithRecord.map((student) => (
             <div key={student.id} className="flat-card rounded-2xl border-0">
               <div className="p-4">
                 <div className="flex items-center justify-between">
@@ -219,17 +265,64 @@ export default function NotificationsPage() {
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-        {studentsWithParentPhone.length === 0 && !isLoading && (
+        {/* 미작성 학생 목록 */}
+        {studentsWithoutRecord.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <XCircle className="h-5 w-5 text-orange-600" />
+              기록 미작성 ({studentsWithoutRecord.length}명)
+            </h2>
+            <div className="space-y-4">
+              {studentsWithoutRecord.map((student) => (
+                <div key={student.id} className="flat-card rounded-2xl border-0 bg-orange-50">
+                  <div className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 flat-surface bg-orange-100 rounded-2xl">
+                            <User className="h-5 w-5 text-orange-600" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-800">
+                              {student.name}
+                            </h3>
+                            <div className="flex items-center space-x-4 text-sm text-gray-600">
+                              <div className="flex items-center space-x-1">
+                                <BookOpen className="h-4 w-4" />
+                                <span>{getGrade(student.grade)}</span>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <Phone className="h-4 w-4" />
+                                <span>{student.parent_phone}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center">
+                        <XCircle className="h-6 w-6 text-orange-500" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {middleSchoolStudents.length === 0 && !isLoading && (
           <div className="flat-card rounded-2xl border-0 p-8 text-center">
             <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-gray-400" />
             <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              알림톡을 보낼 수 있는 학생이 없습니다
+              중등 학생이 없습니다
             </h3>
             <p className="text-gray-600">
-              학부모 연락처가 등록된 학생이 없습니다.
+              학부모 연락처가 등록된 중등 학생(7-9학년)이 없습니다.
             </p>
           </div>
         )}

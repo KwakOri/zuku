@@ -362,6 +362,137 @@ export type Database = {
           },
         ]
       }
+      composition_students_exceptions: {
+        Row: {
+          composition_id_from: string
+          composition_id_to: string
+          created_at: string | null
+          created_by: string | null
+          date_from: string
+          date_to: string
+          id: string
+          reason: string | null
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          composition_id_from: string
+          composition_id_to: string
+          created_at?: string | null
+          created_by?: string | null
+          date_from: string
+          date_to: string
+          id?: string
+          reason?: string | null
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          composition_id_from?: string
+          composition_id_to?: string
+          created_at?: string | null
+          created_by?: string | null
+          date_from?: string
+          date_to?: string
+          id?: string
+          reason?: string | null
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "composition_students_exceptions_composition_id_from_fkey"
+            columns: ["composition_id_from"]
+            isOneToOne: false
+            referencedRelation: "class_composition"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "composition_students_exceptions_composition_id_to_fkey"
+            columns: ["composition_id_to"]
+            isOneToOne: false
+            referencedRelation: "class_composition"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "composition_students_exceptions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "composition_students_exceptions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compositions_exceptions: {
+        Row: {
+          composition_id: string
+          created_at: string | null
+          created_by: string | null
+          date_from: string
+          date_to: string
+          end_time_from: string | null
+          end_time_to: string | null
+          id: string
+          reason: string | null
+          room: string
+          start_time_from: string | null
+          start_time_to: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          composition_id: string
+          created_at?: string | null
+          created_by?: string | null
+          date_from: string
+          date_to: string
+          end_time_from?: string | null
+          end_time_to?: string | null
+          id?: string
+          reason?: string | null
+          room: string
+          start_time_from?: string | null
+          start_time_to?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          composition_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          date_from?: string
+          date_to?: string
+          end_time_from?: string | null
+          end_time_to?: string | null
+          id?: string
+          reason?: string | null
+          room?: string
+          start_time_from?: string | null
+          start_time_to?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compositions_exceptions_composition_id_fkey"
+            columns: ["composition_id"]
+            isOneToOne: false
+            referencedRelation: "class_composition"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compositions_exceptions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       compositions_students: {
         Row: {
           class_id: string | null

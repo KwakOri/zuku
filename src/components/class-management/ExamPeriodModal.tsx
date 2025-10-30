@@ -2,6 +2,7 @@
 
 import { useSchools } from "@/queries/useSchools";
 import { ExamPeriodWithSchool } from "@/services/client/examPeriodApi";
+import { ScrollPicker, ScrollPickerOption } from "@/components/common/input";
 import { Check, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -47,11 +48,6 @@ export default function ExamPeriodModal({
   const [examRound, setExamRound] = useState<1 | 2>(1);
 
   // Refs
-  const startMonthRef = useRef<HTMLDivElement>(null);
-  const startDayRef = useRef<HTMLDivElement>(null);
-  const endMonthRef = useRef<HTMLDivElement>(null);
-  const endDayRef = useRef<HTMLDivElement>(null);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const schoolDropdownRef = useRef<HTMLDivElement>(null);
 
   // Initialize form when editing or opening
@@ -83,48 +79,6 @@ export default function ExamPeriodModal({
     }
   }, [isOpen, editingPeriod]);
 
-  // Auto-scroll to selected date when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => {
-        if (startMonthRef.current) {
-          const monthElement = startMonthRef.current.children[0].children[startMonth - 1] as HTMLElement;
-          if (monthElement) {
-            monthElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
-          }
-        }
-        if (startDayRef.current) {
-          const dayElement = startDayRef.current.children[0].children[startDay - 1] as HTMLElement;
-          if (dayElement) {
-            dayElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
-          }
-        }
-        if (!isEndDateUndecided) {
-          if (endMonthRef.current) {
-            const monthElement = endMonthRef.current.children[0].children[endMonth - 1] as HTMLElement;
-            if (monthElement) {
-              monthElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
-            }
-          }
-          if (endDayRef.current) {
-            const dayElement = endDayRef.current.children[0].children[endDay - 1] as HTMLElement;
-            if (dayElement) {
-              dayElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
-            }
-          }
-        }
-      }, 100);
-    }
-  }, [isOpen, startMonth, startDay, endMonth, endDay, isEndDateUndecided]);
-
-  // Cleanup scroll timeout
-  useEffect(() => {
-    return () => {
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-    };
-  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -185,43 +139,16 @@ export default function ExamPeriodModal({
       .slice(0, 5);
   }, [schools, debouncedSearchQuery]);
 
-  // Handle scroll with debounce
-  const handleScroll = (
-    ref: React.RefObject<HTMLDivElement | null>,
-    setter: (value: number) => void
-  ) => {
-    if (!ref.current) return;
+  // Create options for ScrollPicker
+  const monthOptions: ScrollPickerOption[] = Array.from({ length: 12 }, (_, i) => ({
+    value: i + 1,
+    label: `${i + 1}월`,
+  }));
 
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
-
-    scrollTimeoutRef.current = setTimeout(() => {
-      if (!ref.current) return;
-
-      const container = ref.current;
-      const containerRect = container.getBoundingClientRect();
-      const containerCenter = containerRect.top + containerRect.height / 2;
-
-      const children = container.children[0].children;
-      let closestIndex = 0;
-      let closestDistance = Infinity;
-
-      for (let i = 0; i < children.length; i++) {
-        const child = children[i] as HTMLElement;
-        const childRect = child.getBoundingClientRect();
-        const childCenter = childRect.top + childRect.height / 2;
-        const distance = Math.abs(containerCenter - childCenter);
-
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestIndex = i;
-        }
-      }
-
-      setter(closestIndex + 1);
-    }, 150);
-  };
+  const dayOptions: ScrollPickerOption[] = Array.from({ length: 31 }, (_, i) => ({
+    value: i + 1,
+    label: `${i + 1}일`,
+  }));
 
   const handleSchoolSelect = (school: { id: string; name: string }) => {
     setSelectedSchoolId(school.id);
@@ -398,60 +325,18 @@ export default function ExamPeriodModal({
               시작일 <span className="text-red-500">*</span>
             </label>
             <div className="grid grid-cols-2 gap-2">
-              {/* Month Picker */}
-              <div className="relative h-32 overflow-hidden border border-gray-300 rounded-lg bg-white">
-                <div
-                  ref={startMonthRef}
-                  onScroll={() => handleScroll(startMonthRef, setStartMonth)}
-                  className="h-full overflow-y-scroll scrollbar-hide snap-y snap-mandatory relative z-0"
-                >
-                  <div className="py-10">
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                      <div
-                        key={m}
-                        onClick={() => setStartMonth(m)}
-                        className={`h-10 flex items-center justify-center cursor-pointer snap-center transition-all relative ${
-                          startMonth === m
-                            ? 'font-bold text-primary-700 text-xl z-20'
-                            : 'text-gray-300 text-sm'
-                        }`}
-                      >
-                        {m}월
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="absolute inset-x-0 z-10 pointer-events-none top-1/2 -translate-y-1/2">
-                  <div className="h-10 border-y-2 border-primary-300/40"></div>
-                </div>
-              </div>
-              {/* Day Picker */}
-              <div className="relative h-32 overflow-hidden border border-gray-300 rounded-lg bg-white">
-                <div
-                  ref={startDayRef}
-                  onScroll={() => handleScroll(startDayRef, setStartDay)}
-                  className="h-full overflow-y-scroll scrollbar-hide snap-y snap-mandatory relative z-0"
-                >
-                  <div className="py-10">
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
-                      <div
-                        key={d}
-                        onClick={() => setStartDay(d)}
-                        className={`h-10 flex items-center justify-center cursor-pointer snap-center transition-all relative ${
-                          startDay === d
-                            ? 'font-bold text-primary-700 text-xl z-20'
-                            : 'text-gray-300 text-sm'
-                        }`}
-                      >
-                        {d}일
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="absolute inset-x-0 z-10 pointer-events-none top-1/2 -translate-y-1/2">
-                  <div className="h-10 border-y-2 border-primary-300/40"></div>
-                </div>
-              </div>
+              <ScrollPicker
+                options={monthOptions}
+                value={startMonth}
+                onChange={(value) => setStartMonth(value as number)}
+                autoScroll={isOpen}
+              />
+              <ScrollPicker
+                options={dayOptions}
+                value={startDay}
+                onChange={(value) => setStartDay(value as number)}
+                autoScroll={isOpen}
+              />
             </div>
           </div>
 
@@ -473,61 +358,21 @@ export default function ExamPeriodModal({
                 {isEndDateUndecided ? '✓ 미정' : '미정'}
               </button>
             </div>
-            <div className={`grid grid-cols-2 gap-2 ${isEndDateUndecided ? 'opacity-50 pointer-events-none' : ''}`}>
-              {/* Month Picker */}
-              <div className="relative h-32 overflow-hidden border border-gray-300 rounded-lg bg-white">
-                <div
-                  ref={endMonthRef}
-                  onScroll={() => handleScroll(endMonthRef, setEndMonth)}
-                  className="h-full overflow-y-scroll scrollbar-hide snap-y snap-mandatory relative z-0"
-                >
-                  <div className="py-10">
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                      <div
-                        key={m}
-                        onClick={() => !isEndDateUndecided && setEndMonth(m)}
-                        className={`h-10 flex items-center justify-center cursor-pointer snap-center transition-all relative ${
-                          endMonth === m
-                            ? 'font-bold text-primary-700 text-xl z-20'
-                            : 'text-gray-300 text-sm'
-                        }`}
-                      >
-                        {m}월
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="absolute inset-x-0 z-10 pointer-events-none top-1/2 -translate-y-1/2">
-                  <div className="h-10 border-y-2 border-primary-300/40"></div>
-                </div>
-              </div>
-              {/* Day Picker */}
-              <div className="relative h-32 overflow-hidden border border-gray-300 rounded-lg bg-white">
-                <div
-                  ref={endDayRef}
-                  onScroll={() => handleScroll(endDayRef, setEndDay)}
-                  className="h-full overflow-y-scroll scrollbar-hide snap-y snap-mandatory relative z-0"
-                >
-                  <div className="py-10">
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
-                      <div
-                        key={d}
-                        onClick={() => !isEndDateUndecided && setEndDay(d)}
-                        className={`h-10 flex items-center justify-center cursor-pointer snap-center transition-all relative ${
-                          endDay === d
-                            ? 'font-bold text-primary-700 text-xl z-20'
-                            : 'text-gray-300 text-sm'
-                        }`}
-                      >
-                        {d}일
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="absolute inset-x-0 z-10 pointer-events-none top-1/2 -translate-y-1/2">
-                  <div className="h-10 border-y-2 border-primary-300/40"></div>
-                </div>
-              </div>
+            <div className="grid grid-cols-2 gap-2">
+              <ScrollPicker
+                options={monthOptions}
+                value={endMonth}
+                onChange={(value) => setEndMonth(value as number)}
+                disabled={isEndDateUndecided}
+                autoScroll={isOpen && !isEndDateUndecided}
+              />
+              <ScrollPicker
+                options={dayOptions}
+                value={endDay}
+                onChange={(value) => setEndDay(value as number)}
+                disabled={isEndDateUndecided}
+                autoScroll={isOpen && !isEndDateUndecided}
+              />
             </div>
           </div>
 

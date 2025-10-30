@@ -5,6 +5,7 @@ import {
   ArrowRight,
   BarChart3,
   BookOpen,
+  Building2,
   GraduationCap,
   Grid3X3,
   Loader2,
@@ -67,7 +68,7 @@ export default function HomePage() {
 
     {
       id: "combined-schedule",
-      title: "학생별 통합 시간표",
+      title: "통합 시간표",
       description:
         "모든 학생의 시간표를 한눈에 보고 스크롤 시 시간대가 고정되는 향상된 뷰",
       icon: Grid3X3,
@@ -79,6 +80,22 @@ export default function HomePage() {
         "고정 타임라인",
         "세로 스크롤",
         "통합 관리",
+      ],
+    },
+    {
+      id: "classroom-schedule",
+      title: "학원 수업 시간표",
+      description:
+        "강의실별 수업 일정을 요일과 시간대로 구분하여 한눈에 확인하세요",
+      icon: Building2,
+      color: "bg-teal-50 text-teal-600 border-teal-200",
+      href: "/classroom-schedule",
+      stats: "강의실별 뷰",
+      features: [
+        "1~10강의실 구분",
+        "요일별 시간표",
+        "수업 상세 정보",
+        "학생 목록 확인",
       ],
     },
     {

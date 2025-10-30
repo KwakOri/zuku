@@ -88,12 +88,16 @@ export function useCreateMiddleRecord() {
         queryKey: middleRecordKeys.byStudent(newRecord.student_id),
       });
 
-
       queryClient.invalidateQueries({
         queryKey: middleRecordKeys.byWeek(
           newRecord.class_id,
           newRecord.week_of
         ),
+      });
+
+      // 미입력 학생 목록 무효화 (이번 주 미입력 학생 세션 업데이트)
+      queryClient.invalidateQueries({
+        queryKey: [...middleRecordKeys.all, "pending"],
       });
 
       toast.success("중등 기록이 성공적으로 등록되었습니다.");
@@ -136,12 +140,16 @@ export function useUpdateMiddleRecord() {
         queryKey: middleRecordKeys.byStudent(updatedRecord.student_id),
       });
 
-
       queryClient.invalidateQueries({
         queryKey: middleRecordKeys.byWeek(
           updatedRecord.class_id,
           updatedRecord.week_of
         ),
+      });
+
+      // 미입력 학생 목록 무효화 (이번 주 미입력 학생 세션 업데이트)
+      queryClient.invalidateQueries({
+        queryKey: [...middleRecordKeys.all, "pending"],
       });
 
       toast.success("중등 기록이 성공적으로 수정되었습니다.");
@@ -164,7 +172,7 @@ export function useDeleteMiddleRecord() {
         queryKey: middleRecordKeys.detail(deletedId),
       });
 
-      // 관련 쿼리들 무효화
+      // 관련 쿼리들 무효화 (미입력 학생 목록 포함)
       queryClient.invalidateQueries({
         queryKey: middleRecordKeys.all,
       });

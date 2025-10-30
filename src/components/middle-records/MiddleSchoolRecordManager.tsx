@@ -6,6 +6,7 @@ import {
   useDeleteMiddleRecord,
   useUpdateMiddleRecord,
   useWeeklyMiddleRecords,
+  useMiddleRecords,
   usePendingStudents,
 } from "@/queries/useMiddleRecords";
 import { useStudents } from "@/queries/useStudents";
@@ -13,6 +14,7 @@ import { useClassesByStudent, useClassStudents } from "@/queries/useClassStudent
 import { useAuthState } from "@/queries/useAuth";
 import { Tables, TablesInsert, TablesUpdate } from "@/types/supabase";
 import CascadingStudentSelector from "./CascadingStudentSelector";
+import Link from "next/link";
 
 // Type definition for class_students with nested relations from API
 interface ClassStudentWithRelations extends Tables<"class_students"> {
@@ -81,8 +83,18 @@ export default function MiddleSchoolRecordManager({
   const { data: students = [] } = useStudents();
   const { data: studentClasses = [] } = useClassesByStudent(studentId || "");
   const { data: allStudentClasses = [] } = useClassStudents();
-  const { data: records = [], isLoading: recordsLoading } =
-    useWeeklyMiddleRecords(classId, selectedWeek);
+
+  // propStudentId가 있으면 해당 학생의 기록만, 없으면 선택한 주차의 모든 기록 가져오기
+  const shouldUseWeekly = Boolean(propStudentId);
+  const weeklyRecords = useWeeklyMiddleRecords(
+    shouldUseWeekly ? classId : undefined,
+    selectedWeek
+  );
+  const allRecords = useMiddleRecords({ weekOf: selectedWeek });
+
+  const { data: records = [], isLoading: recordsLoading } = shouldUseWeekly
+    ? weeklyRecords
+    : allRecords;
 
   // 미입력 학생 목록 조회
   const { data: pendingData, isLoading: pendingLoading } = usePendingStudents(
@@ -141,15 +153,25 @@ export default function MiddleSchoolRecordManager({
 
   // 숙제 상태 옵션
   const homeworkOptions = [
-    { value: "excellent", label: "우수", color: "text-blue-600 bg-blue-50" },
-    { value: "good", label: "양호", color: "text-green-600 bg-green-50" },
-    { value: "fair", label: "보통", color: "text-yellow-600 bg-yellow-50" },
-    { value: "poor", label: "미흡", color: "text-orange-600 bg-orange-50" },
+    { value: "excellent", label: "우수", color: "text-primary-700 bg-primary-100", borderColor: "border-primary-600" },
+    { value: "good", label: "양호", color: "text-primary-600 bg-primary-50", borderColor: "border-primary-500" },
+    { value: "fair", label: "보통", color: "text-yellow-600 bg-yellow-50", borderColor: "border-yellow-500" },
+    { value: "poor", label: "미흡", color: "text-orange-600 bg-orange-50", borderColor: "border-orange-500" },
     {
       value: "not_submitted",
       label: "미제출",
       color: "text-red-600 bg-red-50",
+      borderColor: "border-red-500",
     },
+  ];
+
+  // 참여도/이해도 5단계 옵션
+  const scoreOptions = [
+    { value: 1, label: "매우 부족", color: "text-red-600 bg-red-50", borderColor: "border-red-500" },
+    { value: 2, label: "부족", color: "text-orange-600 bg-orange-50", borderColor: "border-orange-500" },
+    { value: 3, label: "보통", color: "text-yellow-600 bg-yellow-50", borderColor: "border-yellow-500" },
+    { value: 4, label: "좋음", color: "text-primary-600 bg-primary-50", borderColor: "border-primary-500" },
+    { value: 5, label: "매우 좋음", color: "text-primary-700 bg-primary-100", borderColor: "border-primary-600" },
   ];
 
   // 주차 변경
@@ -318,9 +340,10 @@ export default function MiddleSchoolRecordManager({
               const homeworkOpt = getHomeworkOption(record.homework);
 
               return (
-                <div
+                <Link
                   key={record.id}
-                  className="p-4 transition-colors hover:bg-purple-50"
+                  href={`/homework/${record.id}`}
+                  className="block p-4 transition-colors hover:bg-purple-50 cursor-pointer"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -339,7 +362,10 @@ export default function MiddleSchoolRecordManager({
                       </div>
                     </div>
                     <button
-                      onClick={() => setEditingRecord(record)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setEditingRecord(record);
+                      }}
                       className="p-1.5 text-gray-400 transition-colors rounded-lg hover:text-purple-600 hover:bg-purple-50"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
@@ -405,7 +431,7 @@ export default function MiddleSchoolRecordManager({
                       </div>
                     )}
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
@@ -415,7 +441,7 @@ export default function MiddleSchoolRecordManager({
   );
 
   return (
-    <div className="w-full h-full flex flex-col gap-6 overflow-hidden">
+    <div className="w-full h-full flex flex-col gap-6">
       {/* 헤더 */}
       <Card size="lg" className="flex-shrink-0">
         <div className="flex items-center justify-between mb-6">
@@ -574,34 +600,10 @@ export default function MiddleSchoolRecordManager({
         </Card>
       )}
 
-      {/* 학생 및 수업 필터 + 기록 목록 통합 */}
-      {!propStudentId && (
-        <Card size="lg" className="flex-1 min-h-0 overflow-hidden flex flex-col">
-          <div className="mb-4 flex-shrink-0">
-            <h3 className="text-lg font-semibold text-gray-900">필터 및 기록 관리</h3>
-            <p className="text-sm text-gray-600">과목, 수업, 학생을 선택하여 기록을 확인하고 관리하세요</p>
-          </div>
-          <div className="flex-1 min-h-0">
-            <CascadingStudentSelector
-            students={middleSchoolStudents}
-            allStudentClasses={allStudentClasses as ClassStudentWithRelations[]}
-            selectedStudentId={selectedStudentId || ""}
-            selectedClassId={selectedClassId || ""}
-            onSelect={(studentId, classId) => {
-              setSelectedStudentId(studentId);
-              setSelectedClassId(classId);
-            }}
-            recordsColumn={recordsColumn}
-            />
-          </div>
-        </Card>
-      )}
-
-      {/* propStudentId가 있을 때는 기존 기록 목록 표시 */}
-      {propStudentId && (
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          <div className="grid gap-6 pb-6">
-        {isLoading ? (
+      {/* 내가 작성한 기록 목록 */}
+      <div className="flex-1 min-h-0">
+        <div className="grid gap-6 pb-6">
+        {recordsLoading ? (
           <Card size="lg">
             <div className="p-12 text-center">
               <Loader2 className="w-12 h-12 mx-auto mb-4 text-primary-600 animate-spin" />
@@ -639,14 +641,15 @@ export default function MiddleSchoolRecordManager({
             const homeworkOpt = getHomeworkOption(record.homework);
 
             return (
-              <div
+              <Link
                 key={record.id}
-                className="p-6 bg-white border border-gray-200 rounded-lg"
+                href={`/homework/${record.id}`}
+                className="block p-6 bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-shadow cursor-pointer"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
-                      <span className="font-semibold text-blue-600">
+                    <div className="flex items-center justify-center w-12 h-12 bg-primary-100 rounded-full">
+                      <span className="font-semibold text-primary-600">
                         {student.name.charAt(0)}
                       </span>
                     </div>
@@ -655,19 +658,33 @@ export default function MiddleSchoolRecordManager({
                         {student.name}
                       </h3>
                       <p className="text-sm text-gray-600">
-                        {getGrade(student.grade, "half")} | {student.phone}
+                        {getGrade(student.grade, "half")}
                       </p>
+                      {record.class && (
+                        <p className="text-xs text-gray-500">
+                          {record.class.subject?.subject_name} - {record.class.title}
+                        </p>
+                      )}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setEditingRecord(record)}
-                      className="p-2 text-gray-400 transition-colors rounded-lg hover:text-blue-600 hover:bg-blue-50"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setEditingRecord(record);
+                      }}
+                      className="p-2 text-gray-400 transition-colors rounded-lg hover:text-primary-600 hover:bg-primary-50"
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
-                    <button className="p-2 text-gray-400 transition-colors rounded-lg hover:text-green-600 hover:bg-green-50">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        // TODO: Implement send notification
+                      }}
+                      className="p-2 text-gray-400 transition-colors rounded-lg hover:text-primary-600 hover:bg-primary-50"
+                    >
                       <Send className="w-4 h-4" />
                     </button>
                   </div>
@@ -696,31 +713,27 @@ export default function MiddleSchoolRecordManager({
                   {/* 참여도 */}
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-gray-600" />
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm text-gray-600">참여도:</span>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getScoreColor(
-                          record.participation
-                        )}`}
-                      >
-                        {record.participation}/5
-                      </span>
-                    </div>
+                    <span className="text-sm text-gray-600">참여도:</span>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getScoreColor(
+                        record.participation
+                      )}`}
+                    >
+                      {record.participation}/5
+                    </span>
                   </div>
 
                   {/* 이해도 */}
                   <div className="flex items-center gap-2">
                     <BookOpen className="w-4 h-4 text-gray-600" />
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm text-gray-600">이해도:</span>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getScoreColor(
-                          record.understanding
-                        )}`}
-                      >
-                        {record.understanding}/5
-                      </span>
-                    </div>
+                    <span className="text-sm text-gray-600">이해도:</span>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getScoreColor(
+                        record.understanding
+                      )}`}
+                    >
+                      {record.understanding}/5
+                    </span>
                   </div>
 
                   {/* 숙제 상태 */}
@@ -733,22 +746,6 @@ export default function MiddleSchoolRecordManager({
                         {homeworkOpt.label}
                       </span>
                     )}
-                  </div>
-                </div>
-
-                {/* 평점 별표 */}
-                <div className="flex items-center gap-6 mb-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">참여도:</span>
-                    <div className="flex gap-1">
-                      {renderStars(record.participation)}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">이해도:</span>
-                    <div className="flex gap-1">
-                      {renderStars(record.understanding)}
-                    </div>
                   </div>
                 </div>
 
@@ -765,20 +762,19 @@ export default function MiddleSchoolRecordManager({
                 <div className="pt-4 mt-4 text-xs text-gray-500 border-t border-gray-200">
                   최종 수정: {record.last_modified}
                 </div>
-              </div>
+              </Link>
             );
           })
           )}
           </div>
         </div>
-      )}
 
       {/* 기록 추가 모달 */}
       {isAddingRecord && (
         <>
           {console.log("모달 렌더링 시작됨")}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold">새 주간 기록 추가</h3>
@@ -795,25 +791,63 @@ export default function MiddleSchoolRecordManager({
               </div>
 
               <div className="p-6 space-y-6">
-                {/* 학생 및 수업 선택 - Cascading List */}
-                <div>
-                  <label className="block mb-3 text-sm font-medium text-gray-700">
-                    학생 및 수업 선택
-                  </label>
-                  <CascadingStudentSelector
-                    students={middleSchoolStudents}
-                    allStudentClasses={allStudentClasses as ClassStudentWithRelations[]}
-                    selectedStudentId={newRecord.student_id || ""}
-                    selectedClassId={newRecord.class_id || ""}
-                    onSelect={(studentId, classId) => {
-                      setNewRecord({
-                        ...newRecord,
-                        student_id: studentId,
-                        class_id: classId,
-                      });
-                    }}
-                  />
-                </div>
+                {/* 학생 및 수업 정보 표시 (student_id와 class_id가 이미 선택되어 있을 때) */}
+                {(propStudentId && propClassId) || (newRecord.student_id && newRecord.class_id) ? (
+                  <div className="p-4 bg-primary-50 border border-primary-200 rounded-lg">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex-shrink-0">
+                          <span className="text-xs font-semibold text-white">
+                            {students.find(s => s.id === (propStudentId || newRecord.student_id))?.name.charAt(0) || '?'}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-gray-600">학생</span>
+                          </div>
+                          <span className="text-sm font-semibold text-gray-900">
+                            {students.find(s => s.id === (propStudentId || newRecord.student_id))?.name || '-'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="w-5 h-5 text-primary-600 flex-shrink-0" />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-gray-600">수업</span>
+                          </div>
+                          <span className="text-sm font-semibold text-gray-900">
+                            {(() => {
+                              const classId = propClassId || newRecord.class_id;
+                              const classInfo = (allStudentClasses as ClassStudentWithRelations[]).find(sc => sc.class_id === classId)?.class;
+                              return classInfo ? `${classInfo.subject?.subject_name || ''} - ${classInfo.title}` : '-';
+                            })()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* 학생 및 수업 선택 - Cascading List (아직 선택되지 않았을 때) */
+                  <div>
+                    <label className="block mb-3 text-sm font-medium text-gray-700">
+                      학생 및 수업 선택
+                    </label>
+                    <CascadingStudentSelector
+                      students={middleSchoolStudents}
+                      allStudentClasses={allStudentClasses as ClassStudentWithRelations[]}
+                      selectedStudentId={newRecord.student_id || ""}
+                      selectedClassId={newRecord.class_id || ""}
+                      onSelect={(studentId, classId) => {
+                        setNewRecord({
+                          ...newRecord,
+                          student_id: studentId,
+                          class_id: classId,
+                        });
+                      }}
+                    />
+                  </div>
+                )}
 
                 {/* 출석 상태 */}
                 <div>
@@ -833,7 +867,7 @@ export default function MiddleSchoolRecordManager({
                         }
                         className={`p-3 rounded-lg border text-sm transition-colors ${
                           newRecord.attendance === option.value
-                            ? "border-blue-500 bg-blue-50 text-blue-700"
+                            ? "border-primary-500 bg-primary-50 text-primary-700 font-semibold"
                             : "border-gray-200 hover:bg-gray-50"
                         }`}
                       >
@@ -847,54 +881,60 @@ export default function MiddleSchoolRecordManager({
                 {/* 참여도 */}
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-700">
-                    참여도 ({newRecord.participation}/5)
+                    참여도
                   </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="range"
-                      min="1"
-                      max="5"
-                      value={newRecord.participation}
-                      onChange={(e) =>
-                        setNewRecord({
-                          ...newRecord,
-                          participation: parseInt(
-                            e.target.value
-                          ) as Tables<"homework_records_middle">["participation"],
-                        })
-                      }
-                      className="flex-1"
-                    />
-                    <div className="flex gap-1">
-                      {renderStars(newRecord.participation || 3)}
-                    </div>
+                  <div className="grid grid-cols-5 gap-2">
+                    {scoreOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() =>
+                          setNewRecord({
+                            ...newRecord,
+                            participation: option.value as Tables<"homework_records_middle">["participation"],
+                          })
+                        }
+                        className={`p-3 rounded-lg border text-sm transition-colors ${
+                          newRecord.participation === option.value
+                            ? `${option.borderColor} ${option.color} font-semibold`
+                            : "border-gray-200 hover:bg-gray-50"
+                        }`}
+                      >
+                        <div className="text-center">
+                          <div className="text-lg font-bold mb-1">{option.value}</div>
+                          <div className="text-xs">{option.label}</div>
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
                 {/* 이해도 */}
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-700">
-                    이해도 ({newRecord.understanding}/5)
+                    이해도
                   </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="range"
-                      min="1"
-                      max="5"
-                      value={newRecord.understanding}
-                      onChange={(e) =>
-                        setNewRecord({
-                          ...newRecord,
-                          understanding: parseInt(
-                            e.target.value
-                          ) as Tables<"homework_records_middle">["understanding"],
-                        })
-                      }
-                      className="flex-1"
-                    />
-                    <div className="flex gap-1">
-                      {renderStars(newRecord.understanding || 3)}
-                    </div>
+                  <div className="grid grid-cols-5 gap-2">
+                    {scoreOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() =>
+                          setNewRecord({
+                            ...newRecord,
+                            understanding: option.value as Tables<"homework_records_middle">["understanding"],
+                          })
+                        }
+                        className={`p-3 rounded-lg border text-sm transition-colors ${
+                          newRecord.understanding === option.value
+                            ? `${option.borderColor} ${option.color} font-semibold`
+                            : "border-gray-200 hover:bg-gray-50"
+                        }`}
+                      >
+                        <div className="text-center">
+                          <div className="text-lg font-bold mb-1">{option.value}</div>
+                          <div className="text-xs">{option.label}</div>
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -903,7 +943,7 @@ export default function MiddleSchoolRecordManager({
                   <label className="block mb-2 text-sm font-medium text-gray-700">
                     숙제 상태
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-5 gap-2">
                     {homeworkOptions.map((option) => (
                       <button
                         key={option.value}
@@ -914,13 +954,13 @@ export default function MiddleSchoolRecordManager({
                               option.value as Tables<"homework_records_middle">["homework"],
                           })
                         }
-                        className={`p-2 rounded-lg border text-sm transition-colors ${
+                        className={`p-3 rounded-lg border text-sm transition-colors ${
                           newRecord.homework === option.value
-                            ? "border-blue-500 bg-blue-50 text-blue-700"
+                            ? `${option.borderColor} ${option.color} font-semibold`
                             : "border-gray-200 hover:bg-gray-50"
                         }`}
                       >
-                        {option.label}
+                        <div className="text-center text-xs">{option.label}</div>
                       </button>
                     ))}
                   </div>
@@ -955,7 +995,7 @@ export default function MiddleSchoolRecordManager({
                   disabled={
                     !newRecord.student_id || !newRecord.class_id || createRecordMutation.isPending
                   }
-                  className="flex-1 px-4 py-2 text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-300"
+                  className="flex-1 px-4 py-2 text-white transition-colors bg-primary-600 rounded-lg hover:bg-primary-700 disabled:bg-gray-300"
                 >
                   {createRecordMutation.isPending ? "추가 중..." : "추가"}
                 </button>
@@ -1004,7 +1044,7 @@ export default function MiddleSchoolRecordManager({
                       }
                       className={`p-3 rounded-lg border text-sm transition-colors ${
                         editingRecord.attendance === option.value
-                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          ? "border-primary-500 bg-primary-50 text-primary-700 font-semibold"
                           : "border-gray-200 hover:bg-gray-50"
                       }`}
                     >
@@ -1018,54 +1058,60 @@ export default function MiddleSchoolRecordManager({
               {/* 참여도 */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-700">
-                  참여도 ({editingRecord.participation}/5)
+                  참여도
                 </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="range"
-                    min="1"
-                    max="5"
-                    value={editingRecord.participation}
-                    onChange={(e) =>
-                      setEditingRecord({
-                        ...editingRecord,
-                        participation: parseInt(
-                          e.target.value
-                        ) as Tables<"homework_records_middle">["participation"],
-                      })
-                    }
-                    className="flex-1"
-                  />
-                  <div className="flex gap-1">
-                    {renderStars(editingRecord.participation)}
-                  </div>
+                <div className="grid grid-cols-5 gap-2">
+                  {scoreOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() =>
+                        setEditingRecord({
+                          ...editingRecord,
+                          participation: option.value as Tables<"homework_records_middle">["participation"],
+                        })
+                      }
+                      className={`p-3 rounded-lg border text-sm transition-colors ${
+                        editingRecord.participation === option.value
+                          ? `${option.borderColor} ${option.color} font-semibold`
+                          : "border-gray-200 hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className="text-center">
+                        <div className="text-lg font-bold mb-1">{option.value}</div>
+                        <div className="text-xs">{option.label}</div>
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
 
               {/* 이해도 */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-700">
-                  이해도 ({editingRecord.understanding}/5)
+                  이해도
                 </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="range"
-                    min="1"
-                    max="5"
-                    value={editingRecord.understanding}
-                    onChange={(e) =>
-                      setEditingRecord({
-                        ...editingRecord,
-                        understanding: parseInt(
-                          e.target.value
-                        ) as Tables<"homework_records_middle">["understanding"],
-                      })
-                    }
-                    className="flex-1"
-                  />
-                  <div className="flex gap-1">
-                    {renderStars(editingRecord.understanding)}
-                  </div>
+                <div className="grid grid-cols-5 gap-2">
+                  {scoreOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() =>
+                        setEditingRecord({
+                          ...editingRecord,
+                          understanding: option.value as Tables<"homework_records_middle">["understanding"],
+                        })
+                      }
+                      className={`p-3 rounded-lg border text-sm transition-colors ${
+                        editingRecord.understanding === option.value
+                          ? `${option.borderColor} ${option.color} font-semibold`
+                          : "border-gray-200 hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className="text-center">
+                        <div className="text-lg font-bold mb-1">{option.value}</div>
+                        <div className="text-xs">{option.label}</div>
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -1074,7 +1120,7 @@ export default function MiddleSchoolRecordManager({
                 <label className="block mb-2 text-sm font-medium text-gray-700">
                   숙제 상태
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-5 gap-2">
                   {homeworkOptions.map((option) => (
                     <button
                       key={option.value}
@@ -1085,13 +1131,13 @@ export default function MiddleSchoolRecordManager({
                             option.value as Tables<"homework_records_middle">["homework"],
                         })
                       }
-                      className={`p-2 rounded-lg border text-sm transition-colors ${
+                      className={`p-3 rounded-lg border text-sm transition-colors ${
                         editingRecord.homework === option.value
-                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          ? `${option.borderColor} ${option.color} font-semibold`
                           : "border-gray-200 hover:bg-gray-50"
                       }`}
                     >
-                      {option.label}
+                      <div className="text-center text-xs">{option.label}</div>
                     </button>
                   ))}
                 </div>
@@ -1133,7 +1179,7 @@ export default function MiddleSchoolRecordManager({
               <button
                 onClick={handleUpdateRecord}
                 disabled={updateRecordMutation.isPending}
-                className="flex-1 px-4 py-2 text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-300"
+                className="flex-1 px-4 py-2 text-white transition-colors bg-primary-600 rounded-lg hover:bg-primary-700 disabled:bg-gray-300"
               >
                 {updateRecordMutation.isPending ? "저장 중..." : "저장"}
               </button>
