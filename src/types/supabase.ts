@@ -14,45 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      assistant_subjects: {
-        Row: {
-          assistant_id: string
-          created_at: string | null
-          id: string
-          subject_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          assistant_id: string
-          created_at?: string | null
-          id?: string
-          subject_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          assistant_id?: string
-          created_at?: string | null
-          id?: string
-          subject_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "assistant_subjects_assistant_id_fkey"
-            columns: ["assistant_id"]
-            isOneToOne: false
-            referencedRelation: "assistants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assistant_subjects_subject_id_fkey"
-            columns: ["subject_id"]
-            isOneToOne: false
-            referencedRelation: "subjects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       assistants: {
         Row: {
           assigned_grades: number[]
@@ -127,7 +88,7 @@ export type Database = {
           },
         ]
       }
-      class_composition: {
+      class_compositions: {
         Row: {
           class_id: string
           created_at: string
@@ -160,7 +121,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "class_composition_class_id_fkey"
+            foreignKeyName: "class_compositions_class_id_fkey"
             columns: ["class_id"]
             isOneToOne: false
             referencedRelation: "classes"
@@ -257,51 +218,6 @@ export type Database = {
           },
         ]
       }
-      class_students: {
-        Row: {
-          class_id: string
-          created_at: string | null
-          enrolled_date: string
-          id: string
-          status: string
-          student_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          class_id: string
-          created_at?: string | null
-          enrolled_date?: string
-          id?: string
-          status?: string
-          student_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          class_id?: string
-          created_at?: string | null
-          enrolled_date?: string
-          id?: string
-          status?: string
-          student_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "class_students_class_id_fkey"
-            columns: ["class_id"]
-            isOneToOne: false
-            referencedRelation: "classes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_students_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       classes: {
         Row: {
           color: string
@@ -368,50 +284,47 @@ export type Database = {
           composition_id_to: string
           created_at: string | null
           created_by: string | null
-          date_from: string
-          date_to: string
           id: string
           reason: string | null
           student_id: string
           updated_at: string | null
+          week_start_date: string
         }
         Insert: {
           composition_id_from: string
           composition_id_to: string
           created_at?: string | null
           created_by?: string | null
-          date_from: string
-          date_to: string
           id?: string
           reason?: string | null
           student_id: string
           updated_at?: string | null
+          week_start_date: string
         }
         Update: {
           composition_id_from?: string
           composition_id_to?: string
           created_at?: string | null
           created_by?: string | null
-          date_from?: string
-          date_to?: string
           id?: string
           reason?: string | null
           student_id?: string
           updated_at?: string | null
+          week_start_date?: string
         }
         Relationships: [
           {
             foreignKeyName: "composition_students_exceptions_composition_id_from_fkey"
             columns: ["composition_id_from"]
             isOneToOne: false
-            referencedRelation: "class_composition"
+            referencedRelation: "class_compositions"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "composition_students_exceptions_composition_id_to_fkey"
             columns: ["composition_id_to"]
             isOneToOne: false
-            referencedRelation: "class_composition"
+            referencedRelation: "class_compositions"
             referencedColumns: ["id"]
           },
           {
@@ -435,8 +348,6 @@ export type Database = {
           composition_id: string
           created_at: string | null
           created_by: string | null
-          date_from: string
-          date_to: string
           end_time_from: string | null
           end_time_to: string | null
           id: string
@@ -445,13 +356,12 @@ export type Database = {
           start_time_from: string | null
           start_time_to: string | null
           updated_at: string | null
+          week_start_date: string
         }
         Insert: {
           composition_id: string
           created_at?: string | null
           created_by?: string | null
-          date_from: string
-          date_to: string
           end_time_from?: string | null
           end_time_to?: string | null
           id?: string
@@ -460,13 +370,12 @@ export type Database = {
           start_time_from?: string | null
           start_time_to?: string | null
           updated_at?: string | null
+          week_start_date: string
         }
         Update: {
           composition_id?: string
           created_at?: string | null
           created_by?: string | null
-          date_from?: string
-          date_to?: string
           end_time_from?: string | null
           end_time_to?: string | null
           id?: string
@@ -475,13 +384,14 @@ export type Database = {
           start_time_from?: string | null
           start_time_to?: string | null
           updated_at?: string | null
+          week_start_date?: string
         }
         Relationships: [
           {
             foreignKeyName: "compositions_exceptions_composition_id_fkey"
             columns: ["composition_id"]
             isOneToOne: false
-            referencedRelation: "class_composition"
+            referencedRelation: "class_compositions"
             referencedColumns: ["id"]
           },
           {
@@ -489,61 +399,6 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      compositions_students: {
-        Row: {
-          class_id: string | null
-          composition_id: string
-          created_at: string | null
-          enrolled_date: string
-          id: string
-          status: string
-          student_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          class_id?: string | null
-          composition_id: string
-          created_at?: string | null
-          enrolled_date?: string
-          id?: string
-          status?: string
-          student_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          class_id?: string | null
-          composition_id?: string
-          created_at?: string | null
-          enrolled_date?: string
-          id?: string
-          status?: string
-          student_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "compositions_students_class_id_fkey"
-            columns: ["class_id"]
-            isOneToOne: false
-            referencedRelation: "classes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "compositions_students_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "student_compositions_composition_id_fkey"
-            columns: ["composition_id"]
-            isOneToOne: false
-            referencedRelation: "class_composition"
             referencedColumns: ["id"]
           },
         ]
@@ -721,6 +576,184 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      relations_assistants_subjects: {
+        Row: {
+          assistant_id: string
+          created_at: string | null
+          id: string
+          subject_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          assistant_id: string
+          created_at?: string | null
+          id?: string
+          subject_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          assistant_id?: string
+          created_at?: string | null
+          id?: string
+          subject_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relations_assistants_subjects_assistant_id_fkey"
+            columns: ["assistant_id"]
+            isOneToOne: false
+            referencedRelation: "assistants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "relations_assistants_subjects_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      relations_classes_students: {
+        Row: {
+          class_id: string
+          created_at: string | null
+          enrolled_date: string
+          id: string
+          status: string
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          class_id: string
+          created_at?: string | null
+          enrolled_date?: string
+          id?: string
+          status?: string
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          class_id?: string
+          created_at?: string | null
+          enrolled_date?: string
+          id?: string
+          status?: string
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relations_classes_students_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "relations_classes_students_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      relations_compositions_students: {
+        Row: {
+          class_id: string | null
+          composition_id: string
+          created_at: string | null
+          enrolled_date: string
+          id: string
+          status: string
+          student_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          class_id?: string | null
+          composition_id: string
+          created_at?: string | null
+          enrolled_date?: string
+          id?: string
+          status?: string
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          class_id?: string | null
+          composition_id?: string
+          created_at?: string | null
+          enrolled_date?: string
+          id?: string
+          status?: string
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relations_compositions_students_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "relations_compositions_students_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_compositions_composition_id_fkey"
+            columns: ["composition_id"]
+            isOneToOne: false
+            referencedRelation: "class_compositions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      relations_teachers_subjects: {
+        Row: {
+          created_at: string | null
+          id: string
+          subject_id: string
+          teacher_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          subject_id: string
+          teacher_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          subject_id?: string
+          teacher_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relations_teachers_subjects_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "relations_teachers_subjects_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
             referencedColumns: ["id"]
           },
         ]
@@ -934,45 +967,6 @@ export type Database = {
           subject_name?: string | null
         }
         Relationships: []
-      }
-      teacher_subjects: {
-        Row: {
-          created_at: string | null
-          id: string
-          subject_id: string
-          teacher_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          subject_id: string
-          teacher_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          subject_id?: string
-          teacher_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "teacher_subjects_subject_id_fkey"
-            columns: ["subject_id"]
-            isOneToOne: false
-            referencedRelation: "subjects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "teacher_subjects_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "teachers"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       teachers: {
         Row: {

@@ -15,7 +15,7 @@ interface ClassWithTeacher extends Tables<"classes"> {
     name: string;
   } | null;
   subject?: Tables<"subjects"> | null;
-  class_composition?: Tables<"class_composition">[];
+  class_composition?: Tables<"class_compositions">[];
 }
 
 // 수업 생성을 위한 새로운 인터페이스

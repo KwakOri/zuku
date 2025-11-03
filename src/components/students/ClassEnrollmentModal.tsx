@@ -1,6 +1,6 @@
 "use client";
 
-import CanvasSchedule from "@/components/common/schedule/ClassroomScheduleCanvas";
+import CanvasSchedule from "@/components/common/schedule/CanvasSchedule";
 import { useClasses } from "@/queries/useClasses";
 import { useEnrollStudent } from "@/queries/useClassStudents";
 import { useEnrollComposition } from "@/queries/useStudentCompositions";
@@ -12,7 +12,7 @@ import { useMemo, useState } from "react";
 type Class = Tables<"classes"> & {
   subject?: Tables<"subjects"> | null;
   teacher?: Tables<"teachers"> | null;
-  class_composition?: Tables<"class_composition">[];
+  class_composition?: Tables<"class_compositions">[];
 };
 
 interface ClassEnrollmentModalProps {

@@ -7,7 +7,7 @@ interface ClassWithTeacher extends Tables<"classes"> {
     name: string;
   } | null;
   subject?: Tables<"subjects"> | null;
-  class_composition?: Tables<"class_composition">[];
+  class_composition?: Tables<"class_compositions">[];
 }
 
 interface ClassWithStudents extends Tables<"classes"> {
@@ -78,7 +78,7 @@ export class ClassService {
       .select(
         `
         *,
-        class_students!inner(
+        relations_classes_students!inner(
           enrolled_date,
           student:students(id, name, grade)
         )
@@ -99,7 +99,7 @@ export class ClassService {
     const classData = {
       ...data,
       students:
-        data.class_students?.map((cs: ClassStudentRelation) => ({
+        data.relations_classes_students?.map((cs: ClassStudentRelation) => ({
           id: cs.student.id,
           name: cs.student.name,
           grade: cs.student.grade,
@@ -108,7 +108,7 @@ export class ClassService {
     } as ClassWithStudents;
 
     // class_students 속성 제거
-    // delete (classData as unknown as Record<string, unknown>).class_students;
+    // delete (classData as unknown as Record<string, unknown>).relations_classes_students;
 
     return classData;
   }

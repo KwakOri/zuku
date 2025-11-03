@@ -30,7 +30,7 @@ export async function GET(
 
     // 2. 수업 일정 조회 (class_students → student_compositions → class_composition)
     const { data: classSchedules, error: classError } = await supabase
-      .from("class_students")
+      .from("relations_classes_students")
       .select(`
         id,
         enrolled_date,
@@ -60,13 +60,13 @@ export async function GET(
 
     // 3. compositions_students 조회 (class_id와 student_id로 필터링)
     const { data: allCompositions, error: compError } = await supabase
-      .from("compositions_students")
+      .from("relations_compositions_students")
       .select(`
         id,
         class_id,
         student_id,
         enrolled_date,
-        composition:class_composition (
+        composition:class_compositions (
           id,
           day_of_week,
           start_time,
@@ -82,8 +82,8 @@ export async function GET(
     }
 
     // Type for the composition with nested data
-    interface CompositionWithData extends Pick<Tables<"compositions_students">, "id" | "class_id" | "student_id" | "enrolled_date"> {
-      composition?: Pick<Tables<"class_composition">, "id" | "day_of_week" | "start_time" | "end_time" | "type"> | null;
+    interface CompositionWithData extends Pick<Tables<"relations_compositions_students">, "id" | "class_id" | "student_id" | "enrolled_date"> {
+      composition?: Pick<Tables<"class_compositions">, "id" | "day_of_week" | "start_time" | "end_time" | "type"> | null;
     }
 
     // 4. class_students에 해당하는 compositions 매핑

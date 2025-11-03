@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     // 1. class_students에서 teacher_id가 일치하는 classes를 참조하는 행들을 조회
     // (classes.teacher_id = teacherId인 classes.id를 참조하는 class_students)
     const { data: allClassStudents, error: studentsError } = await supabase
-      .from("class_students")
+      .from("relations_classes_students")
       .select(`
         id,
         class_id,

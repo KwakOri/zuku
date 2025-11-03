@@ -17,7 +17,7 @@ export interface StudentScheduleWithStudent extends Tables<"student_schedules"> 
   } | null;
 }
 
-export interface ClassStudentWithDetails extends Tables<"class_students"> {
+export interface ClassStudentWithDetails extends Tables<"relations_classes_students"> {
   student?: {
     id: string;
     name: string;
@@ -161,7 +161,7 @@ export class ScheduleApi {
     return result.data;
   }
 
-  async enrollStudentInClass(enrollmentData: TablesInsert<"class_students">): Promise<ClassStudentWithDetails> {
+  async enrollStudentInClass(enrollmentData: TablesInsert<"relations_classes_students">): Promise<ClassStudentWithDetails> {
     const response = await fetch(this.classStudentsUrl, {
       method: "POST",
       headers: {

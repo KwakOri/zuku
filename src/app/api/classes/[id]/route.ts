@@ -113,7 +113,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     // 먼저 수업에 등록된 학생들이 있는지 확인
     const { data: classStudents, error: studentsCheckError } = await supabase
-      .from("class_students")
+      .from("relations_classes_students")
       .select("id")
       .eq("class_id", id);
 

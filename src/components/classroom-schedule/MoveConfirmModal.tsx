@@ -68,7 +68,7 @@ export default function MoveConfirmModal({
               const reason = prompt("일회성 변경 사유를 입력하세요 (선택사항):");
               onConfirmTemporary(reason || undefined);
             }}
-            className="flex-1 px-4 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-medium transition-colors"
+            className="flex-1 px-4 py-3 bg-[#c9a959] hover:bg-[#b89848] text-white rounded-xl font-medium transition-colors shadow-sm"
           >
             일회성 변경
           </button>
@@ -82,7 +82,7 @@ export default function MoveConfirmModal({
                 onConfirmPermanent();
               }
             }}
-            className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors"
+            className="flex-1 px-4 py-3 bg-[#c96969] hover:bg-[#b85858] text-white rounded-xl font-medium transition-colors shadow-sm"
           >
             영구 변경
           </button>

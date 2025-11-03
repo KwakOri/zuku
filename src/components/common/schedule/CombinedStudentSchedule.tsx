@@ -143,7 +143,7 @@ export default function CombinedStudentSchedule() {
             return true;
 
           // 수업명 검색
-          const hasMatchingClass = s.class_students.some(
+          const hasMatchingClass = s.relations_classes_students.some(
             (cs) => cs.class && cs.class.title.toLowerCase().includes(query)
           );
           if (hasMatchingClass) return true;
@@ -155,7 +155,7 @@ export default function CombinedStudentSchedule() {
       })
       .map((student) => {
         // 수업 이벤트 생성
-        const classEvents: TimelineEvent[] = student.class_students.flatMap(
+        const classEvents: TimelineEvent[] = student.relations_classes_students.flatMap(
           (classStudent, index) => {
             if (!classStudent.class) {
               console.warn(

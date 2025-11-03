@@ -1,6 +1,6 @@
 "use client";
 
-import CanvasSchedule from "@/components/common/schedule/ClassroomScheduleCanvas";
+import CanvasSchedule from "@/components/common/schedule/CanvasSchedule";
 import {
   useEnrollComposition,
   useStudentCompositions,
@@ -11,7 +11,7 @@ import { Tables } from "@/types/supabase";
 import { BookOpen, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-type ClassComposition = Tables<"class_composition">;
+type ClassComposition = Tables<"class_compositions">;
 
 interface ClassCompositionEditModalProps {
   classStudentId: string;

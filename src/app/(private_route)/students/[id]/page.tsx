@@ -1,6 +1,6 @@
 "use client";
 
-import CanvasSchedule from "@/components/common/schedule/ClassroomScheduleCanvas";
+import CanvasSchedule from "@/components/common/schedule/CanvasSchedule";
 import ClassCompositionEditModal from "@/components/students/ClassCompositionEditModal";
 import ClassEnrollmentModal from "@/components/students/ClassEnrollmentModal";
 import {
@@ -136,7 +136,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
     classColor: string;
     subjectName?: string;
     teacherName?: string;
-    allCompositions: Tables<"class_composition">[];
+    allCompositions: Tables<"class_compositions">[];
   } | null>(null);
 
   // 새로운 일정 추가 폼 상태

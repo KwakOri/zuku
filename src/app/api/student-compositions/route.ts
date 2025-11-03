@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const studentId = searchParams.get("student_id");
 
     let query = supabase
-      .from("compositions_students")
+      .from("relations_compositions_students")
       .select(`
         *,
         class:classes(
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
           email,
           school:schools(id, name)
         ),
-        composition:class_composition(
+        composition:class_compositions(
           id,
           day_of_week,
           start_time,
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminSupabaseClient();
 
     // 입력 데이터 검증
-    const studentCompositionData: TablesInsert<"compositions_students"> = {
+    const studentCompositionData: TablesInsert<"relations_compositions_students"> = {
       class_id: body.class_id,
       student_id: body.student_id,
       composition_id: body.composition_id,
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
 
     // 중복 등록 체크
     const { data: existing } = await supabase
-      .from("compositions_students")
+      .from("relations_compositions_students")
       .select("id")
       .eq("class_id", body.class_id)
       .eq("student_id", body.student_id)
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: studentComposition, error } = await supabase
-      .from("compositions_students")
+      .from("relations_compositions_students")
       .insert([studentCompositionData])
       .select(`
         *,
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
           email,
           school:schools(id, name)
         ),
-        composition:class_composition(
+        composition:class_compositions(
           id,
           day_of_week,
           start_time,
@@ -178,7 +178,7 @@ export async function DELETE(request: NextRequest) {
 
     // soft delete: status를 inactive로 변경
     const { data: studentComposition, error } = await supabase
-      .from("compositions_students")
+      .from("relations_compositions_students")
       .update({ status: "inactive" })
       .eq("id", id)
       .select()

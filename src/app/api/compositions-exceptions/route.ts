@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       .select(
         `
         *,
-        composition:class_composition(
+        composition:class_compositions(
           id,
           class_id,
           day_of_week,
@@ -25,13 +25,13 @@ export async function GET(request: NextRequest) {
         )
       `
       )
-      .order("date_from", { ascending: true });
+      .order("week_start_date", { ascending: true });
 
-    // 날짜 범위 필터링
+    // 날짜 범위 필터링 (week_start_date 기준)
     if (startDate && endDate) {
       query = query
-        .gte("date_from", startDate)
-        .lte("date_to", endDate);
+        .gte("week_start_date", startDate)
+        .lte("week_start_date", endDate);
     }
 
     // 특정 composition 필터링
@@ -67,10 +67,9 @@ export async function POST(request: NextRequest) {
 
     const {
       composition_id,
-      date_from,
+      week_start_date,
       start_time_from,
       end_time_from,
-      date_to,
       start_time_to,
       end_time_to,
       room,
@@ -79,7 +78,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // 필수 필드 검증
-    if (!composition_id || !date_from || !date_to || !room) {
+    if (!composition_id || !week_start_date || !room) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -90,10 +89,9 @@ export async function POST(request: NextRequest) {
       .from("compositions_exceptions")
       .insert({
         composition_id,
-        date_from,
+        week_start_date,
         start_time_from,
         end_time_from,
-        date_to,
         start_time_to,
         end_time_to,
         room,

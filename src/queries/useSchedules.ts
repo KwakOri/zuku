@@ -184,7 +184,7 @@ export function useEnrollStudentInClass() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: TablesInsert<"class_students">) => 
+    mutationFn: (data: TablesInsert<"relations_classes_students">) => 
       scheduleApi.enrollStudentInClass(data),
     onSuccess: (enrollment) => {
       // 관련 쿼리들 무효화

@@ -4,7 +4,7 @@ import { Tables } from "@/types/supabase";
 export interface StudentWithSchedules extends Tables<"students"> {
   school: Tables<"schools"> | null;
   student_schedules: Tables<"student_schedules">[];
-  class_students: Array<{
+  relations_classes_students: Array<{
     id: string;
     class_id: string;
     enrolled_date: string;
@@ -28,7 +28,7 @@ export interface StudentWithSchedules extends Tables<"students"> {
       composition_id: string;
       enrolled_date: string;
       status: string;
-      composition: Tables<"class_composition"> | null;
+      composition: Tables<"class_compositions"> | null;
     }>;
   }>;
 }
@@ -40,7 +40,7 @@ export interface ClassWithSchedules extends Tables<"classes"> {
     id: string;
     name: string;
   } | null;
-  class_composition: Tables<"class_composition">[];
+  class_composition: Tables<"class_compositions">[];
 }
 
 // 선생님별 통합 스케줄 타입
@@ -53,7 +53,7 @@ export interface TeacherWithSchedules extends Tables<"teachers"> {
       id: string;
       subject_name: string | null;
     } | null;
-    class_composition: Tables<"class_composition">[];
+    class_composition: Tables<"class_compositions">[];
   }>;
 }
 
@@ -64,15 +64,47 @@ export interface ClassroomScheduleClass extends Tables<"classes"> {
     id: string;
     name: string;
   } | null;
-  class_composition: Tables<"class_composition">[];
-  class_students: Array<{
-    id: string;
-    student: {
-      id: string;
-      name: string;
-      grade: number | null;
-    } | null;
-  }>;
+  class_compositions: Array<
+    Tables<"class_compositions"> & {
+      relations_compositions_students: Array<{
+        id: string;
+        composition_id: string;
+        student_id: string | null;
+        enrolled_date: string;
+        status: string;
+        student: {
+          id: string;
+          name: string;
+          grade: number | null;
+          school: {
+            id: string;
+            name: string;
+            level: string;
+          } | null;
+        } | null;
+      }>;
+    }
+  >;
+}
+
+// 강의실 시간표 응답 타입
+export interface ClassroomScheduleResponse {
+  data: ClassroomScheduleClass[];
+  compositionsExceptions: Tables<"compositions_exceptions">[];
+  studentsExceptions: Array<
+    Tables<"composition_students_exceptions"> & {
+      student: {
+        id: string;
+        name: string;
+        grade: number | null;
+        school: {
+          id: string;
+          name: string;
+          level: string;
+        } | null;
+      } | null;
+    }
+  >;
 }
 
 export interface ApiResponse<T> {
@@ -138,8 +170,14 @@ export class CombinedScheduleApi {
     return result.data;
   }
 
-  async getClassroomSchedule(): Promise<ClassroomScheduleClass[]> {
-    const response = await fetch("/api/classroom-schedule", {
+  async getClassroomSchedule(
+    weekStartDate?: string
+  ): Promise<ClassroomScheduleResponse> {
+    const url = weekStartDate
+      ? `/api/classroom-schedule?week_start_date=${weekStartDate}`
+      : "/api/classroom-schedule";
+
+    const response = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -148,14 +186,11 @@ export class CombinedScheduleApi {
 
     if (!response.ok) {
       const error: ApiError = await response.json();
-      throw new Error(
-        error.error || "Failed to fetch classroom schedule data"
-      );
+      throw new Error(error.error || "Failed to fetch classroom schedule data");
     }
 
-    const result: ApiResponse<ClassroomScheduleClass[]> =
-      await response.json();
-    return result.data;
+    const result: ClassroomScheduleResponse = await response.json();
+    return result;
   }
 }
 

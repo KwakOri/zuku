@@ -40,7 +40,10 @@
       "Bash(lsof:*)",
       "Bash(ls:*)",
       "Bash(wait)",
-      "Bash(xargs sed:*)"
+      "Bash(xargs sed:*)",
+      "Bash(npx next build:*)",
+      "Bash(node:*)",
+      "Bash(/Users/kwakori/projects/promotion/zuku/public/omr-template.json)"
     ],
     "deny": [],
     "ask": []

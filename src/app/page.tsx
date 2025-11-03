@@ -15,6 +15,7 @@ import {
   Star,
   UserPlus,
   Users,
+  ScanLine,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -144,6 +145,16 @@ export default function HomePage() {
       href: "/notifications",
       stats: "실시간 발송",
       features: ["개별 발송", "일괄 발송", "템플릿 관리", "발송 내역"],
+    },
+    {
+      id: "omr-grading",
+      title: "OMR 자동 채점",
+      description: "스캔된 OMR 답안지를 자동으로 채점하고 결과를 분석합니다",
+      icon: ScanLine,
+      color: "bg-orange-50 text-orange-600 border-orange-200",
+      href: "/omr-grading",
+      stats: "자동 채점",
+      features: ["이미지 자동 처리", "자동 채점", "통계 분석", "CSV 다운로드"],
     },
   ];
 
@@ -352,13 +363,20 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="mt-8 text-center">
+          <div className="mt-8 flex justify-center gap-4">
             <Link
               href="/students"
               className="inline-flex items-center gap-2 px-6 py-3 text-white transition-all duration-200 flat-card bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl hover:from-primary-600 hover:to-primary-700"
             >
               <Users className="w-5 h-5" />
               학생 관리로 시작하기
+            </Link>
+            <Link
+              href="/omr-grading"
+              className="inline-flex items-center gap-2 px-6 py-3 text-white transition-all duration-200 flat-card bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl hover:from-orange-600 hover:to-orange-700"
+            >
+              <ScanLine className="w-5 h-5" />
+              OMR 자동 채점
             </Link>
           </div>
         </div>

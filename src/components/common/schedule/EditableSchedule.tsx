@@ -1,7 +1,7 @@
 "use client";
 
 import { Calendar, Shield } from "lucide-react";
-import CanvasSchedule from "./ClassroomScheduleCanvas";
+import CanvasSchedule from "./CanvasSchedule";
 
 export default function EditableSchedule() {
   // 기본적으로 관리자 모드로 설정

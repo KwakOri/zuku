@@ -35,11 +35,11 @@ export async function GET(request: NextRequest) {
         )
       `
       )
-      .order("date_from", { ascending: true });
+      .order("week_start_date", { ascending: true });
 
-    // 날짜 범위 필터링
+    // 날짜 범위 필터링 (week_start_date 기준)
     if (startDate && endDate) {
-      query = query.gte("date_from", startDate).lte("date_to", endDate);
+      query = query.gte("week_start_date", startDate).lte("week_start_date", endDate);
     }
 
     // 특정 학생 필터링
@@ -80,9 +80,8 @@ export async function POST(request: NextRequest) {
 
     const {
       composition_id_from,
-      date_from,
       composition_id_to,
-      date_to,
+      week_start_date,
       student_id,
       reason,
       created_by,
@@ -91,9 +90,8 @@ export async function POST(request: NextRequest) {
     // 필수 필드 검증
     if (
       !composition_id_from ||
-      !date_from ||
       !composition_id_to ||
-      !date_to ||
+      !week_start_date ||
       !student_id
     ) {
       return NextResponse.json(
@@ -106,9 +104,8 @@ export async function POST(request: NextRequest) {
       .from("composition_students_exceptions")
       .insert({
         composition_id_from,
-        date_from,
         composition_id_to,
-        date_to,
+        week_start_date,
         student_id,
         reason,
         created_by,
