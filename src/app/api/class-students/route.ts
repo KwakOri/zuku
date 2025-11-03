@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
     // 1. class_students 조회
     let query = supabase
-      .from("class_students")
+      .from("relations_classes_students")
       .select(`
         *,
         student:students(
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
 
     // 3. compositions_students 별도 조회
     let compositionsQuery = supabase
-      .from("compositions_students")
+      .from("relations_compositions_students")
       .select(`
         id,
         class_id,
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
         composition_id,
         enrolled_date,
         status,
-        composition:class_composition(
+        composition:class_compositions(
           id,
           class_id,
           day_of_week,
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminSupabaseClient();
 
     // 입력 데이터 검증
-    const classStudentData: TablesInsert<"class_students"> = {
+    const classStudentData: TablesInsert<"relations_classes_students"> = {
       class_id: body.class_id,
       student_id: body.student_id,
       enrolled_date: body.enrolled_date || new Date().toISOString().split('T')[0],
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
 
     // 중복 등록 체크 - class_students에 이미 active 상태로 등록되어 있는지 확인
     const { data: existingClassStudent } = await supabase
-      .from("class_students")
+      .from("relations_classes_students")
       .select("id")
       .eq("class_id", body.class_id)
       .eq("student_id", body.student_id)
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
     } else {
       // 등록되어 있지 않으면 새로 생성
       const { data: newClassStudent, error: classStudentError } = await supabase
-        .from("class_students")
+        .from("relations_classes_students")
         .insert([classStudentData])
         .select("id")
         .single();
@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
     if (body.composition_id) {
       // 이미 해당 composition에 등록되어 있는지 확인
       const { data: existingComposition } = await supabase
-        .from("compositions_students")
+        .from("relations_compositions_students")
         .select("id")
         .eq("class_id", body.class_id)
         .eq("student_id", body.student_id)
@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
       if (!existingComposition) {
         // compositions_students에 등록
         const { error: compositionError } = await supabase
-          .from("compositions_students")
+          .from("relations_compositions_students")
           .insert([{
             class_id: body.class_id,
             student_id: body.student_id,
@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
 
     // 최종 데이터 조회 (모든 관계 포함)
     const { data: finalClassStudent, error: fetchError } = await supabase
-      .from("class_students")
+      .from("relations_classes_students")
       .select(`
         *,
         student:students(
@@ -228,7 +228,7 @@ export async function POST(request: NextRequest) {
 
     // compositions_students 조회
     const { data: compositions } = await supabase
-      .from("compositions_students")
+      .from("relations_compositions_students")
       .select(`
         id,
         class_id,
@@ -236,7 +236,7 @@ export async function POST(request: NextRequest) {
         composition_id,
         enrolled_date,
         status,
-        composition:class_composition(
+        composition:class_compositions(
           id,
           class_id,
           day_of_week,

@@ -11,11 +11,11 @@ import { getGrade } from "@/lib/utils";
 type Student = Tables<"students"> & {
   school?: Pick<Tables<"schools">, "id" | "name" | "level"> | null;
 };
-type ClassComposition = Tables<"class_composition">;
+type ClassComposition = Tables<"class_compositions">;
 type Class = Tables<"classes">;
 
 // Type for the response from /api/student-compositions
-interface CompositionStudent extends Tables<"compositions_students"> {
+interface CompositionStudent extends Tables<"relations_compositions_students"> {
   class?: Pick<Tables<"classes">, "id" | "title"> & {
     subject?: Pick<Tables<"subjects">, "id" | "subject_name"> | null;
     teacher?: Pick<Tables<"teachers">, "id" | "name"> | null;
@@ -23,7 +23,7 @@ interface CompositionStudent extends Tables<"compositions_students"> {
   student?: Pick<Tables<"students">, "id" | "name" | "grade" | "phone" | "email"> & {
     school?: Pick<Tables<"schools">, "id" | "name"> | null;
   } | null;
-  composition?: Pick<Tables<"class_composition">, "id" | "day_of_week" | "start_time" | "end_time" | "type" | "class_id"> | null;
+  composition?: Pick<Tables<"class_compositions">, "id" | "day_of_week" | "start_time" | "end_time" | "type" | "class_id"> | null;
 }
 
 interface ClassStudentPanelProps {

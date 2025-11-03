@@ -38,7 +38,12 @@
       "Read(//Users/kwakori/projects/promotion/temis/src/app/**)",
       "Read(//private/tmp/**)",
       "Bash(lsof:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(wait)",
+      "Bash(xargs sed:*)",
+      "Bash(npx next build:*)",
+      "Bash(node:*)",
+      "Bash(/Users/kwakori/projects/promotion/zuku/public/omr-template.json)"
     ],
     "deny": [],
     "ask": []

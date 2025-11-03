@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const classId = searchParams.get("classId");
 
     let query = supabase
-      .from("class_composition")
+      .from("class_compositions")
       .select("*")
       .order("day_of_week", { ascending: true })
       .order("start_time", { ascending: true });
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
 
     // Check for time conflicts
     const { data: existingCompositions, error: checkError } = await supabase
-      .from("class_composition")
+      .from("class_compositions")
       .select("*")
       .eq("class_id", class_id)
       .eq("day_of_week", day_of_week);
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
 
     // Create class composition
     const { data: newComposition, error: createError } = await supabase
-      .from("class_composition")
+      .from("class_compositions")
       .insert([{
         class_id,
         day_of_week,
@@ -217,7 +217,7 @@ export async function PATCH(request: NextRequest) {
     if (endTime) updateData.end_time = endTime;
 
     const { data, error } = await supabase
-      .from("class_composition")
+      .from("class_compositions")
       .update(updateData)
       .eq("id", id)
       .select()
@@ -252,7 +252,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const { error } = await supabase
-      .from("class_composition")
+      .from("class_compositions")
       .delete()
       .eq("id", id);
 

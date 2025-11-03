@@ -3,7 +3,7 @@ import { Tables, TablesInsert } from "@/types/supabase";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 
-type CompositionStudentRow = Tables<"compositions_students">;
+type CompositionStudentRow = Tables<"relations_compositions_students">;
 
 // Query Keys
 export const studentCompositionKeys = {
@@ -53,7 +53,7 @@ export function useEnrollComposition() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: TablesInsert<"compositions_students">) =>
+    mutationFn: (data: TablesInsert<"relations_compositions_students">) =>
       studentCompositionApi.enrollComposition(data),
     onSuccess: (newComposition) => {
       // 관련 쿼리들 무효화

@@ -5,10 +5,12 @@ import {
   removeSchoolTag,
   serializeSchoolTags,
 } from "@/lib/schoolTags";
-import { useCreateClass } from "@/queries/useClasses";
+import { useCreateClass, useUpdateClass } from "@/queries/useClasses";
+import { Tables } from "@/types/supabase";
 import { useSchools } from "@/queries/useSchools";
 import { useSubjects } from "@/queries/useSubjects";
 import { useTeachers } from "@/queries/useTeachers";
+import { ScrollPicker, ScrollPickerOption } from "@/components/common/input";
 import { BookOpen, Check, Hash, Save, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -28,17 +30,26 @@ interface SimpleClassFormProps {
   onSubjectChange?: (subjectId: string) => void;
   onCourseTypeChange?: (courseType: "regular" | "school_exam" | "") => void;
   onTeacherChange?: (teacherId: string) => void;
+  editingClass?: Tables<"classes"> & {
+    subject?: Pick<Tables<"subjects">, "id" | "subject_name"> | null;
+    teacher?: Pick<Tables<"teachers">, "id" | "name"> | null;
+  } | null;
+  onEditComplete?: () => void;
 }
 
 export default function SimpleClassForm({
   onSubjectChange,
   onCourseTypeChange,
   onTeacherChange,
+  editingClass,
+  onEditComplete,
 }: SimpleClassFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [teacherSearch, setTeacherSearch] = useState("");
   const [isTeacherSearchOpen, setIsTeacherSearchOpen] = useState(false);
+  const [selectedTeacherIndex, setSelectedTeacherIndex] = useState(-1);
   const teacherSearchRef = useRef<HTMLDivElement>(null);
+  const teacherListRef = useRef<HTMLDivElement>(null);
 
   // School tags state (for school_exam type) - stores school IDs
   const [schoolTagIds, setSchoolTagIds] = useState<string[]>([]);
@@ -64,9 +75,16 @@ export default function SimpleClassForm({
   });
 
   const createClassMutation = useCreateClass();
+  const updateClassMutation = useUpdateClass();
   const { data: teachers = [], isLoading: teachersLoading } = useTeachers();
   const { data: subjects = [], isLoading: subjectsLoading } = useSubjects();
   const { data: schools = [], isLoading: schoolsLoading } = useSchools();
+
+  // Classroom options (1-10)
+  const classroomOptions: ScrollPickerOption[] = Array.from({ length: 10 }, (_, i) => ({
+    value: i + 1,
+    label: `${i + 1}강의실`,
+  }));
 
   // Watch form values
   const selectedSubjectId = watch("subjectId");
@@ -196,12 +214,53 @@ export default function SimpleClassForm({
     }
   };
 
+  // Handle keyboard navigation for teacher search
+  const handleTeacherSearchKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    fieldOnChange: (value: string) => void
+  ) => {
+    if (!isTeacherSearchOpen || filteredTeachers.length === 0) {
+      return;
+    }
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setSelectedTeacherIndex((prev) =>
+          prev < filteredTeachers.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setSelectedTeacherIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (
+          selectedTeacherIndex >= 0 &&
+          selectedTeacherIndex < filteredTeachers.length
+        ) {
+          const selectedTeacher = filteredTeachers[selectedTeacherIndex];
+          fieldOnChange(selectedTeacher.id);
+          setIsTeacherSearchOpen(false);
+          setTeacherSearch("");
+          setSelectedTeacherIndex(-1);
+        }
+        break;
+      case "Escape":
+        e.preventDefault();
+        setIsTeacherSearchOpen(false);
+        setSelectedTeacherIndex(-1);
+        break;
+    }
+  };
+
   // Reset selected index when search input or filtered results change
   useEffect(() => {
     setSelectedSchoolIndex(-1);
   }, [schoolSearchInput, filteredSchools.length]);
 
-  // Scroll selected item into view
+  // Scroll selected school item into view
   useEffect(() => {
     if (selectedSchoolIndex >= 0 && schoolListRef.current) {
       const selectedElement = schoolListRef.current.children[
@@ -216,30 +275,92 @@ export default function SimpleClassForm({
     }
   }, [selectedSchoolIndex]);
 
+  // Reset teacher selected index when search input or filtered results change
+  useEffect(() => {
+    setSelectedTeacherIndex(-1);
+  }, [teacherSearch, filteredTeachers.length]);
+
+  // Scroll selected teacher item into view
+  useEffect(() => {
+    if (selectedTeacherIndex >= 0 && teacherListRef.current) {
+      const selectedElement = teacherListRef.current.children[
+        selectedTeacherIndex
+      ] as HTMLElement;
+      if (selectedElement) {
+        selectedElement.scrollIntoView({
+          block: "nearest",
+          behavior: "smooth",
+        });
+      }
+    }
+  }, [selectedTeacherIndex]);
+
+  // Initialize form when editing
+  useEffect(() => {
+    if (editingClass) {
+      reset({
+        title: editingClass.title,
+        subjectId: editingClass.subject_id || "",
+        teacherId: editingClass.teacher_id || "",
+        description: editingClass.description || "",
+        room: editingClass.room || "",
+        courseType: editingClass.course_type as "regular" | "school_exam",
+        splitType: (editingClass.split_type || "single") as "single" | "split",
+      });
+
+      // Set teacher search to display teacher name
+      if (editingClass.teacher) {
+        setTeacherSearch(editingClass.teacher.name);
+      }
+
+      // Note: school_tags are not supported in edit mode yet
+      // as they are not part of the database schema
+    }
+  }, [editingClass, reset]);
+
   const onSubmit = async (data: SimpleClassFormData) => {
     setIsSubmitting(true);
 
     try {
-      // Serialize school IDs for school_exam type
-      const schoolTagsData =
-        data.courseType === "school_exam"
-          ? serializeSchoolTags(schoolTagIds)
-          : null;
+      if (editingClass) {
+        // Update existing class - use TablesUpdate<"classes"> fields only
+        await updateClassMutation.mutateAsync({
+          id: editingClass.id,
+          data: {
+            title: data.title,
+            subject_id: data.subjectId,
+            teacher_id: data.teacherId,
+            description: data.description || null,
+            room: data.room || null,
+            course_type: data.courseType,
+            split_type: data.splitType,
+          },
+        });
+        toast.success("수업 정보가 수정되었습니다.");
+        onEditComplete?.();
+      } else {
+        // Create new class - use CreateClassData interface
+        const schoolTagsData =
+          data.courseType === "school_exam"
+            ? serializeSchoolTags(schoolTagIds)
+            : null;
 
-      await createClassMutation.mutateAsync({
-        ...data,
-        studentIds: [], // 학생은 나중에 등록
-        schoolTags: schoolTagsData,
-      });
+        await createClassMutation.mutateAsync({
+          ...data,
+          studentIds: [], // 학생은 나중에 등록
+          schoolTags: schoolTagsData,
+        });
+        toast.success(
+          "수업이 성공적으로 개설되었습니다! 시간 배정 탭에서 수업 시간을 설정하세요."
+        );
+      }
 
-      toast.success(
-        "수업이 성공적으로 개설되었습니다! 시간 배정 탭에서 수업 시간을 설정하세요."
-      );
       reset();
       setSchoolTagIds([]);
       setSchoolSearchInput("");
+      setTeacherSearch("");
     } catch (error) {
-      toast.error("수업 개설 중 오류가 발생했습니다.");
+      toast.error(editingClass ? "수업 수정 중 오류가 발생했습니다." : "수업 개설 중 오류가 발생했습니다.");
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -252,7 +373,9 @@ export default function SimpleClassForm({
         <div className="p-2 bg-primary-100 rounded-xl">
           <BookOpen className="w-5 h-5 text-primary-600" />
         </div>
-        <h2 className="text-lg font-semibold text-gray-800">수업 기본 정보</h2>
+        <h2 className="text-lg font-semibold text-gray-800">
+          {editingClass ? "수업 정보 수정" : "수업 기본 정보"}
+        </h2>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -545,13 +668,14 @@ export default function SimpleClassForm({
                         <Search className="absolute w-4 h-4 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
                         <input
                           type="text"
-                          placeholder="강사 이름으로 검색..."
+                          placeholder="강사 이름으로 검색... (↑↓ 이동, Enter 선택)"
                           value={teacherSearch}
                           onChange={(e) => {
                             setTeacherSearch(e.target.value);
                             setIsTeacherSearchOpen(true);
                           }}
                           onFocus={() => setIsTeacherSearchOpen(true)}
+                          onKeyDown={(e) => handleTeacherSearchKeyDown(e, field.onChange)}
                           className="w-full py-3 pl-10 pr-4 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500"
                           disabled={teachersLoading}
                         />
@@ -561,8 +685,11 @@ export default function SimpleClassForm({
                       {isTeacherSearchOpen && !teachersLoading && (
                         <div className="absolute z-10 w-full mt-1 overflow-hidden bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-32">
                           {filteredTeachers.length > 0 ? (
-                            <div className="overflow-y-auto max-h-32">
-                              {filteredTeachers.map((teacher) => (
+                            <div
+                              ref={teacherListRef}
+                              className="overflow-y-auto max-h-32"
+                            >
+                              {filteredTeachers.map((teacher, index) => (
                                 <button
                                   key={teacher.id}
                                   type="button"
@@ -570,10 +697,15 @@ export default function SimpleClassForm({
                                     field.onChange(teacher.id);
                                     setIsTeacherSearchOpen(false);
                                     setTeacherSearch("");
+                                    setSelectedTeacherIndex(-1);
                                   }}
-                                  className="w-full px-4 py-2 text-left transition-colors hover:bg-primary-50"
+                                  className={`w-full px-4 py-2 text-left transition-colors ${
+                                    index === selectedTeacherIndex
+                                      ? "bg-primary-100 text-primary-800"
+                                      : "hover:bg-primary-50"
+                                  }`}
                                 >
-                                  <span className="text-sm font-medium text-gray-800">
+                                  <span className="text-sm font-medium">
                                     {teacher.name}
                                   </span>
                                 </button>
@@ -603,11 +735,17 @@ export default function SimpleClassForm({
             <label className="block mb-2 text-sm font-medium text-gray-700">
               강의실
             </label>
-            <input
-              type="text"
-              {...register("room")}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="예: 301호"
+            <Controller
+              name="room"
+              control={control}
+              render={({ field }) => (
+                <ScrollPicker
+                  options={classroomOptions}
+                  value={field.value ? Number(field.value) : 1}
+                  onChange={(value) => field.onChange(String(value))}
+                  height="h-24"
+                />
+              )}
             />
           </div>
 
@@ -627,23 +765,35 @@ export default function SimpleClassForm({
 
         {/* 제출 버튼 */}
         <div className="pt-4 border-t border-gray-200">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex items-center justify-center w-full gap-2 px-4 py-3 text-white transition-all duration-200 bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl hover:from-primary-600 hover:to-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? (
-              <>
-                <div className="w-4 h-4 border-b-2 border-white rounded-full animate-spin"></div>
-                <span>수업 개설 중...</span>
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                <span>수업 개설</span>
-              </>
+          <div className="flex gap-2">
+            {editingClass && (
+              <button
+                type="button"
+                onClick={onEditComplete}
+                className="flex items-center justify-center gap-2 px-4 py-3 transition-all duration-200 border-2 border-gray-300 rounded-xl hover:bg-gray-50 text-gray-700"
+              >
+                <X className="w-4 h-4" />
+                <span>취소</span>
+              </button>
             )}
-          </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex items-center justify-center flex-1 gap-2 px-4 py-3 text-white transition-all duration-200 bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl hover:from-primary-600 hover:to-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-b-2 border-white rounded-full animate-spin"></div>
+                  <span>{editingClass ? "수정 중..." : "수업 개설 중..."}</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>{editingClass ? "수정" : "수업 개설"}</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </form>
     </div>

@@ -30,7 +30,7 @@ const mainVariants = cva("h-screen flex flex-col", {
 });
 
 const insetContainerVariants = cva(
-  "w-full flex-1 min-h-0 px-4 sm:px-6 lg:px-8 flex flex-col",
+  "w-full flex-1 min-h-0 px-4 sm:px-6 lg:px-8 flex flex-col overflow-y-auto",
   {
     variants: {
       maxWidth: {

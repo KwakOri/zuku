@@ -4,15 +4,15 @@ import ClassCompositionModal, {
   ClassCompositionFormData,
 } from "@/components/class-management/ClassCompositionModal";
 import ClassStudentPanel from "@/components/class-management/ClassStudentPanel";
-import SimpleClassForm from "@/components/class-management/SimpleClassForm";
 import ExamPeriodManagement from "@/components/class-management/ExamPeriodManagement";
+import SimpleClassForm from "@/components/class-management/SimpleClassForm";
 import { PageHeader, PageLayout } from "@/components/common/layout";
 import CanvasSchedule from "@/components/common/schedule/CanvasSchedule";
 import { DAYS_OF_WEEK } from "@/constants/schedule";
 import { useCreateClassComposition } from "@/queries/useClassComposition";
 import { useClasses } from "@/queries/useClasses";
 import type { ClassBlock } from "@/types/schedule";
-import { Calendar, Clock, Plus, Settings, BookOpen } from "lucide-react";
+import { BookOpen, Calendar, Clock, Plus, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -27,6 +27,16 @@ export default function ClassManagementPage() {
   // Selected class for time assignment
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
 
+  // Selected class for manage tab
+  const [selectedManageClassId, setSelectedManageClassId] = useState<
+    string | null
+  >(null);
+
+  // Filter for manage tab
+  const [manageCourseTypeFilter, setManageCourseTypeFilter] = useState<
+    "all" | "regular" | "school_exam"
+  >("all");
+
   // Selected composition for student management
   const [selectedCompositionId, setSelectedCompositionId] = useState<
     string | null
@@ -37,7 +47,9 @@ export default function ClassManagementPage() {
 
   // Create tab filters
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>("");
-  const [selectedCourseType, setSelectedCourseType] = useState<"regular" | "school_exam" | "">("");
+  const [selectedCourseType, setSelectedCourseType] = useState<
+    "regular" | "school_exam" | ""
+  >("");
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>("");
 
   // Data queries
@@ -51,6 +63,11 @@ export default function ClassManagementPage() {
 
   // Find selected class
   const selectedClass = classes.find((c) => c.id === selectedClassId);
+
+  // Find selected manage class
+  const selectedManageClass = classes.find(
+    (c) => c.id === selectedManageClassId
+  );
 
   // Find selected composition
   const selectedComposition =
@@ -87,21 +104,32 @@ export default function ClassManagementPage() {
 
   // Filter classes for create tab based on selected subject, course type, and teacher
   const filteredClasses = useMemo(() => {
-    return classes.filter(cls => {
-      const subjectMatch = !selectedSubjectId || cls.subject_id === selectedSubjectId;
-      const courseTypeMatch = !selectedCourseType || cls.course_type === selectedCourseType;
-      const teacherMatch = !selectedTeacherId || cls.teacher_id === selectedTeacherId;
+    return classes.filter((cls) => {
+      const subjectMatch =
+        !selectedSubjectId || cls.subject_id === selectedSubjectId;
+      const courseTypeMatch =
+        !selectedCourseType || cls.course_type === selectedCourseType;
+      const teacherMatch =
+        !selectedTeacherId || cls.teacher_id === selectedTeacherId;
       return subjectMatch && courseTypeMatch && teacherMatch;
     });
   }, [classes, selectedSubjectId, selectedCourseType, selectedTeacherId]);
+
+  // Filter classes for manage tab based on course type
+  const filteredManageClasses = useMemo(() => {
+    if (manageCourseTypeFilter === "all") {
+      return classes;
+    }
+    return classes.filter((cls) => cls.course_type === manageCourseTypeFilter);
+  }, [classes, manageCourseTypeFilter]);
 
   // Convert filtered classes to ClassBlock format for create tab
   const filteredClassBlocks = useMemo((): ClassBlock[] => {
     const blocks: ClassBlock[] = [];
 
-    filteredClasses.forEach(cls => {
+    filteredClasses.forEach((cls) => {
       if (cls.class_composition && cls.class_composition.length > 0) {
-        cls.class_composition.forEach(comp => {
+        cls.class_composition.forEach((comp) => {
           blocks.push({
             id: comp.id,
             classId: cls.id,
@@ -245,7 +273,10 @@ export default function ClassManagementPage() {
           /* CREATE TAB - 3 Grid Layout */
           <div className="flex flex-1 min-h-0 gap-6">
             {/* Left Section - Class Creation Form */}
-            <div className="flex flex-col flex-shrink-0 overflow-y-auto" style={{ width: "400px" }}>
+            <div
+              className="flex flex-col flex-shrink-0 overflow-y-auto"
+              style={{ width: "400px" }}
+            >
               <SimpleClassForm
                 onSubjectChange={setSelectedSubjectId}
                 onCourseTypeChange={setSelectedCourseType}
@@ -265,17 +296,20 @@ export default function ClassManagementPage() {
                       : "전체 시간표"}
                   </h3>
                   <p className="text-sm text-gray-500">
-                    {selectedSubjectId && selectedCourseType && selectedTeacherId
+                    {selectedSubjectId &&
+                    selectedCourseType &&
+                    selectedTeacherId
                       ? "선택한 조건의 수업 일정이 표시됩니다"
                       : "과목, 수업 유형, 담당 강사를 모두 선택하면 관련 시간표가 표시됩니다"}
                   </p>
                 </div>
-                {selectedSubjectId && selectedCourseType && selectedTeacherId ? (
+                {selectedSubjectId &&
+                selectedCourseType &&
+                selectedTeacherId ? (
                   <div className="flex-1 min-h-0">
                     <CanvasSchedule
                       customBlocks={filteredClassBlocks}
                       editMode="view"
-                      showDensity={false}
                     />
                   </div>
                 ) : (
@@ -583,7 +617,6 @@ export default function ClassManagementPage() {
                         <CanvasSchedule
                           customBlocks={classBlocks}
                           editMode="view"
-                          showDensity={false}
                         />
                       </div>
                     )}
@@ -594,12 +627,134 @@ export default function ClassManagementPage() {
           )
         ) : activeTab === "manage" ? (
           /* MANAGE TAB - Existing Class Management */
-          <div className="p-8 text-center border-0 flat-card rounded-2xl">
-            <Settings className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-            <h3 className="mb-2 text-lg font-medium text-gray-800">
-              기존 수업 관리
-            </h3>
-            <p className="text-gray-500">이 탭은 추후 구현될 예정입니다.</p>
+          <div className="grid flex-1 min-h-0 grid-cols-3 gap-6">
+            {/* Left Section - Edit Form (1 column) */}
+            <div className="col-span-1 overflow-y-auto">
+              {selectedManageClass ? (
+                <SimpleClassForm
+                  editingClass={selectedManageClass}
+                  onEditComplete={() => setSelectedManageClassId(null)}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full p-8 text-center border-0 flat-card rounded-2xl">
+                  <div>
+                    <Settings className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                    <h3 className="mb-2 text-lg font-medium text-gray-800">
+                      수업을 선택하세요
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      우측 목록에서 수정할 수업을 선택하세요
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right Section - Class List (2 columns) */}
+            <div className="col-span-2 overflow-y-auto">
+              <div className="p-6 border-0 flat-card rounded-2xl">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-semibold text-gray-800">
+                    수업 목록
+                  </h3>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setManageCourseTypeFilter("all")}
+                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                        manageCourseTypeFilter === "all"
+                          ? "bg-gradient-to-br from-primary-500 to-primary-600 text-white"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      전체
+                    </button>
+                    <button
+                      onClick={() => setManageCourseTypeFilter("regular")}
+                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                        manageCourseTypeFilter === "regular"
+                          ? "bg-gradient-to-br from-primary-500 to-primary-600 text-white"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      정규수업
+                    </button>
+                    <button
+                      onClick={() => setManageCourseTypeFilter("school_exam")}
+                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                        manageCourseTypeFilter === "school_exam"
+                          ? "bg-gradient-to-br from-primary-500 to-primary-600 text-white"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      학교내신
+                    </button>
+                  </div>
+                </div>
+                {classes.length === 0 ? (
+                  <p className="py-16 text-center text-gray-500">
+                    등록된 수업이 없습니다.
+                  </p>
+                ) : filteredManageClasses.length === 0 ? (
+                  <p className="py-16 text-center text-gray-500">
+                    해당 조건의 수업이 없습니다.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    {filteredManageClasses.map((cls) => (
+                      <button
+                        key={cls.id}
+                        onClick={() => setSelectedManageClassId(cls.id)}
+                        className={`p-5 text-left transition-all duration-200 border-2 rounded-xl ${
+                          selectedManageClassId === cls.id
+                            ? "border-primary-500 bg-primary-50 shadow-md"
+                            : "border-gray-200 hover:border-primary-300 hover:bg-primary-25 hover:shadow-sm"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3 mb-3">
+                          <div
+                            className="w-5 h-5 rounded-full flex-shrink-0 mt-0.5"
+                            style={{ backgroundColor: cls.color }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h4 className="mb-1 text-base font-semibold text-gray-800 break-words">
+                              {cls.title}
+                            </h4>
+                          </div>
+                        </div>
+                        <div className="space-y-1 ml-8">
+                          <p className="text-sm text-gray-600">
+                            {cls.subject?.subject_name || "과목 미지정"}
+                          </p>
+                          {cls.teacher && (
+                            <p className="text-sm text-gray-500">
+                              강사: {cls.teacher.name}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2 pt-2">
+                            <span
+                              className={`px-2 py-1 text-xs rounded-md ${
+                                cls.course_type === "regular"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : "bg-purple-100 text-purple-700"
+                              }`}
+                            >
+                              {cls.course_type === "regular"
+                                ? "정규수업"
+                                : "학교내신"}
+                            </span>
+                            <span className="px-2 py-1 text-xs rounded-md bg-gray-100 text-gray-700">
+                              {cls.split_type === "split"
+                                ? "앞/뒤타임"
+                                : "단일수업"}
+                            </span>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         ) : (
           /* EXAM PERIODS TAB - Exam Period Management */

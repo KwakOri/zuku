@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Tables, TablesInsert } from "@/types/supabase";
 import { toast } from "react-hot-toast";
 
-type ClassStudentRow = Tables<"class_students">;
+type ClassStudentRow = Tables<"relations_classes_students">;
 
 // Query Keys
 export const classStudentKeys = {
@@ -53,7 +53,7 @@ const classStudentApi = {
   },
 
   // 수업에 학생 등록 (composition_id 제거됨)
-  enrollStudent: async (data: TablesInsert<"class_students">): Promise<ClassStudentRow> => {
+  enrollStudent: async (data: TablesInsert<"relations_classes_students">): Promise<ClassStudentRow> => {
     const response = await fetch('/api/class-students', {
       method: 'POST',
       headers: {
@@ -121,7 +121,7 @@ export function useEnrollStudent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: TablesInsert<"class_students">) => classStudentApi.enrollStudent(data),
+    mutationFn: (data: TablesInsert<"relations_classes_students">) => classStudentApi.enrollStudent(data),
     onSuccess: (newEnrollment) => {
       // 관련 쿼리들 무효화
       queryClient.invalidateQueries({ queryKey: classStudentKeys.lists() });

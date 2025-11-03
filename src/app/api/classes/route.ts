@@ -1,18 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase-server";
 import { TablesInsert } from "@/types/supabase";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
   try {
     const supabase = createAdminSupabaseClient();
 
-    const { data: classes, error } = await supabase
-      .from("classes")
-      .select(`
+    const { data: classes, error } = await supabase.from("classes").select(`
         *,
         teacher:teachers(id, name),
         subject:subjects(id, subject_name),
-        class_composition(
+        class_compositions(
           id,
           type,
           day_of_week,
@@ -54,7 +52,7 @@ export async function POST(request: NextRequest) {
       maxStudents,
       studentIds,
       courseType,
-      splitType
+      splitType,
     } = body;
 
     // 필수 필드 검증 (시간 관련 필드는 선택사항)
@@ -66,12 +64,14 @@ export async function POST(request: NextRequest) {
     }
 
     // 학생 ID 배열 검증 (선택사항)
-    const hasStudents = studentIds && Array.isArray(studentIds) && studentIds.length > 0;
+    const hasStudents =
+      studentIds && Array.isArray(studentIds) && studentIds.length > 0;
 
     // 시간 형식 검증 및 변환 (HH:MM -> HH:MM:SS)
     const formatTime = (time: string | undefined) => {
       if (!time) return null;
-      if (time.length === 5) { // HH:MM 형식
+      if (time.length === 5) {
+        // HH:MM 형식
         return `${time}:00`;
       }
       return time;
@@ -100,16 +100,16 @@ export async function POST(request: NextRequest) {
 
     // 과목별 기본 색상 설정
     const subjectColors: { [key: string]: string } = {
-      "수학": "#3b82f6", // blue-500
-      "영어": "#10b981", // emerald-500
-      "과학": "#f59e0b", // amber-500
-      "국어": "#ef4444", // red-500
-      "사회": "#8b5cf6", // violet-500
-      "역사": "#f97316", // orange-500
-      "물리": "#06b6d4", // cyan-500
-      "화학": "#84cc16", // lime-500
-      "생물": "#22c55e", // green-500
-      "지구과학": "#a855f7", // purple-500
+      수학: "#3b82f6", // blue-500
+      영어: "#10b981", // emerald-500
+      과학: "#f59e0b", // amber-500
+      국어: "#ef4444", // red-500
+      사회: "#8b5cf6", // violet-500
+      역사: "#f97316", // orange-500
+      물리: "#06b6d4", // cyan-500
+      화학: "#84cc16", // lime-500
+      생물: "#22c55e", // green-500
+      지구과학: "#a855f7", // purple-500
     };
 
     // 수업 생성 (시간 정보는 class_composition 테이블에서 관리)
@@ -119,20 +119,22 @@ export async function POST(request: NextRequest) {
       description: description || null,
       teacher_id: teacherId,
       room: room || null,
-      color: subjectColors[subject.subject_name || ''] || "#6b7280", // 기본값: gray-500
+      color: subjectColors[subject.subject_name || ""] || "#6b7280", // 기본값: gray-500
       course_type: courseType || "regular", // 기본값: regular
       split_type: splitType || "single", // 기본값: single
-      rrule: null
+      rrule: null,
     };
 
     const { data: newClass, error: classError } = await supabase
       .from("classes")
       .insert([classData])
-      .select(`
+      .select(
+        `
         *,
         teacher:teachers(id, name, email),
         subject:subjects(id, subject_name)
-      `)
+      `
+      )
       .single();
 
     if (classError) {
@@ -149,28 +151,32 @@ export async function POST(request: NextRequest) {
         class_id: newClass.id,
         student_id: studentId,
         status: "active",
-        enrolled_date: new Date().toISOString().split('T')[0] // YYYY-MM-DD 형식
+        enrolled_date: new Date().toISOString().split("T")[0], // YYYY-MM-DD 형식
       }));
 
       const { error: studentsError } = await supabase
-        .from("class_students")
+        .from("relations_classes_students")
         .insert(classStudentInserts);
 
       if (studentsError) {
         console.error("Students enrollment error:", studentsError);
         // 수업은 생성되었지만 학생 등록에 실패한 경우 경고와 함께 응답
-        return NextResponse.json({
-          data: newClass,
-          warning: "수업은 생성되었지만 일부 학생 등록에 실패했습니다",
-          error: studentsError.message
-        }, { status: 201 });
+        return NextResponse.json(
+          {
+            data: newClass,
+            warning: "수업은 생성되었지만 일부 학생 등록에 실패했습니다",
+            error: studentsError.message,
+          },
+          { status: 201 }
+        );
       }
     }
 
     // 생성된 수업 정보를 학생 정보와 함께 다시 조회
     const { data: createdClass, error: fetchError } = await supabase
       .from("classes")
-      .select(`
+      .select(
+        `
         *,
         teacher:teachers(id, name, email),
         subject:subjects(id, subject_name),
@@ -183,7 +189,8 @@ export async function POST(request: NextRequest) {
             grade
           )
         )
-      `)
+      `
+      )
       .eq("id", newClass.id)
       .single();
 
@@ -193,11 +200,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ data: newClass }, { status: 201 });
     }
 
-    return NextResponse.json({
-      data: createdClass,
-      message: "수업이 성공적으로 생성되었습니다"
-    }, { status: 201 });
-
+    return NextResponse.json(
+      {
+        data: createdClass,
+        message: "수업이 성공적으로 생성되었습니다",
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Class creation API error:", error);
     return NextResponse.json(

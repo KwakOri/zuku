@@ -1,5 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendKakaoNotification } from '@/services/server/notificationService';
+import { sendKakaoNotification, getKakaoAlimtalkTemplates } from '@/services/server/notificationService';
+
+export async function GET() {
+  try {
+    const templates = await getKakaoAlimtalkTemplates();
+    return NextResponse.json(templates);
+  } catch (error) {
+    console.error('템플릿 조회 중 오류:', error);
+    return NextResponse.json(
+      { error: '템플릿 목록을 가져오는데 실패했습니다.' },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {

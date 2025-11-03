@@ -4,14 +4,19 @@ import { Tables } from "./supabase";
 export type Student = Tables<"students">;
 export type Teacher = Tables<"teachers">;
 export type Class = Tables<"classes">;
-export type ClassComposition = Tables<"class_composition">;
+export type ClassComposition = Tables<"class_compositions">;
 export type Subject = Tables<"subjects">;
 export type School = Tables<"schools">;
 export type ExamPeriod = Tables<"exam_periods">;
 
 // Supabase 타입 사용
-export type ClassStudent = Tables<"class_students">;
+export type ClassStudent = Tables<"relations_classes_students">;
 export type ClassException = Tables<"class_exceptions">;
+
+// 예외 테이블 타입
+export type CompositionsException = Tables<"compositions_exceptions">;
+export type CompositionStudentsException =
+  Tables<"composition_students_exceptions">;
 
 // UI에서 사용할 수업 블록 데이터
 export interface ClassBlock {
@@ -32,6 +37,12 @@ export interface ClassBlock {
   isException?: boolean;
   splitType?: string; // single | split
   compositionType?: string; // class | clinic (앞타임/뒤타임 구분)
+  students?: Array<{
+    id: string;
+    name: string;
+    grade: number | null;
+    school: { id: string; name: string; level: string } | null;
+  }>; // 학생 정보
 }
 
 // 시간표 편집 모드

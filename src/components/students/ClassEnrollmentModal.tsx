@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { X, Search, BookOpen, CheckCircle, AlertCircle } from "lucide-react";
+import CanvasSchedule from "@/components/common/schedule/CanvasSchedule";
 import { useClasses } from "@/queries/useClasses";
 import { useEnrollStudent } from "@/queries/useClassStudents";
 import { useEnrollComposition } from "@/queries/useStudentCompositions";
-import { Tables } from "@/types/supabase";
-import CanvasSchedule from "@/components/common/schedule/CanvasSchedule";
 import { ClassBlock } from "@/types/schedule";
+import { Tables } from "@/types/supabase";
+import { AlertCircle, BookOpen, CheckCircle, Search, X } from "lucide-react";
+import { useMemo, useState } from "react";
 
 type Class = Tables<"classes"> & {
   subject?: Tables<"subjects"> | null;
   teacher?: Tables<"teachers"> | null;
-  class_composition?: Tables<"class_composition">[];
+  class_composition?: Tables<"class_compositions">[];
 };
 
 interface ClassEnrollmentModalProps {
@@ -30,7 +30,9 @@ export default function ClassEnrollmentModal({
 }: ClassEnrollmentModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
-  const [selectedCompositions, setSelectedCompositions] = useState<Set<string>>(new Set());
+  const [selectedCompositions, setSelectedCompositions] = useState<Set<string>>(
+    new Set()
+  );
 
   const { data: classes = [], isLoading } = useClasses();
   const enrollStudent = useEnrollStudent();
@@ -88,7 +90,13 @@ export default function ClassEnrollmentModal({
       return hasSelectedClassComposition && hasSelectedClinicComposition;
     }
     return true;
-  }, [selectedClassId, selectedCompositions, isSplitClass, hasSelectedClassComposition, hasSelectedClinicComposition]);
+  }, [
+    selectedClassId,
+    selectedCompositions,
+    isSplitClass,
+    hasSelectedClassComposition,
+    hasSelectedClinicComposition,
+  ]);
 
   const filteredClasses = useMemo(() => {
     return classes.filter((cls) => {
@@ -132,14 +140,15 @@ export default function ClassEnrollmentModal({
       });
 
       // 2단계: compositions_students 테이블에 선택된 각 composition 등록
-      const compositionPromises = Array.from(selectedCompositions).map((compositionId) =>
-        enrollComposition.mutateAsync({
-          class_id: selectedClassId,
-          student_id: studentId,
-          composition_id: compositionId,
-          enrolled_date: new Date().toISOString().split("T")[0],
-          status: "active",
-        })
+      const compositionPromises = Array.from(selectedCompositions).map(
+        (compositionId) =>
+          enrollComposition.mutateAsync({
+            class_id: selectedClassId,
+            student_id: studentId,
+            composition_id: compositionId,
+            enrolled_date: new Date().toISOString().split("T")[0],
+            status: "active",
+          })
       );
 
       await Promise.all(compositionPromises);
@@ -161,7 +170,9 @@ export default function ClassEnrollmentModal({
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h2 className="text-xl font-semibold text-gray-800">수업 등록</h2>
-            <p className="mt-1 text-sm text-gray-600">{studentName} 학생을 수업에 등록합니다</p>
+            <p className="mt-1 text-sm text-gray-600">
+              {studentName} 학생을 수업에 등록합니다
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -195,7 +206,9 @@ export default function ClassEnrollmentModal({
                 </div>
               ) : filteredClasses.length === 0 ? (
                 <p className="py-8 text-sm text-center text-gray-500">
-                  {searchQuery ? "검색 결과가 없습니다." : "등록 가능한 수업이 없습니다."}
+                  {searchQuery
+                    ? "검색 결과가 없습니다."
+                    : "등록 가능한 수업이 없습니다."}
                 </p>
               ) : (
                 filteredClasses.map((cls) => (
@@ -241,7 +254,8 @@ export default function ClassEnrollmentModal({
                     {selectedClass.title}
                   </h3>
                   <p className="text-sm text-gray-600">
-                    {selectedClass.teacher?.name} • {selectedClass.subject?.subject_name}
+                    {selectedClass.teacher?.name} •{" "}
+                    {selectedClass.subject?.subject_name}
                   </p>
                 </div>
 
@@ -250,7 +264,10 @@ export default function ClassEnrollmentModal({
                     <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-amber-800">
                       <p className="font-medium">앞/뒤타임 수업입니다</p>
-                      <p className="mt-1">시간표에서 앞타임(정규)과 뒤타임(클리닉)을 클릭하여 선택하세요.</p>
+                      <p className="mt-1">
+                        시간표에서 앞타임(정규)과 뒤타임(클리닉)을 클릭하여
+                        선택하세요.
+                      </p>
                     </div>
                   </div>
                 )}
@@ -289,10 +306,7 @@ export default function ClassEnrollmentModal({
                     <CanvasSchedule
                       key={`schedule-${selectedClassId}`}
                       customBlocks={scheduleBlocks}
-                      onBlockClick={handleBlockClick}
                       editMode="view"
-                      showDensity={false}
-                      selectedBlockIds={Array.from(selectedCompositions)}
                     />
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full text-center">
@@ -310,7 +324,9 @@ export default function ClassEnrollmentModal({
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <BookOpen className="w-12 h-12 mb-4 text-gray-400" />
-                <p className="text-sm font-medium text-gray-700">수업을 선택하세요</p>
+                <p className="text-sm font-medium text-gray-700">
+                  수업을 선택하세요
+                </p>
                 <p className="mt-1 text-xs text-gray-500">
                   왼쪽 목록에서 등록할 수업을 선택하세요
                 </p>
@@ -335,10 +351,16 @@ export default function ClassEnrollmentModal({
             </button>
             <button
               onClick={handleEnroll}
-              disabled={!canEnroll || enrollStudent.isPending || enrollComposition.isPending}
+              disabled={
+                !canEnroll ||
+                enrollStudent.isPending ||
+                enrollComposition.isPending
+              }
               className="px-4 py-2 text-white transition-all duration-200 bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg hover:from-primary-600 hover:to-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {enrollStudent.isPending || enrollComposition.isPending ? "등록 중..." : "등록"}
+              {enrollStudent.isPending || enrollComposition.isPending
+                ? "등록 중..."
+                : "등록"}
             </button>
           </div>
         </div>

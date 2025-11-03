@@ -3,15 +3,15 @@ import { createAdminSupabaseClient } from "@/lib/supabase-server";
 import { Tables } from "@/types/supabase";
 
 // Types for the nested query response
-interface ClassStudent extends Pick<Tables<"class_students">, "id" | "class_id" | "enrolled_date" | "status"> {
+interface ClassStudent extends Pick<Tables<"relations_classes_students">, "id" | "class_id" | "enrolled_date" | "status"> {
   class?: Pick<Tables<"classes">, "id" | "title" | "color" | "split_type"> & {
     subject?: Pick<Tables<"subjects">, "id" | "subject_name"> | null;
     teacher?: Pick<Tables<"teachers">, "id" | "name"> | null;
   } | null;
 }
 
-interface CompositionStudent extends Pick<Tables<"compositions_students">, "id" | "class_id" | "student_id" | "composition_id" | "enrolled_date" | "status"> {
-  composition?: Pick<Tables<"class_composition">, "id" | "class_id" | "day_of_week" | "start_time" | "end_time" | "type"> | null;
+interface CompositionStudent extends Pick<Tables<"relations_compositions_students">, "id" | "class_id" | "student_id" | "composition_id" | "enrolled_date" | "status"> {
+  composition?: Pick<Tables<"class_compositions">, "id" | "class_id" | "day_of_week" | "start_time" | "end_time" | "type"> | null;
 }
 
 export async function GET() {
@@ -41,7 +41,7 @@ export async function GET() {
           recurring,
           status
         ),
-        class_students!class_students_student_id_fkey(
+        relations_classes_students!relations_classes_students_student_id_fkey(
           id,
           class_id,
           enrolled_date,
@@ -64,7 +64,7 @@ export async function GET() {
       `)
       .eq("is_active", true)
       .eq("student_schedules.status", "active")
-      .eq("class_students.status", "active")
+      .eq("relations_classes_students.status", "active")
       .order("grade", { ascending: true })
       .order("name", { ascending: true });
 
@@ -78,7 +78,7 @@ export async function GET() {
 
     // 2. 모든 student_id와 class_id 쌍 수집
     const studentClassPairs = students?.flatMap(student =>
-      student.class_students.map((cs: ClassStudent) => ({
+      student.relations_classes_students.map((cs: ClassStudent) => ({
         student_id: student.id,
         class_id: cs.class_id
       }))
@@ -89,7 +89,7 @@ export async function GET() {
 
     if (studentClassPairs.length > 0) {
       const { data, error: compositionsError } = await supabase
-        .from("compositions_students")
+        .from("relations_compositions_students")
         .select(`
           id,
           class_id,
@@ -97,7 +97,7 @@ export async function GET() {
           composition_id,
           enrolled_date,
           status,
-          composition:class_composition(
+          composition:class_compositions(
             id,
             class_id,
             day_of_week,
@@ -118,7 +118,7 @@ export async function GET() {
     // 4. compositions_students를 class_students에 매핑
     const enrichedStudents = students?.map(student => ({
       ...student,
-      class_students: student.class_students.map((cs: ClassStudent) => ({
+      class_students: student.relations_classes_students.map((cs: ClassStudent) => ({
         ...cs,
         student_compositions: compositionsStudents.filter(
           sc => sc.student_id === student.id && sc.class_id === cs.class_id

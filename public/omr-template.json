@@ -1,0 +1,1822 @@
+{
+  "name": "기본 OMR 템플릿 (45문항)",
+  "totalQuestions": 45,
+  "optionsPerQuestion": 5,
+  "imageUrl": "/omr_card.jpg",
+  "markers": [
+    {
+      "questionNumber": 1,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 17.92,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 1,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 17.92,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 1,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 17.92,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 1,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 17.92,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 1,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 17.92,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 2,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 21.68,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 2,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 21.68,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 2,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 21.68,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 2,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 21.68,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 2,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 21.68,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 3,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 25.44,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 3,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 25.44,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 3,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 25.44,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 3,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 25.44,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 3,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 25.44,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 4,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 29.200000000000003,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 4,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 29.200000000000003,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 4,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 29.200000000000003,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 4,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 29.200000000000003,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 4,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 29.200000000000003,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 5,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 32.96,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 5,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 32.96,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 5,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 32.96,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 5,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 32.96,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 5,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 32.96,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 6,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 36.72,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 6,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 36.72,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 6,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 36.72,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 6,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 36.72,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 6,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 36.72,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 7,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 40.480000000000004,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 7,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 40.480000000000004,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 7,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 40.480000000000004,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 7,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 40.480000000000004,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 7,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 40.480000000000004,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 8,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 44.24,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 8,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 44.24,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 8,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 44.24,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 8,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 44.24,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 8,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 44.24,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 9,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 48,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 9,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 48,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 9,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 48,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 9,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 48,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 9,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 48,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 10,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 51.76,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 10,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 51.76,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 10,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 51.76,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 10,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 51.76,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 10,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 51.76,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 11,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 55.519999999999996,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 11,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 55.519999999999996,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 11,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 55.519999999999996,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 11,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 55.519999999999996,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 11,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 55.519999999999996,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 12,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 59.28,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 12,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 59.28,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 12,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 59.28,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 12,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 59.28,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 12,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 59.28,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 13,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 63.04,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 13,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 63.04,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 13,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 63.04,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 13,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 63.04,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 13,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 63.04,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 14,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 66.8,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 14,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 66.8,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 14,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 66.8,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 14,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 66.8,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 14,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 66.8,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 15,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 70.56,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 15,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 70.56,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 15,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 70.56,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 15,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 70.56,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 15,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 70.56,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 16,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 74.32,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 16,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 74.32,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 16,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 74.32,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 16,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 74.32,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 16,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 74.32,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 17,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 78.08,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 17,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 78.08,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 17,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 78.08,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 17,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 78.08,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 17,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 78.08,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 18,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 81.84,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 18,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 81.84,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 18,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 81.84,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 18,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 81.84,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 18,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 81.84,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 19,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 85.6,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 19,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 85.6,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 19,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 85.6,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 19,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 85.6,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 19,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 85.6,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 20,
+      "optionNumber": 1,
+      "x": 59.4,
+      "y": 89.36,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 20,
+      "optionNumber": 2,
+      "x": 60.879999999999995,
+      "y": 89.36,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 20,
+      "optionNumber": 3,
+      "x": 62.36,
+      "y": 89.36,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 20,
+      "optionNumber": 4,
+      "x": 63.839999999999996,
+      "y": 89.36,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 20,
+      "optionNumber": 5,
+      "x": 65.32,
+      "y": 89.36,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 21,
+      "optionNumber": 1,
+      "x": 72.4,
+      "y": 17.92,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 21,
+      "optionNumber": 2,
+      "x": 73.88000000000001,
+      "y": 17.92,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 21,
+      "optionNumber": 3,
+      "x": 75.36,
+      "y": 17.92,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 21,
+      "optionNumber": 4,
+      "x": 76.84,
+      "y": 17.92,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 21,
+      "optionNumber": 5,
+      "x": 78.32000000000001,
+      "y": 17.92,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 22,
+      "optionNumber": 1,
+      "x": 72.4,
+      "y": 21.68,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 22,
+      "optionNumber": 2,
+      "x": 73.88000000000001,
+      "y": 21.68,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 22,
+      "optionNumber": 3,
+      "x": 75.36,
+      "y": 21.68,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 22,
+      "optionNumber": 4,
+      "x": 76.84,
+      "y": 21.68,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 22,
+      "optionNumber": 5,
+      "x": 78.32000000000001,
+      "y": 21.68,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 23,
+      "optionNumber": 1,
+      "x": 72.4,
+      "y": 25.44,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 23,
+      "optionNumber": 2,
+      "x": 73.88000000000001,
+      "y": 25.44,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 23,
+      "optionNumber": 3,
+      "x": 75.36,
+      "y": 25.44,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 23,
+      "optionNumber": 4,
+      "x": 76.84,
+      "y": 25.44,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 23,
+      "optionNumber": 5,
+      "x": 78.32000000000001,
+      "y": 25.44,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 24,
+      "optionNumber": 1,
+      "x": 72.4,
+      "y": 29.200000000000003,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 24,
+      "optionNumber": 2,
+      "x": 73.88000000000001,
+      "y": 29.200000000000003,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 24,
+      "optionNumber": 3,
+      "x": 75.36,
+      "y": 29.200000000000003,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 24,
+      "optionNumber": 4,
+      "x": 76.84,
+      "y": 29.200000000000003,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 24,
+      "optionNumber": 5,
+      "x": 78.32000000000001,
+      "y": 29.200000000000003,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 25,
+      "optionNumber": 1,
+      "x": 72.4,
+      "y": 32.96,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 25,
+      "optionNumber": 2,
+      "x": 73.88000000000001,
+      "y": 32.96,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 25,
+      "optionNumber": 3,
+      "x": 75.36,
+      "y": 32.96,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 25,
+      "optionNumber": 4,
+      "x": 76.84,
+      "y": 32.96,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 25,
+      "optionNumber": 5,
+      "x": 78.32000000000001,
+      "y": 32.96,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 26,
+      "optionNumber": 1,
+      "x": 72.4,
+      "y": 36.72,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 26,
+      "optionNumber": 2,
+      "x": 73.88000000000001,
+      "y": 36.72,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 26,
+      "optionNumber": 3,
+      "x": 75.36,
+      "y": 36.72,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 26,
+      "optionNumber": 4,
+      "x": 76.84,
+      "y": 36.72,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 26,
+      "optionNumber": 5,
+      "x": 78.32000000000001,
+      "y": 36.72,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 27,
+      "optionNumber": 1,
+      "x": 72.4,
+      "y": 40.480000000000004,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 27,
+      "optionNumber": 2,
+      "x": 73.88000000000001,
+      "y": 40.480000000000004,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 27,
+      "optionNumber": 3,
+      "x": 75.36,
+      "y": 40.480000000000004,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 27,
+      "optionNumber": 4,
+      "x": 76.84,
+      "y": 40.480000000000004,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 27,
+      "optionNumber": 5,
+      "x": 78.32000000000001,
+      "y": 40.480000000000004,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 28,
+      "optionNumber": 1,
+      "x": 72.4,
+      "y": 44.24,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 28,
+      "optionNumber": 2,
+      "x": 73.88000000000001,
+      "y": 44.24,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 28,
+      "optionNumber": 3,
+      "x": 75.36,
+      "y": 44.24,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 28,
+      "optionNumber": 4,
+      "x": 76.84,
+      "y": 44.24,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 28,
+      "optionNumber": 5,
+      "x": 78.32000000000001,
+      "y": 44.24,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 29,
+      "optionNumber": 1,
+      "x": 72.4,
+      "y": 48,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 29,
+      "optionNumber": 2,
+      "x": 73.88000000000001,
+      "y": 48,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 29,
+      "optionNumber": 3,
+      "x": 75.36,
+      "y": 48,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 29,
+      "optionNumber": 4,
+      "x": 76.84,
+      "y": 48,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 29,
+      "optionNumber": 5,
+      "x": 78.32000000000001,
+      "y": 48,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 30,
+      "optionNumber": 1,
+      "x": 72.4,
+      "y": 51.76,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 30,
+      "optionNumber": 2,
+      "x": 73.88000000000001,
+      "y": 51.76,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 30,
+      "optionNumber": 3,
+      "x": 75.36,
+      "y": 51.76,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 30,
+      "optionNumber": 4,
+      "x": 76.84,
+      "y": 51.76,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 30,
+      "optionNumber": 5,
+      "x": 78.32000000000001,
+      "y": 51.76,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 31,
+      "optionNumber": 1,
+      "x": 72.4,
+      "y": 55.519999999999996,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 31,
+      "optionNumber": 2,
+      "x": 73.88000000000001,
+      "y": 55.519999999999996,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 31,
+      "optionNumber": 3,
+      "x": 75.36,
+      "y": 55.519999999999996,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 31,
+      "optionNumber": 4,
+      "x": 76.84,
+      "y": 55.519999999999996,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 31,
+      "optionNumber": 5,
+      "x": 78.32000000000001,
+      "y": 55.519999999999996,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 32,
+      "optionNumber": 1,
+      "x": 72.4,
+      "y": 59.28,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 32,
+      "optionNumber": 2,
+      "x": 73.88000000000001,
+      "y": 59.28,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 32,
+      "optionNumber": 3,
+      "x": 75.36,
+      "y": 59.28,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 32,
+      "optionNumber": 4,
+      "x": 76.84,
+      "y": 59.28,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 32,
+      "optionNumber": 5,
+      "x": 78.32000000000001,
+      "y": 59.28,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 33,
+      "optionNumber": 1,
+      "x": 72.4,
+      "y": 63.04,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 33,
+      "optionNumber": 2,
+      "x": 73.88000000000001,
+      "y": 63.04,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 33,
+      "optionNumber": 3,
+      "x": 75.36,
+      "y": 63.04,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 33,
+      "optionNumber": 4,
+      "x": 76.84,
+      "y": 63.04,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 33,
+      "optionNumber": 5,
+      "x": 78.32000000000001,
+      "y": 63.04,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 34,
+      "optionNumber": 1,
+      "x": 72.4,
+      "y": 66.8,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 34,
+      "optionNumber": 2,
+      "x": 73.88000000000001,
+      "y": 66.8,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 34,
+      "optionNumber": 3,
+      "x": 75.36,
+      "y": 66.8,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 34,
+      "optionNumber": 4,
+      "x": 76.84,
+      "y": 66.8,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 34,
+      "optionNumber": 5,
+      "x": 78.32000000000001,
+      "y": 66.8,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 35,
+      "optionNumber": 1,
+      "x": 84.5,
+      "y": 17.92,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 35,
+      "optionNumber": 2,
+      "x": 85.98,
+      "y": 17.92,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 35,
+      "optionNumber": 3,
+      "x": 87.46,
+      "y": 17.92,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 35,
+      "optionNumber": 4,
+      "x": 88.94,
+      "y": 17.92,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 35,
+      "optionNumber": 5,
+      "x": 90.42,
+      "y": 17.92,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 36,
+      "optionNumber": 1,
+      "x": 84.5,
+      "y": 21.68,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 36,
+      "optionNumber": 2,
+      "x": 85.98,
+      "y": 21.68,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 36,
+      "optionNumber": 3,
+      "x": 87.46,
+      "y": 21.68,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 36,
+      "optionNumber": 4,
+      "x": 88.94,
+      "y": 21.68,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 36,
+      "optionNumber": 5,
+      "x": 90.42,
+      "y": 21.68,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 37,
+      "optionNumber": 1,
+      "x": 84.5,
+      "y": 25.44,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 37,
+      "optionNumber": 2,
+      "x": 85.98,
+      "y": 25.44,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 37,
+      "optionNumber": 3,
+      "x": 87.46,
+      "y": 25.44,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 37,
+      "optionNumber": 4,
+      "x": 88.94,
+      "y": 25.44,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 37,
+      "optionNumber": 5,
+      "x": 90.42,
+      "y": 25.44,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 38,
+      "optionNumber": 1,
+      "x": 84.5,
+      "y": 29.200000000000003,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 38,
+      "optionNumber": 2,
+      "x": 85.98,
+      "y": 29.200000000000003,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 38,
+      "optionNumber": 3,
+      "x": 87.46,
+      "y": 29.200000000000003,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 38,
+      "optionNumber": 4,
+      "x": 88.94,
+      "y": 29.200000000000003,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 38,
+      "optionNumber": 5,
+      "x": 90.42,
+      "y": 29.200000000000003,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 39,
+      "optionNumber": 1,
+      "x": 84.5,
+      "y": 32.96,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 39,
+      "optionNumber": 2,
+      "x": 85.98,
+      "y": 32.96,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 39,
+      "optionNumber": 3,
+      "x": 87.46,
+      "y": 32.96,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 39,
+      "optionNumber": 4,
+      "x": 88.94,
+      "y": 32.96,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 39,
+      "optionNumber": 5,
+      "x": 90.42,
+      "y": 32.96,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 40,
+      "optionNumber": 1,
+      "x": 84.5,
+      "y": 36.72,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 40,
+      "optionNumber": 2,
+      "x": 85.98,
+      "y": 36.72,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 40,
+      "optionNumber": 3,
+      "x": 87.46,
+      "y": 36.72,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 40,
+      "optionNumber": 4,
+      "x": 88.94,
+      "y": 36.72,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 40,
+      "optionNumber": 5,
+      "x": 90.42,
+      "y": 36.72,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 41,
+      "optionNumber": 1,
+      "x": 84.5,
+      "y": 40.480000000000004,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 41,
+      "optionNumber": 2,
+      "x": 85.98,
+      "y": 40.480000000000004,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 41,
+      "optionNumber": 3,
+      "x": 87.46,
+      "y": 40.480000000000004,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 41,
+      "optionNumber": 4,
+      "x": 88.94,
+      "y": 40.480000000000004,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 41,
+      "optionNumber": 5,
+      "x": 90.42,
+      "y": 40.480000000000004,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 42,
+      "optionNumber": 1,
+      "x": 84.5,
+      "y": 44.24,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 42,
+      "optionNumber": 2,
+      "x": 85.98,
+      "y": 44.24,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 42,
+      "optionNumber": 3,
+      "x": 87.46,
+      "y": 44.24,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 42,
+      "optionNumber": 4,
+      "x": 88.94,
+      "y": 44.24,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 42,
+      "optionNumber": 5,
+      "x": 90.42,
+      "y": 44.24,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 43,
+      "optionNumber": 1,
+      "x": 84.5,
+      "y": 48,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 43,
+      "optionNumber": 2,
+      "x": 85.98,
+      "y": 48,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 43,
+      "optionNumber": 3,
+      "x": 87.46,
+      "y": 48,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 43,
+      "optionNumber": 4,
+      "x": 88.94,
+      "y": 48,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 43,
+      "optionNumber": 5,
+      "x": 90.42,
+      "y": 48,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 44,
+      "optionNumber": 1,
+      "x": 84.5,
+      "y": 51.76,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 44,
+      "optionNumber": 2,
+      "x": 85.98,
+      "y": 51.76,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 44,
+      "optionNumber": 3,
+      "x": 87.46,
+      "y": 51.76,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 44,
+      "optionNumber": 4,
+      "x": 88.94,
+      "y": 51.76,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 44,
+      "optionNumber": 5,
+      "x": 90.42,
+      "y": 51.76,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 45,
+      "optionNumber": 1,
+      "x": 84.5,
+      "y": 55.519999999999996,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 45,
+      "optionNumber": 2,
+      "x": 85.98,
+      "y": 55.519999999999996,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 45,
+      "optionNumber": 3,
+      "x": 87.46,
+      "y": 55.519999999999996,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 45,
+      "optionNumber": 4,
+      "x": 88.94,
+      "y": 55.519999999999996,
+      "width": 1.4,
+      "height": 2
+    },
+    {
+      "questionNumber": 45,
+      "optionNumber": 5,
+      "x": 90.42,
+      "y": 55.519999999999996,
+      "width": 1.4,
+      "height": 2
+    }
+  ],
+  "alignmentMarkers": [
+    {
+      "x": 94,
+      "y": 90,
+      "width": 2,
+      "height": 3
+    },
+    {
+      "x": 94,
+      "y": 95,
+      "width": 2,
+      "height": 3
+    }
+  ]
+}

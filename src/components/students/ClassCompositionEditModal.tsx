@@ -11,7 +11,7 @@ import { Tables } from "@/types/supabase";
 import { BookOpen, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-type ClassComposition = Tables<"class_composition">;
+type ClassComposition = Tables<"class_compositions">;
 
 interface ClassCompositionEditModalProps {
   classStudentId: string;
@@ -359,10 +359,7 @@ export default function ClassCompositionEditModal({
               <CanvasSchedule
                 key={`schedule-${classStudentId}`}
                 customBlocks={scheduleBlocks}
-                onBlockClick={handleBlockClick}
                 editMode="view"
-                showDensity={false}
-                selectedBlockIds={Array.from(selectedCompositions)}
               />
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center">

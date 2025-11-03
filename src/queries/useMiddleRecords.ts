@@ -23,6 +23,8 @@ export const middleRecordKeys = {
     [...middleRecordKeys.all, "byStudent", studentId] as const,
   byWeek: (classId?: string, weekOf?: string) =>
     [...middleRecordKeys.all, "byWeek", classId, weekOf] as const,
+  pending: (teacherId: string, weekOf?: string) =>
+    [...middleRecordKeys.all, "pending", teacherId, weekOf] as const,
 };
 
 // 중등 기록 목록 조회
@@ -86,12 +88,16 @@ export function useCreateMiddleRecord() {
         queryKey: middleRecordKeys.byStudent(newRecord.student_id),
       });
 
-
       queryClient.invalidateQueries({
         queryKey: middleRecordKeys.byWeek(
           newRecord.class_id,
           newRecord.week_of
         ),
+      });
+
+      // 미입력 학생 목록 무효화 (이번 주 미입력 학생 세션 업데이트)
+      queryClient.invalidateQueries({
+        queryKey: [...middleRecordKeys.all, "pending"],
       });
 
       toast.success("중등 기록이 성공적으로 등록되었습니다.");
@@ -134,12 +140,16 @@ export function useUpdateMiddleRecord() {
         queryKey: middleRecordKeys.byStudent(updatedRecord.student_id),
       });
 
-
       queryClient.invalidateQueries({
         queryKey: middleRecordKeys.byWeek(
           updatedRecord.class_id,
           updatedRecord.week_of
         ),
+      });
+
+      // 미입력 학생 목록 무효화 (이번 주 미입력 학생 세션 업데이트)
+      queryClient.invalidateQueries({
+        queryKey: [...middleRecordKeys.all, "pending"],
       });
 
       toast.success("중등 기록이 성공적으로 수정되었습니다.");
@@ -162,7 +172,7 @@ export function useDeleteMiddleRecord() {
         queryKey: middleRecordKeys.detail(deletedId),
       });
 
-      // 관련 쿼리들 무효화
+      // 관련 쿼리들 무효화 (미입력 학생 목록 포함)
       queryClient.invalidateQueries({
         queryKey: middleRecordKeys.all,
       });
@@ -199,5 +209,18 @@ export function useBulkCreateMiddleRecords() {
     onError: (error: Error) => {
       toast.error(error.message || "일괄 등록 중 오류가 발생했습니다.");
     },
+  });
+}
+
+// 미입력 학생 목록 조회
+export function usePendingStudents(teacherId?: string, weekOf?: string) {
+  return useQuery({
+    queryKey: middleRecordKeys.pending(teacherId || "", weekOf),
+    queryFn: () => middleRecordApi.getPendingStudents({
+      teacherId: teacherId!,
+      weekOf
+    }),
+    enabled: !!teacherId,
+    staleTime: 1 * 60 * 1000, // 1분
   });
 }

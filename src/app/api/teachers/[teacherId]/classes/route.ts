@@ -18,7 +18,7 @@ export async function GET(
       .select(`
         *,
         subject:subjects(id, subject_name),
-        class_students!inner(
+        relations_classes_students!inner(
           student_id,
           status,
           students(
@@ -40,7 +40,7 @@ export async function GET(
 
     // 수업별로 학생 정보를 정리
     const classesWithStudents = classes?.map(classItem => {
-      const students = classItem.class_students?.map(cs => cs.students).filter(Boolean) || [];
+      const students = classItem.relations_classes_students?.map(cs => cs.students).filter(Boolean) || [];
 
       return {
         ...classItem,

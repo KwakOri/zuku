@@ -35,6 +35,7 @@
     "react-hook-form": "^7.63.0",
     "react-hot-toast": "^2.6.0",
     "rrule": "^2.8.1",
+    "sharp": "^0.34.4",
     "solapi": "^5.5.2",
     "tailwind-merge": "^3.3.1",
     "uuid": "^13.0.0",

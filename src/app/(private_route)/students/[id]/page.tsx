@@ -73,11 +73,16 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   // 앞타임/뒷타임 구분: composition_order로 판단
   const scheduleBlocks = allSchedules.map((schedule) => {
     const isPersonal = schedule.type !== "class";
-    const compositionOrder = "composition_order" in schedule ? schedule.composition_order : null;
+    const compositionOrder =
+      "composition_order" in schedule ? schedule.composition_order : null;
     const isFrontTime = compositionOrder === 0 || !compositionOrder;
-    const compositionType = ("composition_type" in schedule ? schedule.composition_type : null) || "class";
-    const subjectName = "subject_name" in schedule ? schedule.subject_name : null;
-    const teacherName = "teacher_name" in schedule ? schedule.teacher_name : null;
+    const compositionType =
+      ("composition_type" in schedule ? schedule.composition_type : null) ||
+      "class";
+    const subjectName =
+      "subject_name" in schedule ? schedule.subject_name : null;
+    const teacherName =
+      "teacher_name" in schedule ? schedule.teacher_name : null;
     const classId = "class_id" in schedule ? schedule.class_id : null;
 
     const color = getSubjectColor(
@@ -91,8 +96,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
       id: schedule.id,
       classId: classId || schedule.id,
       title: schedule.title,
-      subject:
-        schedule.type === "class" ? subjectName || "" : schedule.type,
+      subject: schedule.type === "class" ? subjectName || "" : schedule.type,
       teacherName: teacherName || "",
       startTime: schedule.start_time.substring(0, 5), // HH:MM:SS → HH:MM
       endTime: schedule.end_time.substring(0, 5), // HH:MM:SS → HH:MM
@@ -132,7 +136,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
     classColor: string;
     subjectName?: string;
     teacherName?: string;
-    allCompositions: Tables<"class_composition">[];
+    allCompositions: Tables<"class_compositions">[];
   } | null>(null);
 
   // 새로운 일정 추가 폼 상태
@@ -337,9 +341,18 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
     // 수업 블록인지 확인: 전체 시간표에서 type으로 판단
     const originalSchedule = allSchedules.find((s) => s.id === block.id);
     const isClassBlock = originalSchedule?.type === "class";
-    const scheduleClassId = originalSchedule && "class_id" in originalSchedule ? originalSchedule.class_id : null;
-    const scheduleSubjectName = originalSchedule && "subject_name" in originalSchedule ? originalSchedule.subject_name : null;
-    const scheduleTeacherName = originalSchedule && "teacher_name" in originalSchedule ? originalSchedule.teacher_name : null;
+    const scheduleClassId =
+      originalSchedule && "class_id" in originalSchedule
+        ? originalSchedule.class_id
+        : null;
+    const scheduleSubjectName =
+      originalSchedule && "subject_name" in originalSchedule
+        ? originalSchedule.subject_name
+        : null;
+    const scheduleTeacherName =
+      originalSchedule && "teacher_name" in originalSchedule
+        ? originalSchedule.teacher_name
+        : null;
 
     if (isClassBlock && originalSchedule && scheduleClassId) {
       try {
@@ -698,9 +711,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                 .join("-")}`}
               customBlocks={scheduleBlocks}
               onBlocksChange={handleBlocksChange}
-              onBlockClick={handleBlockClick}
               editMode={"view"}
-              showDensity={false}
             />
           </div>
         </div>

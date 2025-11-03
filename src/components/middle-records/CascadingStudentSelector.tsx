@@ -6,15 +6,15 @@ import { Tables } from "@/types/supabase";
 import { getGrade } from "@/lib/utils";
 
 // Type definition for class_students with nested relations from API
-interface ClassStudentWithRelations extends Tables<"class_students"> {
+interface ClassStudentWithRelations extends Tables<"relations_classes_students"> {
   student?: Pick<Tables<"students">, "id" | "name" | "grade" | "phone" | "parent_phone" | "email"> & {
     school?: Pick<Tables<"schools">, "id" | "name" | "level"> | null;
   } | null;
   class?: Pick<Tables<"classes">, "id" | "title"> & {
     subject?: Pick<Tables<"subjects">, "id" | "subject_name"> | null;
   } | null;
-  student_compositions?: Array<Tables<"compositions_students"> & {
-    composition?: Pick<Tables<"class_composition">, "id" | "class_id" | "day_of_week" | "start_time" | "end_time" | "type"> | null;
+  student_compositions?: Array<Tables<"relations_compositions_students"> & {
+    composition?: Pick<Tables<"class_compositions">, "id" | "class_id" | "day_of_week" | "start_time" | "end_time" | "type"> | null;
   }>;
 }
 

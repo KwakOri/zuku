@@ -9,7 +9,7 @@ interface StudentScheduleWithStudent extends Tables<"student_schedules"> {
   } | null;
 }
 
-interface ClassStudentWithDetails extends Tables<"class_students"> {
+interface ClassStudentWithDetails extends Tables<"relations_classes_students"> {
   student?: {
     id: string;
     name: string;
@@ -121,7 +121,7 @@ export class ScheduleService {
   // 수업-학생 관계 관리
   async getClassStudents(classId?: string, studentId?: string): Promise<ClassStudentWithDetails[]> {
     let query = this.supabase
-      .from("class_students")
+      .from("relations_classes_students")
       .select(`
         *,
         student:students(id, name, grade, phone, parent_phone, email),
@@ -146,10 +146,10 @@ export class ScheduleService {
     return data || [];
   }
 
-  async enrollStudentInClass(enrollmentData: TablesInsert<"class_students">): Promise<ClassStudentWithDetails> {
+  async enrollStudentInClass(enrollmentData: TablesInsert<"relations_classes_students">): Promise<ClassStudentWithDetails> {
     // 중복 등록 체크
     const { data: existing } = await this.supabase
-      .from("class_students")
+      .from("relations_classes_students")
       .select("id")
       .eq("class_id", enrollmentData.class_id)
       .eq("student_id", enrollmentData.student_id)
@@ -161,7 +161,7 @@ export class ScheduleService {
     }
 
     const { data, error } = await this.supabase
-      .from("class_students")
+      .from("relations_classes_students")
       .insert([enrollmentData])
       .select(`
         *,
@@ -179,7 +179,7 @@ export class ScheduleService {
 
   async unenrollStudentFromClass(classId: string, studentId: string): Promise<void> {
     const { error } = await this.supabase
-      .from("class_students")
+      .from("relations_classes_students")
       .update({ status: "inactive" })
       .eq("class_id", classId)
       .eq("student_id", studentId);
@@ -229,7 +229,7 @@ export class ScheduleService {
 
     // 해당 시간대에 다른 수업이 있는 학생 조회
     let classQuery = this.supabase
-      .from("class_students")
+      .from("relations_classes_students")
       .select(`
         student_id,
         class:classes!inner(start_time, end_time, day_of_week)

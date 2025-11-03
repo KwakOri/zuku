@@ -1,6 +1,6 @@
 import { Tables, TablesInsert } from "@/types/supabase";
 
-type CompositionStudentRow = Tables<"compositions_students">;
+type CompositionStudentRow = Tables<"relations_compositions_students">;
 
 export const studentCompositionApi = {
   // 모든 compositions_students 조회
@@ -46,7 +46,7 @@ export const studentCompositionApi = {
   },
 
   // composition에 학생 등록
-  enrollComposition: async (data: TablesInsert<"compositions_students">): Promise<CompositionStudentRow> => {
+  enrollComposition: async (data: TablesInsert<"relations_compositions_students">): Promise<CompositionStudentRow> => {
     const response = await fetch("/api/student-compositions", {
       method: "POST",
       headers: {
