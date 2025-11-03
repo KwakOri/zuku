@@ -839,7 +839,7 @@ export default function ClassroomSchedule({
               const studentsPerRow = 3; // 오른쪽 3열
               const schoolColumnWidth = (width - 20) / 4; // 왼쪽 1열 (전체의 1/4)
               const studentBlockWidth = ((width - 20) * 3) / 4 / studentsPerRow; // 오른쪽 3/4를 3등분
-              const studentBlockHeight = 22;
+              const studentBlockHeight = 33; // 22 * 1.5
               const studentBlockGap = 4;
 
               // scheduleUtils의 getSubjectColor 사용 (탁한 색상 테마)
@@ -957,7 +957,7 @@ export default function ClassroomSchedule({
                               >
                                 {/* 텍스트 레이어 */}
                                 <div
-                                  className="relative text-[10px] font-bold truncate px-1 text-white"
+                                  className="relative text-xs font-bold truncate px-1 text-white"
                                   style={{
                                     textShadow:
                                       "0.5px 0.5px 1px rgba(0, 0, 0, 0.3)",
@@ -1008,7 +1008,7 @@ export default function ClassroomSchedule({
                                           "rgba(255, 255, 255, 0.1)",
                                       }}
                                     />
-                                    <div className="relative flex items-center justify-center w-full h-full text-[10px] font-bold">
+                                    <div className="relative flex items-center justify-center w-full h-full text-sm font-bold">
                                       {student.name.length > 4
                                         ? student.name.slice(0, 3) + "…"
                                         : student.name}
