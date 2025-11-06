@@ -124,8 +124,8 @@ export default function MiddleSchoolRecordManager({
     understanding: 3,
     homework: "good",
     notes: "",
-    created_date: new Date().toISOString().split("T")[0],
-    last_modified: new Date().toISOString().split("T")[0],
+    created_date: formatDateToYYYYMMDD(new Date()),
+    last_modified: formatDateToYYYYMMDD(new Date()),
   });
 
 
@@ -179,7 +179,9 @@ export default function MiddleSchoolRecordManager({
     const currentDate = new Date(selectedWeek);
     const newDate = new Date(currentDate);
     newDate.setDate(currentDate.getDate() + (direction === "next" ? 7 : -7));
-    const newWeekString = newDate.toISOString().split("T")[0];
+    // 새로운 주의 월요일을 명시적으로 계산
+    const newWeekStart = getWeekStartDate(newDate);
+    const newWeekString = formatDateToYYYYMMDD(newWeekStart);
     setSelectedWeek(newWeekString);
 
     // newRecord도 주차에 맞게 업데이트
@@ -199,8 +201,8 @@ export default function MiddleSchoolRecordManager({
       understanding: newRecord.understanding!,
       homework: newRecord.homework!,
       notes: newRecord.notes || "",
-      created_date: new Date().toISOString().split("T")[0],
-      last_modified: new Date().toISOString().split("T")[0],
+      created_date: formatDateToYYYYMMDD(new Date()),
+      last_modified: formatDateToYYYYMMDD(new Date()),
     };
 
     try {
@@ -214,8 +216,8 @@ export default function MiddleSchoolRecordManager({
         understanding: 3,
         homework: "good",
         notes: "",
-        created_date: new Date().toISOString().split("T")[0],
-        last_modified: new Date().toISOString().split("T")[0],
+        created_date: formatDateToYYYYMMDD(new Date()),
+        last_modified: formatDateToYYYYMMDD(new Date()),
       });
       setIsAddingRecord(false);
     } catch (error) {
@@ -233,7 +235,7 @@ export default function MiddleSchoolRecordManager({
       understanding: editingRecord.understanding,
       homework: editingRecord.homework,
       notes: editingRecord.notes,
-      last_modified: new Date().toISOString().split("T")[0],
+      last_modified: formatDateToYYYYMMDD(new Date()),
     };
 
     try {
@@ -577,8 +579,8 @@ export default function MiddleSchoolRecordManager({
                             understanding: 3,
                             homework: "good",
                             notes: "",
-                            created_date: new Date().toISOString().split("T")[0],
-                            last_modified: new Date().toISOString().split("T")[0],
+                            created_date: formatDateToYYYYMMDD(new Date()),
+                            last_modified: formatDateToYYYYMMDD(new Date()),
                           });
                           setIsAddingRecord(true);
                         }}

@@ -10,14 +10,12 @@ import {
   Filter,
   GraduationCap,
   Mail,
-  MessageSquare,
   Phone,
   Search,
   User,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { useSendKakaoNotification } from "@/queries/useNotifications";
 import {
   Card,
   Button,
@@ -44,9 +42,6 @@ export default function StudentList({
 
   // API에서 학생 데이터 가져오기
   const { data: students = [], isLoading, error } = useStudents();
-
-  // 알림톡 전송 mutation
-  const sendNotification = useSendKakaoNotification();
 
   // 학년별 필터링된 학생 목록 (학년순으로 정렬)
   const filteredStudents = useMemo(() => {
@@ -78,13 +73,6 @@ export default function StudentList({
     );
     return grades;
   }, [students]);
-
-  // 알림톡 전송 핸들러
-  const handleSendNotification = (studentId: string, studentName: string) => {
-    if (confirm(`${studentName} 학생의 학부모에게 알림톡을 전송하시겠습니까?`)) {
-      sendNotification.mutate(studentId);
-    }
-  };
 
   // 로딩 상태
   if (isLoading) {
@@ -289,20 +277,6 @@ export default function StudentList({
                     >
                       <Calendar className="w-4 h-4" />
                     </Button>
-                    {student.parent_phone && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSendNotification(student.id, student.name);
-                        }}
-                        disabled={sendNotification.isPending}
-                        title="알림톡 전송"
-                      >
-                        <MessageSquare className="w-4 h-4" />
-                      </Button>
-                    )}
                     <Button
                       variant="ghost"
                       size="sm"

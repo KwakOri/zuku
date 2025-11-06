@@ -87,7 +87,11 @@ export async function POST(request: NextRequest) {
         if (typeof birthDateRaw === 'number') {
           const excelEpoch = new Date(1900, 0, 1);
           const date = new Date(excelEpoch.getTime() + (birthDateRaw - 2) * 24 * 60 * 60 * 1000);
-          birthDate = date.toISOString().split('T')[0];
+          // 타임존 문제를 방지하기 위해 로컬 날짜를 사용
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          birthDate = `${year}-${month}-${day}`;
         } else {
           birthDate = String(birthDateRaw).trim();
           if (birthDate.includes('/')) {

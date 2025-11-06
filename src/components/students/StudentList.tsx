@@ -10,7 +10,6 @@ import {
   SearchInput,
 } from "@/components/design-system";
 import { getGrade } from "@/lib/utils";
-import { useSendKakaoNotification } from "@/queries/useNotifications";
 import { useStudents } from "@/queries/useStudents";
 import { Tables } from "@/types/supabase";
 import {
@@ -19,7 +18,6 @@ import {
   Edit3,
   Filter,
   Mail,
-  MessageSquare,
   Phone,
   User,
 } from "lucide-react";
@@ -42,9 +40,6 @@ export default function StudentList({
 
   // API에서 학생 데이터 가져오기
   const { data: students = [], isLoading, error } = useStudents();
-
-  // 알림톡 전송 mutation
-  const sendNotification = useSendKakaoNotification();
 
   // 학년별 필터링된 학생 목록
   const filteredStudents = useMemo(() => {
@@ -84,15 +79,6 @@ export default function StudentList({
   const getGradeColor = (grade: number) => {
     if (grade <= 9) return "bg-blue-50 text-blue-700 border-blue-200";
     return "bg-purple-50 text-purple-700 border-purple-200";
-  };
-
-  // 알림톡 전송 핸들러
-  const handleSendNotification = (studentId: string, studentName: string) => {
-    if (
-      confirm(`${studentName} 학생의 학부모에게 알림톡을 전송하시겠습니까?`)
-    ) {
-      sendNotification.mutate(studentId);
-    }
   };
 
   // 로딩 상태
@@ -321,23 +307,6 @@ export default function StudentList({
                           >
                             <Calendar className="w-4 h-4" />
                           </Button>
-                          {student.parent_phone && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSendNotification(
-                                  student.id,
-                                  student.name
-                                );
-                              }}
-                              disabled={sendNotification.isPending}
-                              title="알림톡 전송"
-                            >
-                              <MessageSquare className="w-4 h-4" />
-                            </Button>
-                          )}
                           <Button
                             variant="ghost"
                             size="sm"

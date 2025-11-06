@@ -11,7 +11,6 @@ import {
 } from "@/lib/scheduleUtils";
 import { getGrade } from "@/lib/utils";
 import { fullScheduleKeys, useFullSchedule } from "@/queries/useFullSchedule";
-import { useSendKakaoNotification } from "@/queries/useNotifications";
 import { useStudents } from "@/queries/useStudents";
 import {
   createStudentSchedule,
@@ -27,7 +26,6 @@ import {
   Clock,
   Home,
   MapPin,
-  MessageSquare,
   Plus,
   Search,
   User,
@@ -46,9 +44,6 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: students = [], isLoading, error } = useStudents();
-
-  // 알림톡 전송 mutation
-  const sendNotification = useSendKakaoNotification();
 
   // params를 unwrap
   const { id } = use(params);
@@ -291,16 +286,6 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
     router.back();
   };
 
-  // 알림톡 전송 핸들러
-  const handleSendNotification = () => {
-    if (
-      student &&
-      confirm(`${student.name} 학생의 학부모에게 알림톡을 전송하시겠습니까?`)
-    ) {
-      sendNotification.mutate(student.id);
-    }
-  };
-
   // 새 일정 추가 핸들러
   const handleAddSchedule = async () => {
     try {
@@ -523,18 +508,6 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                 <Plus className="w-4 h-4" />
                 일정 추가
               </button>
-
-              {/* 알림톡 전송 버튼 */}
-              {student?.parent_phone && (
-                <button
-                  onClick={handleSendNotification}
-                  disabled={sendNotification.isPending}
-                  className="flex items-center gap-2 px-4 py-2 text-white transition-colors bg-orange-600 rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  {sendNotification.isPending ? "전송 중..." : "알림톡 전송"}
-                </button>
-              )}
 
               {/* 학생 정보 카드 */}
               <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
