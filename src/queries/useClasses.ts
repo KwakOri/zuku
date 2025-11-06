@@ -1,17 +1,20 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { classApi, CreateClassData } from "@/services/client/classApi";
 import { TablesInsert, TablesUpdate } from "@/types/supabase";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 
 // Query Keys
 export const classKeys = {
   all: ["classes"] as const,
   lists: () => [...classKeys.all, "list"] as const,
-  list: (filters?: Record<string, unknown>) => [...classKeys.lists(), { filters }] as const,
+  list: (filters?: Record<string, unknown>) =>
+    [...classKeys.lists(), { filters }] as const,
   details: () => [...classKeys.all, "detail"] as const,
   detail: (id: string) => [...classKeys.details(), id] as const,
-  byTeacher: (teacherId: string) => [...classKeys.all, "byTeacher", teacherId] as const,
-  bySubject: (subject: string) => [...classKeys.all, "bySubject", subject] as const,
+  byTeacher: (teacherId: string) =>
+    [...classKeys.all, "byTeacher", teacherId] as const,
+  bySubject: (subject: string) =>
+    [...classKeys.all, "bySubject", subject] as const,
   byDay: (dayOfWeek: number) => [...classKeys.all, "byDay", dayOfWeek] as const,
 };
 
@@ -65,7 +68,8 @@ export function useCreateClass() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateClassData) => classApi.createClassWithStudents(data),
+    mutationFn: (data: CreateClassData) =>
+      classApi.createClassWithStudents(data),
     onSuccess: (newClass) => {
       // 수업 목록 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: classKeys.lists() });
@@ -73,18 +77,18 @@ export function useCreateClass() {
       // 강사별 쿼리 무효화
       if (newClass.teacher_id) {
         queryClient.invalidateQueries({
-          queryKey: classKeys.byTeacher(newClass.teacher_id)
+          queryKey: classKeys.byTeacher(newClass.teacher_id),
         });
       }
 
       // 모든 관련 쿼리 무효화 (시간 정보가 class_composition에 있으므로)
       queryClient.invalidateQueries({
-        queryKey: classKeys.all
+        queryKey: classKeys.all,
       });
 
       // 강사 수업 목록도 무효화 (TeacherClassManager에서 사용)
       queryClient.invalidateQueries({
-        queryKey: ["teacher-classes"]
+        queryKey: ["teacher-classes"],
       });
 
       toast.success("수업이 성공적으로 등록되었습니다.");
@@ -121,21 +125,18 @@ export function useUpdateClass() {
       classApi.updateClass(id, data),
     onSuccess: (updatedClass, variables) => {
       // 해당 수업의 상세 정보 쿼리 업데이트
-      queryClient.setQueryData(
-        classKeys.detail(variables.id),
-        updatedClass
-      );
+      queryClient.setQueryData(classKeys.detail(variables.id), updatedClass);
 
       // 관련 쿼리들 무효화
       queryClient.invalidateQueries({ queryKey: classKeys.lists() });
-      
+
       // 강사, 과목, 요일별 쿼리 무효화 (변경될 수 있음)
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
         queryKey: classKeys.all,
-        predicate: (query) => 
+        predicate: (query) =>
           query.queryKey.includes("byTeacher") ||
           query.queryKey.includes("bySubject") ||
-          query.queryKey.includes("byDay")
+          query.queryKey.includes("byDay"),
       });
 
       toast.success("수업 정보가 성공적으로 수정되었습니다.");
@@ -157,14 +158,14 @@ export function useDeleteClass() {
 
       // 수업 목록 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: classKeys.lists() });
-      
+
       // 분류별 쿼리들 무효화
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
         queryKey: classKeys.all,
-        predicate: (query) => 
+        predicate: (query) =>
           query.queryKey.includes("byTeacher") ||
           query.queryKey.includes("bySubject") ||
-          query.queryKey.includes("byDay")
+          query.queryKey.includes("byDay"),
       });
 
       toast.success("수업이 성공적으로 삭제되었습니다.");
@@ -189,22 +190,27 @@ export function useWeeklyClasses() {
 
       classes.forEach((classItem) => {
         // class_composition 배열이 있으면 각 composition의 요일별로 그룹화
-        if (classItem.class_composition && Array.isArray(classItem.class_composition)) {
-          classItem.class_composition.forEach((comp: { day_of_week: number; start_time: string }) => {
-            const day = comp.day_of_week;
-            if (!weeklySchedule[day]) {
-              weeklySchedule[day] = [];
+        if (
+          classItem.class_compositions &&
+          Array.isArray(classItem.class_compositions)
+        ) {
+          classItem.class_compositions.forEach(
+            (comp: { day_of_week: number; start_time: string }) => {
+              const day = comp.day_of_week;
+              if (!weeklySchedule[day]) {
+                weeklySchedule[day] = [];
+              }
+              weeklySchedule[day].push(classItem);
             }
-            weeklySchedule[day].push(classItem);
-          });
+          );
         }
       });
 
       // 각 요일의 수업을 시간 순으로 정렬 (class_composition의 start_time 기준)
       Object.keys(weeklySchedule).forEach((day) => {
         weeklySchedule[parseInt(day)].sort((a, b) => {
-          const aTime = a.class_composition?.[0]?.start_time || '';
-          const bTime = b.class_composition?.[0]?.start_time || '';
+          const aTime = a.class_compositions?.[0]?.start_time || "";
+          const bTime = b.class_compositions?.[0]?.start_time || "";
           return aTime.localeCompare(bTime);
         });
       });

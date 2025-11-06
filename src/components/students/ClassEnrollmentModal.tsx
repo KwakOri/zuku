@@ -47,9 +47,9 @@ export default function ClassEnrollmentModal({
 
   // 선택된 수업의 시간표를 ClassBlock 형태로 변환
   const scheduleBlocks = useMemo((): ClassBlock[] => {
-    if (!selectedClass?.class_composition) return [];
+    if (!selectedClass?.class_compositions) return [];
 
-    return selectedClass.class_composition.map((composition) => ({
+    return selectedClass.class_compositions.map((composition) => ({
       id: composition.id,
       classId: selectedClass.id,
       title: selectedClass.title,
@@ -68,16 +68,16 @@ export default function ClassEnrollmentModal({
 
   // 앞/뒤타임이 있는 경우 각 타입별로 composition이 선택되었는지 확인
   const hasSelectedClassComposition = useMemo(() => {
-    if (!selectedClass?.class_composition) return false;
-    const compositions = selectedClass.class_composition.filter((c) =>
+    if (!selectedClass?.class_compositions) return false;
+    const compositions = selectedClass.class_compositions.filter((c) =>
       selectedCompositions.has(c.id)
     );
     return compositions.some((c) => c.type === "class");
   }, [selectedClass, selectedCompositions]);
 
   const hasSelectedClinicComposition = useMemo(() => {
-    if (!selectedClass?.class_composition) return false;
-    const compositions = selectedClass.class_composition.filter((c) =>
+    if (!selectedClass?.class_compositions) return false;
+    const compositions = selectedClass.class_compositions.filter((c) =>
       selectedCompositions.has(c.id)
     );
     return compositions.some((c) => c.type === "clinic");

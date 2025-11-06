@@ -14,7 +14,7 @@ import { useClasses } from "@/queries/useClasses";
 import type { ClassBlock } from "@/types/schedule";
 import { BookOpen, Calendar, Clock, Plus, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type TabType = "create" | "assign" | "manage" | "exam-periods";
 
@@ -55,8 +55,15 @@ export default function ClassManagementPage() {
   // Data queries
   const { data: classes = [], isLoading, error } = useClasses();
 
+  console.log("classes", classes);
+
   // Mutations
   const createComposition = useCreateClassComposition();
+
+  // 수업이 변경될 때마다 선택된 구성 초기화
+  useEffect(() => {
+    setSelectedCompositionId(null);
+  }, [selectedClassId]);
 
   // All classes (no need to filter by schedule status anymore)
   const allClasses = classes;
@@ -71,7 +78,7 @@ export default function ClassManagementPage() {
 
   // Find selected composition
   const selectedComposition =
-    selectedClass?.class_composition?.find(
+    selectedClass?.class_compositions?.find(
       (comp) => comp.id === selectedCompositionId
     ) || null;
 
@@ -79,13 +86,13 @@ export default function ClassManagementPage() {
   const classBlocks = useMemo((): ClassBlock[] => {
     if (
       !selectedClass ||
-      !selectedClass.class_composition ||
-      selectedClass.class_composition.length === 0
+      !selectedClass.class_compositions ||
+      selectedClass.class_compositions.length === 0
     ) {
       return [];
     }
 
-    return selectedClass.class_composition.map((comp) => ({
+    return selectedClass.class_compositions.map((comp) => ({
       id: comp.id,
       classId: selectedClass.id,
       compositionId: comp.id,
@@ -128,8 +135,8 @@ export default function ClassManagementPage() {
     const blocks: ClassBlock[] = [];
 
     filteredClasses.forEach((cls) => {
-      if (cls.class_composition && cls.class_composition.length > 0) {
-        cls.class_composition.forEach((comp) => {
+      if (cls.class_compositions && cls.class_compositions.length > 0) {
+        cls.class_compositions.forEach((comp) => {
           blocks.push({
             id: comp.id,
             classId: cls.id,
@@ -381,11 +388,12 @@ export default function ClassManagementPage() {
                               <span>{cls.teacher.name}</span>
                             </div>
                           )}
-                          {cls.class_composition &&
-                            cls.class_composition.length > 0 && (
+                          {cls.class_compositions &&
+                            cls.class_compositions.length > 0 && (
                               <div className="flex items-center gap-2 pt-2 mt-2 text-sm border-t border-gray-200">
                                 <span className="font-semibold text-primary-600">
-                                  {cls.class_composition.length}개 시간대 배정됨
+                                  {cls.class_compositions.length}개 시간대
+                                  배정됨
                                 </span>
                               </div>
                             )}
@@ -428,8 +436,8 @@ export default function ClassManagementPage() {
                   </div>
 
                   <div className="flex-1 min-h-0 overflow-y-auto">
-                    {!selectedClass.class_composition ||
-                    selectedClass.class_composition.length === 0 ? (
+                    {!selectedClass.class_compositions ||
+                    selectedClass.class_compositions.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-12 text-center">
                         <Clock className="w-12 h-12 mb-3 text-gray-400" />
                         <p className="text-sm font-medium text-gray-700">
@@ -442,7 +450,7 @@ export default function ClassManagementPage() {
                     ) : (
                       <div className="space-y-4">
                         {/* 정규 수업 섹션 */}
-                        {selectedClass.class_composition.filter(
+                        {selectedClass.class_compositions.filter(
                           (comp) => comp.type === "class"
                         ).length > 0 && (
                           <div>
@@ -450,7 +458,7 @@ export default function ClassManagementPage() {
                               정규 수업
                             </h4>
                             <div className="space-y-2">
-                              {selectedClass.class_composition
+                              {selectedClass.class_compositions
                                 .filter((comp) => comp.type === "class")
                                 .sort(
                                   (a, b) =>
@@ -486,7 +494,7 @@ export default function ClassManagementPage() {
                         )}
 
                         {/* 클리닉 섹션 */}
-                        {selectedClass.class_composition.filter(
+                        {selectedClass.class_compositions.filter(
                           (comp) => comp.type === "clinic"
                         ).length > 0 && (
                           <div>
@@ -494,7 +502,7 @@ export default function ClassManagementPage() {
                               클리닉
                             </h4>
                             <div className="space-y-2">
-                              {selectedClass.class_composition
+                              {selectedClass.class_compositions
                                 .filter((comp) => comp.type === "clinic")
                                 .sort(
                                   (a, b) =>
@@ -530,11 +538,11 @@ export default function ClassManagementPage() {
                         )}
 
                         {/* 타입이 없는 시간대 (단일 수업) */}
-                        {selectedClass.class_composition.filter(
+                        {selectedClass.class_compositions.filter(
                           (comp) => !comp.type
                         ).length > 0 && (
                           <div className="space-y-2">
-                            {selectedClass.class_composition
+                            {selectedClass.class_compositions
                               .filter((comp) => !comp.type)
                               .sort(
                                 (a, b) =>
@@ -591,7 +599,7 @@ export default function ClassManagementPage() {
                   className={selectedClass.title}
                   composition={selectedComposition}
                   classData={selectedClass}
-                  allCompositions={selectedClass.class_composition || []}
+                  allCompositions={selectedClass.class_compositions || []}
                   onClose={() => setSelectedCompositionId(null)}
                 />
               ) : (
@@ -600,8 +608,8 @@ export default function ClassManagementPage() {
                     <h3 className="mb-4 text-lg font-semibold text-gray-800">
                       시간표
                     </h3>
-                    {!selectedClass.class_composition ||
-                    selectedClass.class_composition.length === 0 ? (
+                    {!selectedClass.class_compositions ||
+                    selectedClass.class_compositions.length === 0 ? (
                       <div className="flex items-center justify-center flex-1 text-sm text-center text-gray-500">
                         <div>
                           <Clock className="w-12 h-12 mx-auto mb-4 text-gray-400" />
@@ -721,7 +729,7 @@ export default function ClassManagementPage() {
                             </h4>
                           </div>
                         </div>
-                        <div className="space-y-1 ml-8">
+                        <div className="ml-8 space-y-1">
                           <p className="text-sm text-gray-600">
                             {cls.subject?.subject_name || "과목 미지정"}
                           </p>
@@ -742,7 +750,7 @@ export default function ClassManagementPage() {
                                 ? "정규수업"
                                 : "학교내신"}
                             </span>
-                            <span className="px-2 py-1 text-xs rounded-md bg-gray-100 text-gray-700">
+                            <span className="px-2 py-1 text-xs text-gray-700 bg-gray-100 rounded-md">
                               {cls.split_type === "split"
                                 ? "앞/뒤타임"
                                 : "단일수업"}

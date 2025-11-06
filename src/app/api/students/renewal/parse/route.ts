@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx';
 import { ExcelStudentData, ParsedStudentData } from '@/types/student-renewal';
 import { compareWithDatabase } from '@/services/server/studentRenewalService';
 import { createAdminSupabaseClient } from '@/lib/supabase-server';
+import { parseClassName } from '@/lib/classNameParser';
 
 // 필수 컬럼 목록
 const REQUIRED_COLUMNS = ['반명', '학생명', '학교명', '학년', '학생핸드폰', '생년월일', '성별'];
@@ -139,8 +140,18 @@ export async function POST(request: NextRequest) {
           unifiedGrade = Number(row.학년) + 9;
         }
 
+        // 반명 파싱
+        const classNameRaw = String(row.반명 || '').trim();
+        const classInfo = parseClassName(classNameRaw, unifiedGrade);
+
+        if (!classInfo) {
+          validationErrors.push(`${rowNumber}행 (${studentName}): 반명 형식이 올바르지 않습니다 (${classNameRaw})`);
+          return;
+        }
+
         parsedData.push({
-          className: String(row.반명 || '').trim(),
+          className: classNameRaw,
+          classInfo,
           name: studentName,
           schoolName,
           grade: unifiedGrade,

@@ -2,7 +2,7 @@
 
 import { useState, useRef, DragEvent, useEffect } from 'react';
 import { Upload, X, AlertCircle, CheckCircle, FileSpreadsheet, History } from 'lucide-react';
-import { useParseStudentFile, useApplyStudentRenewal } from '@/queries/useStudentRenewal';
+import { useParseStudentFile, useApplyStudentRenewalStep } from '@/queries/useStudentRenewal';
 import { useBackupHistory } from '@/queries/useBackupHistory';
 import { RenewalPreview } from '@/types/student-renewal';
 import StudentRenewalPreview from './StudentRenewalPreview';
@@ -13,16 +13,19 @@ interface StudentRenewalDialogProps {
   onClose: () => void;
 }
 
+type ApplicationStep = 'none' | 'students' | 'classes' | 'compositions' | 'enrollments' | 'complete';
+
 export default function StudentRenewalDialog({ isOpen, onClose }: StudentRenewalDialogProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<RenewalPreview | null>(null);
-  const [step, setStep] = useState<'upload' | 'preview' | 'complete'>('upload');
+  const [step, setStep] = useState<'upload' | 'preview' | 'applying' | 'complete'>('upload');
+  const [applicationStep, setApplicationStep] = useState<ApplicationStep>('none');
   const [isDragging, setIsDragging] = useState(false);
   const [showBackupHistory, setShowBackupHistory] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const parseMutation = useParseStudentFile();
-  const applyMutation = useApplyStudentRenewal();
+  const applyStepMutation = useApplyStudentRenewalStep();
   const { data: backups = [], isLoading: isLoadingBackups } = useBackupHistory();
 
   // 모달이 열려있을 때 body 스크롤 비활성화
@@ -95,20 +98,34 @@ export default function StudentRenewalDialog({ isOpen, onClose }: StudentRenewal
     }
   };
 
-  const handleApply = async () => {
+  const handleStartApply = () => {
     if (!preview) return;
 
-    if (!confirm('정말로 학생 정보를 갱신하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-      return;
-    }
+    setStep('applying');
+    setApplicationStep('students');
+  };
+
+  const handleApplyStep = async (currentStep: 'students' | 'classes' | 'compositions' | 'enrollments') => {
+    if (!preview) return;
 
     try {
-      const result = await applyMutation.mutateAsync(preview);
+      const result = await applyStepMutation.mutateAsync({ preview, step: currentStep });
+
       if (result.success) {
-        setStep('complete');
+        // 다음 단계로 이동
+        if (currentStep === 'students') {
+          setApplicationStep('classes');
+        } else if (currentStep === 'classes') {
+          setApplicationStep('compositions');
+        } else if (currentStep === 'compositions') {
+          setApplicationStep('enrollments');
+        } else if (currentStep === 'enrollments') {
+          setApplicationStep('complete');
+          setStep('complete');
+        }
       }
     } catch (error) {
-      alert(error instanceof Error ? error.message : '변경사항 적용 중 오류가 발생했습니다.');
+      alert(error instanceof Error ? error.message : `${currentStep} 단계 적용 중 오류가 발생했습니다.`);
     }
   };
 
@@ -116,6 +133,7 @@ export default function StudentRenewalDialog({ isOpen, onClose }: StudentRenewal
     setSelectedFile(null);
     setPreview(null);
     setStep('upload');
+    setApplicationStep('none');
     onClose();
   };
 
@@ -217,7 +235,81 @@ export default function StudentRenewalDialog({ isOpen, onClose }: StudentRenewal
             <StudentRenewalPreview preview={preview} />
           )}
 
-          {/* Step 3: 완료 */}
+          {/* Step 3: 단계별 적용 */}
+          {step === 'applying' && preview && (
+            <div className="space-y-6">
+              <div className="p-4 border bg-primary-50 border-primary-200 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-primary-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="mb-2 font-semibold text-primary-900">
+                      단계별 적용 진행 중
+                    </h3>
+                    <p className="text-sm text-primary-700">
+                      각 단계를 확인하고 진행해주세요. 모든 단계가 완료되어야 정보가 최종 반영됩니다.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 단계 진행 상태 */}
+              <div className="space-y-3">
+                {/* 1단계: 학생 정보 */}
+                <StepCard
+                  stepNumber={1}
+                  title="학생 정보 갱신"
+                  description={`신규 ${preview.newStudents.length}명, 수정 ${preview.updatedStudents.length}명, 퇴원 ${preview.withdrawnStudents.length}명`}
+                  status={
+                    applicationStep === 'students' ? 'current' :
+                    applicationStep === 'none' ? 'pending' : 'completed'
+                  }
+                  onConfirm={() => handleApplyStep('students')}
+                  isLoading={applyStepMutation.isPending && applicationStep === 'students'}
+                />
+
+                {/* 2단계: 반 생성 */}
+                <StepCard
+                  stepNumber={2}
+                  title="반 정보 생성"
+                  description={`${preview.classes?.filter(c => !c.exists).length || 0}개 반 생성`}
+                  status={
+                    applicationStep === 'classes' ? 'current' :
+                    applicationStep === 'students' || applicationStep === 'none' ? 'pending' : 'completed'
+                  }
+                  onConfirm={() => handleApplyStep('classes')}
+                  isLoading={applyStepMutation.isPending && applicationStep === 'classes'}
+                />
+
+                {/* 3단계: 수업 구성 생성 */}
+                <StepCard
+                  stepNumber={3}
+                  title="수업 구성 생성"
+                  description={`${preview.compositions?.filter(c => !c.exists).length || 0}개 구성 생성`}
+                  status={
+                    applicationStep === 'compositions' ? 'current' :
+                    ['students', 'classes', 'none'].includes(applicationStep) ? 'pending' : 'completed'
+                  }
+                  onConfirm={() => handleApplyStep('compositions')}
+                  isLoading={applyStepMutation.isPending && applicationStep === 'compositions'}
+                />
+
+                {/* 4단계: 수강 정보 생성 */}
+                <StepCard
+                  stepNumber={4}
+                  title="수강 정보 등록"
+                  description={`${preview.enrollments?.filter(e => !e.exists).length || 0}개 신규 등록`}
+                  status={
+                    applicationStep === 'enrollments' ? 'current' :
+                    ['students', 'classes', 'compositions', 'none'].includes(applicationStep) ? 'pending' : 'completed'
+                  }
+                  onConfirm={() => handleApplyStep('enrollments')}
+                  isLoading={applyStepMutation.isPending && applicationStep === 'enrollments'}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: 완료 */}
           {step === 'complete' && (
             <div className="text-center py-12">
               <div className="w-20 h-20 mx-auto mb-6 bg-success-100 rounded-full flex items-center justify-center">
@@ -267,13 +359,24 @@ export default function StudentRenewalDialog({ isOpen, onClose }: StudentRenewal
                 이전
               </button>
               <button
-                onClick={handleApply}
-                disabled={applyMutation.isPending}
-                className="px-5 py-2.5 bg-success-600 text-white rounded-xl hover:bg-success-700 transition-all duration-200 disabled:bg-neu-300 disabled:cursor-not-allowed font-medium shadow-sm hover:shadow-md"
+                onClick={handleStartApply}
+                className="px-5 py-2.5 bg-success-600 text-white rounded-xl hover:bg-success-700 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
               >
-                {applyMutation.isPending ? '적용 중...' : '변경사항 적용'}
+                단계별 적용 시작
               </button>
             </>
+          )}
+
+          {step === 'applying' && (
+            <button
+              onClick={() => {
+                setStep('preview');
+                setApplicationStep('none');
+              }}
+              className="px-5 py-2.5 text-neu-700 bg-white border border-neu-300 rounded-xl hover:bg-neu-50 transition-all duration-200 font-medium"
+            >
+              취소
+            </button>
           )}
 
           {step === 'complete' && (
@@ -295,5 +398,62 @@ export default function StudentRenewalDialog({ isOpen, onClose }: StudentRenewal
         isLoading={isLoadingBackups}
       />
     </>
+  );
+}
+
+interface StepCardProps {
+  stepNumber: number;
+  title: string;
+  description: string;
+  status: 'pending' | 'current' | 'completed';
+  onConfirm: () => void;
+  isLoading: boolean;
+}
+
+function StepCard({ stepNumber, title, description, status, onConfirm, isLoading }: StepCardProps) {
+  return (
+    <div
+      className={`
+        p-4 border-2 rounded-xl transition-all duration-200
+        ${status === 'current' ? 'border-primary-500 bg-primary-50' : ''}
+        ${status === 'completed' ? 'border-success-500 bg-success-50' : ''}
+        ${status === 'pending' ? 'border-neu-200 bg-neu-50 opacity-60' : ''}
+      `}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3 flex-1">
+          <div
+            className={`
+              flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm
+              ${status === 'current' ? 'bg-primary-600 text-white' : ''}
+              ${status === 'completed' ? 'bg-success-600 text-white' : ''}
+              ${status === 'pending' ? 'bg-neu-300 text-neu-600' : ''}
+            `}
+          >
+            {status === 'completed' ? '✓' : stepNumber}
+          </div>
+          <div className="flex-1">
+            <h4 className="font-semibold text-neu-900">{title}</h4>
+            <p className="text-sm text-neu-600">{description}</p>
+          </div>
+        </div>
+
+        {status === 'current' && (
+          <button
+            onClick={onConfirm}
+            disabled={isLoading}
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 disabled:bg-neu-300 disabled:cursor-not-allowed font-medium"
+          >
+            {isLoading ? '처리 중...' : '확인 및 진행'}
+          </button>
+        )}
+
+        {status === 'completed' && (
+          <div className="px-4 py-2 bg-success-100 text-success-700 rounded-lg font-medium">
+            완료
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
