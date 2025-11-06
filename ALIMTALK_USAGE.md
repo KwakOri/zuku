@@ -2,7 +2,7 @@
 
 ## 개요
 
-주간 보고서 알림톡 발송 시 자동으로 발송 기록을 `weekly_report_logs` 테이블에 저장하는 통합 API입니다.
+주간 보고서 알림톡 발송 시 자동으로 `weekly_reports` 테이블에 리포트 ID를 생성하고, 발송 기록을 `weekly_report_logs` 테이블에 저장하는 통합 API입니다.
 
 ## 아키텍처
 
@@ -15,9 +15,23 @@ Client Service (weeklyReportApi.ts)
   ↓
 API Route (/api/weekly-report/send)
   ↓
-1. 알림톡 발송 (alimtalkService.ts)
-2. 로그 저장 (Supabase)
+1. weekly_reports 테이블에 리포트 생성 (report_id 발급)
+2. 알림톡 발송 (alimtalkService.ts) - report_id를 variables에 포함
+3. 로그 저장 (weekly_report_logs)
 ```
+
+## weekly_reports 테이블
+
+알림톡을 발송하기 전에 각 학생별로 `weekly_reports` 테이블에 레코드가 생성됩니다.
+
+- `id`: 리포트 고유 ID (알림톡 템플릿의 `report_id` 변수로 사용)
+- `student_id`: 학생 ID
+- `week_of`: 해당 주의 월요일 날짜 (KST)
+- `expired_at`: 링크 만료일 (기본 7일 후)
+
+이 ID는 알림톡 템플릿의 `report_id` 변수로 자동으로 전달되어, 학부모가 링크를 클릭하면 해당 주간 리포트를 조회할 수 있습니다.
+
+리포트 조회 URL: `https://your-domain.com/weekly-reports/[report_id]`
 
 ## 사용 방법
 

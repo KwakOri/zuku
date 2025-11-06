@@ -67,12 +67,63 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1. 알림톡 발송
-    const alimtalkRecipients = body.recipients.map((recipient) => ({
-      to: recipient.phone,
-      variables: recipient.variables,
+    const supabase = createAdminSupabaseClient();
+
+    // 1. weekly_reports 테이블에 리포트 먼저 생성
+    console.log('[WeeklyReportSend] weekly_reports 생성 시작');
+
+    // 학생별로 weekly_report 생성 (upsert 사용하여 중복 방지)
+    const weeklyReportsToCreate = body.recipients.map(recipient => ({
+      student_id: recipient.studentId,
+      week_of: body.weekOf,
+      expired_at: new Date(new Date(body.weekOf).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7일 후
     }));
 
+    const { data: weeklyReports, error: weeklyReportError } = await supabase
+      .from('weekly_reports')
+      .upsert(weeklyReportsToCreate, {
+        onConflict: 'student_id,week_of',
+        ignoreDuplicates: false,
+      })
+      .select('id, student_id');
+
+    if (weeklyReportError) {
+      console.error('weekly_reports 생성 실패:', weeklyReportError);
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'weekly_reports 생성에 실패했습니다: ' + weeklyReportError.message,
+        },
+        { status: 500 }
+      );
+    }
+
+    console.log('[WeeklyReportSend] weekly_reports 생성 완료:', weeklyReports?.length);
+
+    // 학생 ID와 report ID 매핑
+    const studentReportMap = new Map<string, string>();
+    weeklyReports?.forEach(report => {
+      studentReportMap.set(report.student_id, report.id);
+    });
+
+    // 2. 알림톡 발송 (report_id를 variables에 포함)
+    const alimtalkRecipients = body.recipients.map((recipient) => {
+      const reportId = studentReportMap.get(recipient.studentId);
+
+      if (!reportId) {
+        console.warn(`학생 ${recipient.studentName}의 report_id를 찾을 수 없습니다.`);
+      }
+
+      return {
+        to: recipient.phone,
+        variables: {
+          ...recipient.variables,
+          report_id: reportId || '', // report_id 추가
+        },
+      };
+    });
+
+    console.log('[WeeklyReportSend] 알림톡 발송 시작');
     const sendResult = await sendBulkAlimtalk(
       body.templateId,
       alimtalkRecipients,
@@ -82,6 +133,7 @@ export async function POST(request: NextRequest) {
 
     // 발송 실패 시 조기 리턴
     if (!sendResult.success) {
+      console.error('[WeeklyReportSend] 알림톡 발송 실패:', sendResult.message);
       return NextResponse.json(
         {
           success: false,
@@ -91,8 +143,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. 발송 성공 시 로그 저장
-    const supabase = createAdminSupabaseClient();
+    console.log('[WeeklyReportSend] 알림톡 발송 완료');
+
+    // 3. 발송 성공 시 로그 저장
 
     // 모든 학생의 모든 과목에 대해 로그 생성
     const logsToInsert = body.recipients.flatMap((recipient) =>

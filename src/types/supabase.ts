@@ -1079,6 +1079,41 @@ export type Database = {
           },
         ]
       }
+      weekly_reports: {
+        Row: {
+          created_at: string
+          expired_at: string
+          id: string
+          student_id: string
+          updated_at: string
+          week_of: string
+        }
+        Insert: {
+          created_at?: string
+          expired_at?: string
+          id?: string
+          student_id: string
+          updated_at?: string
+          week_of: string
+        }
+        Update: {
+          created_at?: string
+          expired_at?: string
+          id?: string
+          student_id?: string
+          updated_at?: string
+          week_of?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_reports_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
