@@ -801,48 +801,48 @@ export async function applyStudentsOnly(
   supabase: SupabaseClient<Database>,
   preview: RenewalPreview
 ): Promise<void> {
-  console.log('[applyStudentsOnly] ========== 1단계: 학생 정보 적용 시작 ==========');
+  console.log('[applyStudentsOnly] ========== 1단계: 학생 정보 적용 시작 (최적화) ==========');
 
   // 학교 데이터 캐싱 (1회 쿼리)
   const schoolMap = await getAllSchoolsMap(supabase);
 
-  // 1. 새 학생 추가 (수강 정보 제외)
-  console.log(`[applyStudentsOnly] 새 학생 ${preview.newStudents.length}명 추가 중...`);
-  for (const student of preview.newStudents) {
-    if (!student.newData) continue;
+  // 1. 새 학생 배치 추가 (1번 쿼리)
+  console.log(`[applyStudentsOnly] 새 학생 ${preview.newStudents.length}명 배치 추가 중...`);
+  if (preview.newStudents.length > 0) {
+    const newStudentsToInsert = preview.newStudents
+      .filter(s => s.newData)
+      .map(student => {
+        const school = findSchoolFromCache(student.newData!.schoolName, schoolMap);
+        return {
+          name: student.newData!.name,
+          class_name: student.newData!.className,
+          school_id: school?.id || null,
+          grade: student.newData!.grade,
+          phone: student.newData!.phone,
+          birth_date: student.newData!.birthDate,
+          gender: student.newData!.gender,
+          enrollment_status: 'active' as const,
+        };
+      });
 
-    console.log(`[applyStudentsOnly] 새 학생 추가: ${student.newData.name}`);
-    const school = findSchoolFromCache(student.newData.schoolName, schoolMap);
+    if (newStudentsToInsert.length > 0) {
+      const { error: studentError } = await supabase
+        .from('students')
+        .insert(newStudentsToInsert);
 
-    const { data: newStudent, error: studentError } = await supabase
-      .from('students')
-      .insert({
-        name: student.newData.name,
-        class_name: student.newData.className,
-        school_id: school?.id || null,
-        grade: student.newData.grade,
-        phone: student.newData.phone,
-        birth_date: student.newData.birthDate,
-        gender: student.newData.gender,
-        enrollment_status: 'active' as const,
-      })
-      .select('id')
-      .single();
-
-    if (studentError || !newStudent) {
-      console.error(`[applyStudentsOnly] 학생 추가 실패 (${student.newData.name}):`, studentError);
-      throw new Error(`학생 추가 실패 (${student.newData.name}): ${studentError?.message}`);
+      if (studentError) {
+        console.error(`[applyStudentsOnly] 학생 배치 추가 실패:`, studentError);
+        throw new Error(`학생 배치 추가 실패: ${studentError.message}`);
+      }
+      console.log(`[applyStudentsOnly] ✓ ${newStudentsToInsert.length}명 추가 완료`);
     }
-
-    console.log(`[applyStudentsOnly] ✓ ${student.newData.name} 추가 완료 (ID: ${newStudent.id})`);
   }
 
-  // 2. 기존 학생 업데이트 (수강 정보 제외)
+  // 2. 기존 학생 업데이트 (개별 처리 - 각 학생마다 다른 값으로 업데이트)
   console.log(`[applyStudentsOnly] 기존 학생 ${preview.updatedStudents.length}명 업데이트 중...`);
   for (const student of preview.updatedStudents) {
     if (!student.id || !student.newData) continue;
 
-    console.log(`[applyStudentsOnly] 학생 업데이트: ${student.name}`);
     const school = findSchoolFromCache(student.newData.schoolName, schoolMap);
 
     const { error: updateError } = await supabase
@@ -860,31 +860,33 @@ export async function applyStudentsOnly(
       console.error(`[applyStudentsOnly] 학생 업데이트 실패 (${student.name}):`, updateError);
       throw new Error(`학생 업데이트 실패 (${student.name}): ${updateError.message}`);
     }
-
-    console.log(`[applyStudentsOnly] ✓ ${student.name} 업데이트 완료`);
+  }
+  if (preview.updatedStudents.length > 0) {
+    console.log(`[applyStudentsOnly] ✓ ${preview.updatedStudents.length}명 업데이트 완료`);
   }
 
-  // 3. 퇴원 학생 처리
+  // 3. 퇴원 학생 배치 처리 (1번 쿼리)
   console.log(`[applyStudentsOnly] 퇴원 학생 ${preview.withdrawnStudents.length}명 처리 중...`);
-  for (const student of preview.withdrawnStudents) {
-    if (!student.id) continue;
+  if (preview.withdrawnStudents.length > 0) {
+    const withdrawnIds = preview.withdrawnStudents
+      .filter(s => s.id)
+      .map(s => s.id!);
 
-    console.log(`[applyStudentsOnly] 퇴원 처리: ${student.name}`);
+    if (withdrawnIds.length > 0) {
+      const { error: withdrawError } = await supabase
+        .from('students')
+        .update({ enrollment_status: 'withdrawn' as const })
+        .in('id', withdrawnIds);
 
-    const { error: withdrawError } = await supabase
-      .from('students')
-      .update({ enrollment_status: 'withdrawn' as const })
-      .eq('id', student.id);
-
-    if (withdrawError) {
-      console.error(`[applyStudentsOnly] 퇴원 처리 실패 (${student.name}):`, withdrawError);
-      throw new Error(`퇴원 처리 실패 (${student.name}): ${withdrawError.message}`);
+      if (withdrawError) {
+        console.error(`[applyStudentsOnly] 퇴원 배치 처리 실패:`, withdrawError);
+        throw new Error(`퇴원 배치 처리 실패: ${withdrawError.message}`);
+      }
+      console.log(`[applyStudentsOnly] ✓ ${withdrawnIds.length}명 퇴원 처리 완료`);
     }
-
-    console.log(`[applyStudentsOnly] ✓ ${student.name} 퇴원 처리 완료`);
   }
 
-  console.log('[applyStudentsOnly] ========== 1단계 완료 ==========');
+  console.log('[applyStudentsOnly] ========== 1단계 완료 (최적화) ==========');
 }
 
 /**
@@ -940,7 +942,7 @@ export async function applyCompositions(
   supabase: SupabaseClient<Database>,
   preview: RenewalPreview
 ): Promise<void> {
-  console.log('[applyCompositions] ========== 3단계: 수업 구성 생성 시작 ==========');
+  console.log('[applyCompositions] ========== 3단계: 수업 구성 생성 시작 (최적화) ==========');
   console.log(`[applyCompositions] 총 ${preview.compositions.length}개 구성 처리 중...`);
 
   // 반 ID 매핑 생성
@@ -952,6 +954,15 @@ export async function applyCompositions(
   classes?.forEach(c => {
     classIdByTitle.set(c.title, c.id);
   });
+
+  // 배치 삽입을 위한 데이터 준비
+  const compositionsToInsert: Array<{
+    class_id: string;
+    day_of_week: number;
+    start_time: string;
+    end_time: string;
+    type: string;
+  }> = [];
 
   for (const compPreview of preview.compositions) {
     if (compPreview.exists) {
@@ -965,29 +976,30 @@ export async function applyCompositions(
       continue;
     }
 
-    console.log(`[applyCompositions] 구성 생성 중: ${compPreview.fullClassName} ${compPreview.type} (${compPreview.dayOfWeek}요일 ${compPreview.startTime})`);
-
-    const { data: newComp, error } = await supabase
-      .from('class_compositions')
-      .insert({
-        class_id: classId,
-        day_of_week: compPreview.dayOfWeek,
-        start_time: compPreview.startTime,
-        end_time: compPreview.endTime,
-        type: compPreview.type,
-      })
-      .select('id')
-      .single();
-
-    if (error || !newComp) {
-      console.error(`[applyCompositions] 구성 생성 실패:`, error);
-      throw new Error(`구성 생성 실패: ${error?.message}`);
-    }
-
-    console.log(`[applyCompositions] ✓ 구성 생성 완료 (ID: ${newComp.id})`);
+    compositionsToInsert.push({
+      class_id: classId,
+      day_of_week: compPreview.dayOfWeek,
+      start_time: compPreview.startTime,
+      end_time: compPreview.endTime,
+      type: compPreview.type,
+    });
   }
 
-  console.log('[applyCompositions] ========== 3단계 완료 ==========');
+  // 배치 삽입 (1번 쿼리)
+  if (compositionsToInsert.length > 0) {
+    console.log(`[applyCompositions] ${compositionsToInsert.length}개 구성 배치 생성 중...`);
+    const { error } = await supabase
+      .from('class_compositions')
+      .insert(compositionsToInsert);
+
+    if (error) {
+      console.error(`[applyCompositions] 구성 배치 생성 실패:`, error);
+      throw new Error(`구성 배치 생성 실패: ${error.message}`);
+    }
+    console.log(`[applyCompositions] ✓ ${compositionsToInsert.length}개 구성 생성 완료`);
+  }
+
+  console.log('[applyCompositions] ========== 3단계 완료 (최적화) ==========');
 }
 
 /**
@@ -997,10 +1009,10 @@ export async function applyEnrollments(
   supabase: SupabaseClient<Database>,
   preview: RenewalPreview
 ): Promise<void> {
-  console.log('[applyEnrollments] ========== 4단계: 수강 정보 생성 시작 ==========');
+  console.log('[applyEnrollments] ========== 4단계: 수강 정보 생성 시작 (최적화) ==========');
   console.log(`[applyEnrollments] 총 ${preview.enrollments.length}개 수강 정보 처리 중...`);
 
-  // 학생 ID 매핑
+  // 1. 학생 ID 매핑
   const { data: students } = await supabase
     .from('students')
     .select('id, name, birth_date')
@@ -1011,7 +1023,10 @@ export async function applyEnrollments(
     studentIdByName.set(s.name, s.id);
   });
 
-  // 반 ID 매핑
+  const studentIds = Array.from(studentIdByName.values());
+  console.log(`[applyEnrollments] 활성 학생 ${studentIds.length}명`);
+
+  // 2. 반 ID 매핑
   const { data: classes } = await supabase
     .from('classes')
     .select('id, title');
@@ -1021,14 +1036,58 @@ export async function applyEnrollments(
     classIdByTitle.set(c.title, c.id);
   });
 
-  // 기존 수강 정보 모두 withdrawn 처리
-  console.log('[applyEnrollments] 기존 수강 정보 정리 중...');
-  for (const studentId of studentIdByName.values()) {
-    await withdrawStudentFromAllClasses(supabase, studentId);
+  // 3. 모든 class_compositions 미리 조회 (1번 쿼리)
+  console.log('[applyEnrollments] 모든 수업 구성 조회 중...');
+  const { data: allCompositions } = await supabase
+    .from('class_compositions')
+    .select('id, class_id, day_of_week, start_time, end_time, type');
+
+  // class_id별로 compositions 그룹화
+  const compositionsByClassId = new Map<string, typeof allCompositions>();
+  allCompositions?.forEach(comp => {
+    if (!compositionsByClassId.has(comp.class_id)) {
+      compositionsByClassId.set(comp.class_id, []);
+    }
+    compositionsByClassId.get(comp.class_id)!.push(comp);
+  });
+  console.log(`[applyEnrollments] ✓ ${allCompositions?.length || 0}개 구성 조회 완료`);
+
+  // 4. 기존 수강 정보 일괄 withdrawn 처리 (2번 쿼리)
+  console.log('[applyEnrollments] 기존 수강 정보 일괄 정리 중...');
+  if (studentIds.length > 0) {
+    await supabase
+      .from('relations_classes_students')
+      .update({ status: 'withdrawn' })
+      .in('student_id', studentIds)
+      .eq('status', 'active');
+
+    await supabase
+      .from('relations_compositions_students')
+      .update({ status: 'withdrawn' })
+      .in('student_id', studentIds)
+      .eq('status', 'active');
   }
   console.log('[applyEnrollments] ✓ 기존 수강 정보 정리 완료');
 
-  // 새로운 수강 정보 등록
+  // 5. 새로운 수강 정보 배치 생성
+  const classRelationsToInsert: Array<{
+    student_id: string;
+    class_id: string;
+    status: string;
+    enrolled_date: string;
+  }> = [];
+
+  const compositionRelationsToInsert: Array<{
+    student_id: string;
+    class_id: string;
+    composition_id: string;
+    status: string;
+    enrolled_date: string;
+  }> = [];
+
+  const enrolledDate = new Date().toISOString().split('T')[0];
+  const normalizeTime = (time: string) => time.substring(0, 5); // HH:MM:SS → HH:MM
+
   for (const enrollment of preview.enrollments) {
     const studentId = studentIdByName.get(enrollment.studentName);
     const classId = classIdByTitle.get(enrollment.fullClassName);
@@ -1043,23 +1102,19 @@ export async function applyEnrollments(
       continue;
     }
 
-    console.log(`[applyEnrollments] 수강 정보 등록 중: ${enrollment.studentName} → ${enrollment.fullClassName}`);
+    // class relation 추가
+    classRelationsToInsert.push({
+      student_id: studentId,
+      class_id: classId,
+      status: 'active',
+      enrolled_date: enrolledDate,
+    });
 
-    // compositions 찾기
-    const { data: compositions } = await supabase
-      .from('class_compositions')
-      .select('id, day_of_week, start_time, end_time, type')
-      .eq('class_id', classId);
-
-    console.log(`[applyEnrollments] 조회된 구성들:`, compositions?.map(c => `${c.type} (${c.day_of_week}요일 ${c.start_time}-${c.end_time})`));
-
-    const compositionIds: string[] = [];
+    // 캐싱된 compositions에서 찾기
+    const compositions = compositionsByClassId.get(classId) || [];
 
     for (const schedule of enrollment.schedules) {
-      // 시간 비교를 위해 HH:MM 형식으로 정규화
-      const normalizeTime = (time: string) => time.substring(0, 5); // HH:MM:SS → HH:MM
-
-      const matchingComp = compositions?.find(c =>
+      const matchingComp = compositions.find(c =>
         c.day_of_week === schedule.dayOfWeek &&
         normalizeTime(c.start_time) === schedule.startTime &&
         normalizeTime(c.end_time) === schedule.endTime &&
@@ -1067,20 +1122,48 @@ export async function applyEnrollments(
       );
 
       if (matchingComp) {
-        compositionIds.push(matchingComp.id);
-        console.log(`[applyEnrollments] - 구성 매칭: ${schedule.type} (${schedule.dayOfWeek}요일 ${schedule.startTime})`);
+        compositionRelationsToInsert.push({
+          student_id: studentId,
+          class_id: classId,
+          composition_id: matchingComp.id,
+          status: 'active',
+          enrolled_date: enrolledDate,
+        });
       } else {
-        console.warn(`[applyEnrollments] ⚠ 구성을 찾을 수 없음: ${schedule.type} (${schedule.dayOfWeek}요일 ${schedule.startTime})`);
+        console.warn(`[applyEnrollments] ⚠ 구성을 찾을 수 없음: ${enrollment.studentName} - ${schedule.type} (${schedule.dayOfWeek}요일 ${schedule.startTime})`);
       }
-    }
-
-    if (compositionIds.length > 0) {
-      await updateStudentEnrollments(supabase, studentId, classId, compositionIds);
-      console.log(`[applyEnrollments] ✓ ${enrollment.studentName} 수강 등록 완료 (${compositionIds.length}개 구성)`);
     }
   }
 
-  console.log('[applyEnrollments] ========== 4단계 완료 ==========');
+  // 6. 배치 삽입 (2번 쿼리)
+  console.log(`[applyEnrollments] 배치 삽입 중: ${classRelationsToInsert.length}개 반 등록, ${compositionRelationsToInsert.length}개 구성 등록...`);
+
+  if (classRelationsToInsert.length > 0) {
+    const { error: classError } = await supabase
+      .from('relations_classes_students')
+      .insert(classRelationsToInsert);
+
+    if (classError) {
+      console.error('[applyEnrollments] 반 등록 실패:', classError);
+      throw new Error(`반 등록 실패: ${classError.message}`);
+    }
+    console.log(`[applyEnrollments] ✓ ${classRelationsToInsert.length}개 반 등록 완료`);
+  }
+
+  if (compositionRelationsToInsert.length > 0) {
+    const { error: compError } = await supabase
+      .from('relations_compositions_students')
+      .insert(compositionRelationsToInsert);
+
+    if (compError) {
+      console.error('[applyEnrollments] 구성 등록 실패:', compError);
+      throw new Error(`구성 등록 실패: ${compError.message}`);
+    }
+    console.log(`[applyEnrollments] ✓ ${compositionRelationsToInsert.length}개 구성 등록 완료`);
+  }
+
+  console.log('[applyEnrollments] ========== 4단계 완료 (최적화) ==========');
+  console.log(`[applyEnrollments] 총 ${preview.enrollments.length}명 학생 등록 완료`);
 }
 
 /**
