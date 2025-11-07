@@ -93,7 +93,7 @@ export default function CombinedClassSchedule() {
         return true;
       })
       .map((classItem) => {
-        const events: TimelineEvent[] = classItem.class_composition
+        const events: TimelineEvent[] = classItem.class_compositions
           .filter((comp) => comp !== null)
           .map((comp) => {
             const subjectName = classItem.subject?.subject_name;
@@ -413,9 +413,11 @@ export default function CombinedClassSchedule() {
       {/* 타임라인 */}
       <div className="flex-1 overflow-auto scrollbar-hide">
         <div
-          className="grid min-w-[4800px]"
+          className="grid min-w-[4800px] pb-20"
           style={{
             gridTemplateColumns: `min-content repeat(${timelineMetrics.totalSlots}, 1fr)`,
+            gridTemplateRows: `30px 30px repeat(${classData.length}, 50px)`,
+            minHeight: `${60 + classData.length * 50}px`,
           }}
         >
           <div
@@ -450,6 +452,21 @@ export default function CombinedClassSchedule() {
               );
             })
           )}
+
+          {/* Row Hover Backgrounds */}
+          {classData.map((classItem, rowIndex) => (
+            <div
+              key={`hover-bg-${classItem.id}`}
+              className="opacity-0 hover:opacity-100 transition-opacity"
+              style={{
+                gridColumn: "1 / -1",
+                gridRow: rowIndex + 3,
+                height: "50px",
+                backgroundColor: "rgba(0, 0, 0, 0.1)",
+                zIndex: 5,
+              }}
+            />
+          ))}
 
           {/* 정각 세로선 */}
           {classData.map((classItem, rowIndex) =>

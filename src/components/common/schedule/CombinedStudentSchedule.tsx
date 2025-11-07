@@ -168,7 +168,7 @@ export default function CombinedStudentSchedule() {
             const classInfo = classStudent.class;
 
             // student_compositions를 통해 시간표 생성
-            const events = classStudent.student_compositions
+            const events = (classStudent.student_compositions || [])
               .filter((sc) => sc.composition !== null)
               .map((sc) => {
                 const composition = sc.composition!;
@@ -549,9 +549,11 @@ export default function CombinedStudentSchedule() {
       {/* 타임라인 */}
       <div className="flex-1 overflow-auto scrollbar-hide">
         <div
-          className="grid min-w-[4800px]"
+          className="grid min-w-[4800px] pb-20"
           style={{
             gridTemplateColumns: `min-content repeat(${timelineMetrics.totalSlots}, 1fr)`,
+            gridTemplateRows: `30px 30px repeat(${studentData.length}, 50px)`,
+            minHeight: `${60 + studentData.length * 50}px`,
           }}
         >
           {/* Timeline Header */}
@@ -588,6 +590,21 @@ export default function CombinedStudentSchedule() {
               );
             })
           )}
+
+          {/* Row Hover Backgrounds */}
+          {studentData.map((student, rowIndex) => (
+            <div
+              key={`hover-bg-${student.id}`}
+              className="opacity-0 hover:opacity-100 transition-opacity row-hover-trigger"
+              style={{
+                gridColumn: "1 / -1",
+                gridRow: rowIndex + 3,
+                height: "50px",
+                backgroundColor: "rgba(0, 0, 0, 0.1)",
+                zIndex: 5,
+              }}
+            />
+          ))}
 
           {/* 정각 세로선 */}
           {studentData.map((student, rowIndex) =>
