@@ -12,7 +12,7 @@ import { useMemo, useState } from "react";
 type Class = Tables<"classes"> & {
   subject?: Tables<"subjects"> | null;
   teacher?: Tables<"teachers"> | null;
-  class_composition?: Tables<"class_compositions">[];
+  class_compositions?: Tables<"class_compositions">[];
 };
 
 interface ClassEnrollmentModalProps {

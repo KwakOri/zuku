@@ -98,7 +98,6 @@ export default function MiddleSchoolRecordManager({
 
   // 미입력 학생 목록 조회
   const { data: pendingData, isLoading: pendingLoading } = usePendingStudents(
-    user?.id,
     selectedWeek
   );
 
@@ -538,65 +537,91 @@ export default function MiddleSchoolRecordManager({
               <p className="text-xs text-gray-600">불러오는 중...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {pendingData.data.map((item) => {
-                const student = item.student;
-                const classInfo = item.class;
-
-                if (!student || !classInfo) return null;
-
-                return (
-                  <div
-                    key={`${item.student_id}-${item.class_id}`}
-                    className="p-4 border border-orange-200 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex-shrink-0">
-                          <span className="text-xs font-semibold text-white">
-                            {student.name.charAt(0)}
-                          </span>
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-sm text-gray-900">
-                            {student.name}
-                          </h4>
-                          <p className="text-xs text-gray-600">
-                            {getGrade(student.grade, "half")}
-                          </p>
-                        </div>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setNewRecord({
-                            student_id: student.id,
-                            class_id: classInfo.id,
-                            week_of: selectedWeek,
-                            attendance: "present",
-                            participation: 3,
-                            understanding: 3,
-                            homework: "good",
-                            notes: "",
-                            created_date: formatDateToYYYYMMDD(new Date()),
-                            last_modified: formatDateToYYYYMMDD(new Date()),
-                          });
-                          setIsAddingRecord(true);
-                        }}
-                      >
-                        <Plus className="w-3 h-3 mr-1" />
-                        작성
-                      </Button>
-                    </div>
-                    <div className="text-xs text-gray-600">
-                      <p className="truncate">
-                        {classInfo.subject?.subject_name} - {classInfo.title}
-                      </p>
-                    </div>
+            <div className="space-y-6">
+              {/* 과목별로 그룹화 */}
+              {Object.entries(
+                pendingData.data.reduce((acc, item) => {
+                  const subjectName = item.class?.subject?.subject_name || "과목 미지정";
+                  if (!acc[subjectName]) {
+                    acc[subjectName] = [];
+                  }
+                  acc[subjectName].push(item);
+                  return acc;
+                }, {} as Record<string, typeof pendingData.data>)
+              ).map(([subjectName, students]) => (
+                <div key={subjectName}>
+                  {/* 과목 헤더 */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <BookOpen className="w-4 h-4 text-orange-600" />
+                    <h4 className="font-semibold text-gray-900">{subjectName}</h4>
+                    <span className="px-2 py-0.5 text-xs font-medium text-orange-700 bg-orange-100 rounded-full">
+                      {students.length}명
+                    </span>
                   </div>
-                );
-              })}
+
+                  {/* 학생 그리드 */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {students.map((item) => {
+                      const student = item.student;
+                      const classInfo = item.class;
+
+                      if (!student || !classInfo) return null;
+
+                      return (
+                        <div
+                          key={`${item.student_id}-${item.class_id}`}
+                          className="p-4 border border-orange-200 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors"
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex-shrink-0">
+                                <span className="text-xs font-semibold text-white">
+                                  {student.name.charAt(0)}
+                                </span>
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-sm text-gray-900">
+                                  {student.name}
+                                </h4>
+                                <p className="text-xs text-gray-600">
+                                  {getGrade(student.grade, "half")}
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setNewRecord({
+                                  student_id: student.id,
+                                  class_id: classInfo.id,
+                                  week_of: selectedWeek,
+                                  attendance: "present",
+                                  participation: 3,
+                                  understanding: 3,
+                                  homework: "good",
+                                  notes: "",
+                                  created_date: formatDateToYYYYMMDD(new Date()),
+                                  last_modified: formatDateToYYYYMMDD(new Date()),
+                                });
+                                setIsAddingRecord(true);
+                              }}
+                            >
+                              <Plus className="w-3 h-3 mr-1" />
+                              작성
+                            </Button>
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            <p className="truncate">
+                              {classInfo.title}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </Card>

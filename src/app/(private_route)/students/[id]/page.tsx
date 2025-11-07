@@ -22,14 +22,7 @@ import {
 import { ClassBlock } from "@/types/schedule";
 import { Tables } from "@/types/supabase";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  Clock,
-  Home,
-  MapPin,
-  Plus,
-  Search,
-  User,
-} from "lucide-react";
+import { Clock, Home, MapPin, Plus, Search, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useRef, useState } from "react";
@@ -58,6 +51,8 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
     isLoading: isScheduleLoading,
     error: scheduleError,
   } = useFullSchedule(studentId);
+
+  console.log("학생 전체 시간표 데이터 -> ", fullScheduleData);
 
   // 전체 시간표를 CanvasSchedule용 블록으로 변환
   const allSchedules = fullScheduleData?.all || [];
