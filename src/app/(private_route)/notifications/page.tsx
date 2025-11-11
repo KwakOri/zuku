@@ -2,18 +2,15 @@
 
 import { PageHeader, PageLayout } from "@/components/common/layout";
 import { getGrade } from "@/lib/utils";
-import {
-  useSendBulkAlimtalk,
-  useSendSingleAlimtalk,
-} from "@/queries/useAlimtalk";
 import { useAuthState } from "@/queries/useAuth";
 import { useStudentSubjectsBatch } from "@/queries/useClassStudents";
 import { useMiddleRecords } from "@/queries/useMiddleRecords";
 import { useStudents } from "@/queries/useStudents";
+import { useWeeklyReportLogs } from "@/queries/useWeeklyReportLogs";
 import {
-  useCreateWeeklyReportLog,
-  useWeeklyReportLogs,
-} from "@/queries/useWeeklyReportLogs";
+  useSendSingleWeeklyReport,
+  useSendWeeklyReport,
+} from "@/queries/useWeeklyReport";
 import { addWeeks, endOfWeek, format, startOfWeek, subWeeks } from "date-fns";
 import { ko } from "date-fns/locale";
 import {
@@ -38,17 +35,12 @@ const TEMPLATE_ID = process.env.NEXT_PUBLIC_WEEKLY_REPORT_TEMPLATE_ID || "";
 const HOMEWORK_URL_BASE =
   process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
-interface TemplateVariable {
-  key: string;
-  value: string;
-}
-
 interface RecipientData {
   studentId: string;
   studentName: string;
   parentPhone: string;
-  variables: TemplateVariable[];
-  reportId: string; // 중등 기록 ID
+  subjectIds: string[]; // 수강 과목 ID 배열
+  variables: Record<string, string>; // 템플릿 변수
 }
 
 export default function NotificationsPage() {
@@ -71,9 +63,8 @@ export default function NotificationsPage() {
   );
 
   const { data: students = [], isLoading: studentsLoading } = useStudents();
-  const sendSingle = useSendSingleAlimtalk();
-  const sendBulk = useSendBulkAlimtalk();
-  const createWeeklyReportLog = useCreateWeeklyReportLog();
+  const sendSingleWeeklyReport = useSendSingleWeeklyReport();
+  const sendWeeklyReport = useSendWeeklyReport();
   const { user } = useAuthState();
 
   // 주간 시작/종료 날짜 계산
@@ -251,11 +242,11 @@ export default function NotificationsPage() {
     setRecipientsData((prev) =>
       prev.map((r) => ({
         ...r,
-        variables: r.variables.map((v) => {
-          if (v.key === "start_date") return { ...v, value: weekStartDate };
-          if (v.key === "end_date") return { ...v, value: weekEndDate };
-          return v;
-        }),
+        variables: {
+          ...r.variables,
+          start_date: weekStartDate,
+          end_date: weekEndDate,
+        },
       }))
     );
   }, [weekStartDate, weekEndDate]);
@@ -272,19 +263,20 @@ export default function NotificationsPage() {
       newSelected.add(studentId);
       const student = studentsWithStatus.find((s) => s.id === studentId);
 
-      if (student && student.isEligible && student.reportId) {
+      if (student && student.isEligible) {
+        const subjectIds = student.studentSubjects.map((s) => s.id);
         setRecipientsData((prev) => [
           ...prev,
           {
             studentId: student.id,
             studentName: student.name,
             parentPhone: student.parent_phone || "",
-            reportId: student.reportId!, // 위 if문에서 이미 체크함
-            variables: [
-              { key: "start_date", value: weekStartDate },
-              { key: "end_date", value: weekEndDate },
-              { key: "student", value: student.name },
-            ],
+            subjectIds,
+            variables: {
+              start_date: weekStartDate,
+              end_date: weekEndDate,
+              student: student.name,
+            },
           },
         ]);
       }
@@ -300,22 +292,23 @@ export default function NotificationsPage() {
       setSelectedStudents(new Set());
       setRecipientsData([]);
     } else {
-      const allIds = new Set(eligibleStudents.map((s) => s.id));
+      const allIds = new Set<string>(eligibleStudents.map((s) => s.id));
       setSelectedStudents(allIds);
       setRecipientsData(
-        eligibleStudents
-          .filter((student) => student.reportId) // reportId가 있는 학생만
-          .map((student) => ({
+        eligibleStudents.map((student) => {
+          const subjectIds = student.studentSubjects.map((s) => s.id);
+          return {
             studentId: student.id,
             studentName: student.name,
             parentPhone: student.parent_phone || "",
-            reportId: student.reportId!, // filter에서 이미 체크함
-            variables: [
-              { key: "start_date", value: weekStartDate },
-              { key: "end_date", value: weekEndDate },
-              { key: "student", value: student.name },
-            ],
-          }))
+            subjectIds,
+            variables: {
+              start_date: weekStartDate,
+              end_date: weekEndDate,
+              student: student.name,
+            },
+          };
+        })
       );
     }
   };
@@ -331,9 +324,10 @@ export default function NotificationsPage() {
         if (recipient.studentId === studentId) {
           return {
             ...recipient,
-            variables: recipient.variables.map((v) =>
-              v.key === variableKey ? { ...v, value } : v
-            ),
+            variables: {
+              ...recipient.variables,
+              [variableKey]: value,
+            },
           };
         }
         return recipient;
@@ -353,36 +347,20 @@ export default function NotificationsPage() {
       return;
     }
 
-    const variables = recipientData.variables.reduce((acc, v) => {
-      acc[v.key] = v.value;
-      return acc;
-    }, {} as Record<string, string>);
-
-    // report_id와 student_id를 variables에 포함
-    variables.report_id = recipientData.reportId;
-    variables.student_id = recipientData.studentId;
-
     try {
-      // 알림톡 발송
-      await sendSingle.mutateAsync({
+      // 주간 보고서 발송 (weekly_reports 생성 + 알림톡 발송 + 로그 저장)
+      await sendSingleWeeklyReport.mutateAsync({
         templateId: TEMPLATE_ID,
-        to: recipientData.parentPhone,
-        variables,
+        recipient: {
+          studentId: recipientData.studentId,
+          studentName: recipientData.studentName,
+          phone: recipientData.parentPhone,
+          subjectIds: recipientData.subjectIds,
+          variables: recipientData.variables,
+        },
+        weekOf,
+        sentBy: user.id,
       });
-
-      // 발송 성공 시 로그 저장
-      const student = studentsWithStatus.find(
-        (s) => s.id === recipientData.studentId
-      );
-      if (student && student.studentSubjects.length > 0) {
-        const subjectIds = student.studentSubjects.map((s) => s.id);
-        await createWeeklyReportLog.mutateAsync({
-          week_of: weekOf,
-          student_id: recipientData.studentId,
-          subject_ids: subjectIds,
-          sent_by: user.id,
-        });
-      }
 
       alert(`${recipientData.studentName} 학부모님께 알림톡이 발송되었습니다.`);
     } catch (error) {
@@ -413,7 +391,7 @@ export default function NotificationsPage() {
 
     // 모든 변수가 입력되었는지 확인
     const incompleteRecipients = recipientsData.filter((r) =>
-      r.variables.some((v) => !v.value.trim())
+      Object.values(r.variables).some((v) => !v.trim())
     );
 
     if (incompleteRecipients.length > 0) {
@@ -428,50 +406,19 @@ export default function NotificationsPage() {
     setIsSending(true);
 
     try {
-      const recipients = recipientsData.map((r) => {
-        const variables = r.variables.reduce((acc, v) => {
-          acc[v.key] = v.value;
-          return acc;
-        }, {} as Record<string, string>);
-
-        // report_id와 student_id를 variables에 포함
-        variables.report_id = r.reportId;
-        variables.student_id = r.studentId;
-
-        return {
-          to: r.parentPhone,
-          variables,
-        };
-      });
-
-      // 알림톡 발송
-      await sendBulk.mutateAsync({
+      // 주간 보고서 일괄 발송 (weekly_reports 생성 + 알림톡 발송 + 로그 저장)
+      await sendWeeklyReport.mutateAsync({
         templateId: TEMPLATE_ID,
-        recipients,
+        recipients: recipientsData.map((r) => ({
+          studentId: r.studentId,
+          studentName: r.studentName,
+          phone: r.parentPhone,
+          subjectIds: r.subjectIds,
+          variables: r.variables,
+        })),
+        weekOf,
+        sentBy: user.id,
       });
-
-      // 발송 성공 시 각 학생별로 로그 저장
-      for (const recipient of recipientsData) {
-        const student = studentsWithStatus.find(
-          (s) => s.id === recipient.studentId
-        );
-        if (student && student.studentSubjects.length > 0) {
-          const subjectIds = student.studentSubjects.map((s) => s.id);
-          try {
-            await createWeeklyReportLog.mutateAsync({
-              week_of: weekOf,
-              student_id: recipient.studentId,
-              subject_ids: subjectIds,
-              sent_by: user.id,
-            });
-          } catch (logError) {
-            console.error(
-              `로그 저장 실패 (${recipient.studentName}):`,
-              logError
-            );
-          }
-        }
-      }
 
       alert(`${recipientsData.length}명의 학부모님께 알림톡이 발송되었습니다.`);
       setSelectedStudents(new Set());
@@ -765,27 +712,27 @@ export default function NotificationsPage() {
                   {isSelected && isExpanded && recipientData && (
                     <div className="pt-4 mt-4 border-t border-gray-200">
                       <div className="grid grid-cols-1 gap-4 mb-4">
-                        {recipientData.variables.map((variable) => (
-                          <div key={variable.key}>
+                        {Object.entries(recipientData.variables).map(([key, value]) => (
+                          <div key={key}>
                             <label className="block mb-1 text-sm font-medium text-gray-700">
-                              {variable.key === "start_date"
+                              {key === "start_date"
                                 ? "시작 날짜"
-                                : variable.key === "end_date"
+                                : key === "end_date"
                                 ? "종료 날짜"
                                 : "학생 이름"}
                             </label>
                             <input
                               type={
-                                variable.key === "start_date" ||
-                                variable.key === "end_date"
+                                key === "start_date" ||
+                                key === "end_date"
                                   ? "date"
                                   : "text"
                               }
-                              value={variable.value}
+                              value={value}
                               onChange={(e) =>
                                 handleVariableChange(
                                   student.id,
-                                  variable.key,
+                                  key,
                                   e.target.value
                                 )
                               }
@@ -797,8 +744,8 @@ export default function NotificationsPage() {
                       </div>
                       <button
                         onClick={() => handleSendSingle(recipientData)}
-                        disabled={recipientData.variables.some(
-                          (v) => !v.value.trim()
+                        disabled={Object.values(recipientData.variables).some(
+                          (v) => !v.trim()
                         )}
                         className="flex items-center justify-center w-full px-4 py-2 space-x-2 text-white transition-colors rounded-lg bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                       >

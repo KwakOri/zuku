@@ -180,7 +180,7 @@ export async function POST(request: NextRequest) {
         *,
         teacher:teachers(id, name, email),
         subject:subjects(id, subject_name),
-        class_students(
+        relations_classes_students(
           student_id,
           status,
           students(

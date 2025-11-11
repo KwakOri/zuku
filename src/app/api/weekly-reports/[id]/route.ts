@@ -7,10 +7,10 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const reportId = params.id;
+    const { id: reportId } = await params;
 
     if (!reportId) {
       return NextResponse.json(
@@ -18,6 +18,8 @@ export async function GET(
         { status: 400 }
       );
     }
+
+    console.log('[WeeklyReports GET] Fetching report with ID:', reportId);
 
     const supabase = createAdminSupabaseClient();
 
@@ -37,7 +39,7 @@ export async function GET(
           school_id,
           schools (
             id,
-            school_name
+            name
           )
         )
       `)
@@ -45,11 +47,15 @@ export async function GET(
       .single();
 
     if (reportError || !weeklyReport) {
+      console.log('[WeeklyReports GET] Report not found. Error:', reportError);
+      console.log('[WeeklyReports GET] This might be an old report_id from homework_records_middle');
       return NextResponse.json(
-        { error: 'Weekly report not found' },
+        { error: 'Weekly report not found. This ID may be from an old notification sent before the system update.' },
         { status: 404 }
       );
     }
+
+    console.log('[WeeklyReports GET] Found report:', weeklyReport);
 
     // 2. 만료 확인
     const now = new Date();
@@ -57,34 +63,32 @@ export async function GET(
     const isExpired = now > expiredAt;
 
     // 3. 해당 주의 중등 숙제 기록 조회
-    // week_of는 월요일, 일요일까지의 범위로 조회
-    const weekStart = new Date(weeklyReport.week_of);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekEnd.getDate() + 6); // 일요일까지
-
-    const weekStartStr = weekStart.toISOString().split('T')[0];
-    const weekEndStr = weekEnd.toISOString().split('T')[0];
-
+    // week_of로 조회 (YYYY-MM-DD 형식의 월요일 날짜)
     const { data: homeworkRecords, error: homeworkError } = await supabase
       .from('homework_records_middle')
       .select(`
         id,
         student_id,
-        subject_id,
-        record_date,
-        homework_completion,
-        test_score,
+        class_id,
+        week_of,
+        attendance,
+        homework,
+        participation,
+        understanding,
         notes,
-        subjects (
+        created_date,
+        classes (
           id,
-          subject_name
+          subject_id,
+          subjects (
+            id,
+            subject_name
+          )
         )
       `)
       .eq('student_id', weeklyReport.student_id)
-      .gte('record_date', weekStartStr)
-      .lte('record_date', weekEndStr)
-      .order('record_date', { ascending: true })
-      .order('subject_id', { ascending: true });
+      .eq('week_of', weeklyReport.week_of)
+      .order('created_date', { ascending: true });
 
     if (homeworkError) {
       console.error('Homework records fetch error:', homeworkError);
@@ -100,8 +104,6 @@ export async function GET(
         report: weeklyReport,
         isExpired,
         homeworkRecords: homeworkRecords || [],
-        weekStart: weekStartStr,
-        weekEnd: weekEndStr,
       },
     });
   } catch (error) {

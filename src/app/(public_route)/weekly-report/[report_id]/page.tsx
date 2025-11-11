@@ -8,14 +8,21 @@ import { getGrade } from '@/lib/utils';
 interface HomeworkRecord {
   id: string;
   student_id: string;
-  subject_id: string;
-  record_date: string;
-  homework_completion: 'completed' | 'incomplete' | 'partial';
-  test_score: number | null;
-  notes: string | null;
-  subjects: {
+  class_id: string;
+  week_of: string;
+  attendance: string;
+  homework: string;
+  participation: number;
+  understanding: number;
+  notes: string;
+  created_date: string;
+  classes: {
     id: string;
-    subject_name: string;
+    subject_id: string;
+    subjects: {
+      id: string;
+      subject_name: string;
+    };
   };
 }
 
@@ -26,7 +33,7 @@ interface Student {
   school_id: string;
   schools: {
     id: string;
-    school_name: string;
+    name: string;
   } | null;
 }
 
@@ -43,8 +50,6 @@ interface WeeklyReportData {
   report: WeeklyReport;
   isExpired: boolean;
   homeworkRecords: HomeworkRecord[];
-  weekStart: string;
-  weekEnd: string;
 }
 
 export default function WeeklyReportPage() {
@@ -125,18 +130,31 @@ export default function WeeklyReportPage() {
     );
   }
 
-  const { report, homeworkRecords, weekStart, weekEnd } = data;
+  const { report, homeworkRecords } = data;
   const student = report.students;
+
+  // 주차 계산 (week_of는 월요일)
+  const weekStart = new Date(report.week_of);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6); // 일요일까지
 
   // 과목별로 그룹화
   const recordsBySubject = homeworkRecords.reduce((acc, record) => {
-    const subjectName = record.subjects.subject_name;
+    const subjectName = record.classes?.subjects?.subject_name;
+    if (!subjectName) return acc; // subjects 정보가 없으면 스킵
     if (!acc[subjectName]) {
       acc[subjectName] = [];
     }
     acc[subjectName].push(record);
     return acc;
   }, {} as Record<string, HomeworkRecord[]>);
+
+  // homework 문자열을 기반으로 완료 상태 판단
+  const getHomeworkStatus = (homework: string): 'completed' | 'incomplete' | 'partial' => {
+    if (!homework || homework === '안 함' || homework === '미완료') return 'incomplete';
+    if (homework === '완료' || homework === '완벽') return 'completed';
+    return 'partial'; // 부분 완료 또는 기타 상태
+  };
 
   // 숙제 완료 상태별 아이콘 및 색상
   const getCompletionBadge = (status: 'completed' | 'incomplete' | 'partial') => {
@@ -198,7 +216,7 @@ export default function WeeklyReportPage() {
               <div>
                 <p className="text-sm text-gray-500">학교 / 학년</p>
                 <p className="font-semibold text-gray-900">
-                  {student.schools?.school_name || '학교 정보 없음'} · {getGrade(student.grade, 'half')}
+                  {student.schools?.name || '학교 정보 없음'} · {getGrade(student.grade, 'half')}
                 </p>
               </div>
             </div>
@@ -242,22 +260,39 @@ export default function WeeklyReportPage() {
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <p className="text-sm font-medium text-gray-900">
-                            {new Date(record.record_date).toLocaleDateString('ko-KR', {
+                            {new Date(record.created_date).toLocaleDateString('ko-KR', {
                               month: 'long',
                               day: 'numeric',
                               weekday: 'short',
                             })}
                           </p>
                         </div>
-                        {getCompletionBadge(record.homework_completion)}
+                        {getCompletionBadge(getHomeworkStatus(record.homework))}
                       </div>
 
-                      {record.test_score !== null && (
-                        <div className="mb-2">
-                          <span className="text-sm text-gray-500">시험 점수: </span>
-                          <span className="text-lg font-bold text-blue-600">{record.test_score}점</span>
-                        </div>
-                      )}
+                      {/* 출석 */}
+                      <div className="mb-2">
+                        <span className="text-sm text-gray-500">출석: </span>
+                        <span className="font-medium text-gray-900">{record.attendance}</span>
+                      </div>
+
+                      {/* 숙제 */}
+                      <div className="mb-2">
+                        <span className="text-sm text-gray-500">숙제: </span>
+                        <span className="font-medium text-gray-900">{record.homework}</span>
+                      </div>
+
+                      {/* 참여도 */}
+                      <div className="mb-2">
+                        <span className="text-sm text-gray-500">참여도: </span>
+                        <span className="font-medium text-gray-900">{record.participation}/10</span>
+                      </div>
+
+                      {/* 이해도 */}
+                      <div className="mb-2">
+                        <span className="text-sm text-gray-500">이해도: </span>
+                        <span className="font-medium text-gray-900">{record.understanding}/10</span>
+                      </div>
 
                       {record.notes && (
                         <div className="p-3 mt-2 text-sm bg-gray-50 rounded-lg">

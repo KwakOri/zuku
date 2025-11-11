@@ -155,8 +155,8 @@ export default function CombinedStudentSchedule() {
       })
       .map((student) => {
         // 수업 이벤트 생성
-        const classEvents: TimelineEvent[] = student.relations_classes_students.flatMap(
-          (classStudent, index) => {
+        const classEvents: TimelineEvent[] =
+          student.relations_classes_students.flatMap((classStudent, index) => {
             if (!classStudent.class) {
               console.warn(
                 `  ⚠️ [DEBUG] Class not found for class_student:`,
@@ -190,8 +190,7 @@ export default function CombinedStudentSchedule() {
               });
 
             return events;
-          }
-        );
+          });
 
         // 개인 일정 이벤트 생성 (회색으로 표시)
         const personalEvents: TimelineEvent[] = student.student_schedules.map(
@@ -595,7 +594,7 @@ export default function CombinedStudentSchedule() {
           {studentData.map((student, rowIndex) => (
             <div
               key={`hover-bg-${student.id}`}
-              className="opacity-0 hover:opacity-100 transition-opacity row-hover-trigger"
+              className="transition-opacity opacity-0 hover:opacity-100 row-hover-trigger"
               style={{
                 gridColumn: "1 / -1",
                 gridRow: rowIndex + 3,
@@ -732,7 +731,7 @@ export default function CombinedStudentSchedule() {
 
                           {/* 메인 아이템 */}
                           <div
-                            className="relative rounded-lg my-0.5 text-white px-1.5 py-0.5 cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:transform hover:-translate-y-px border-2 border-white shadow-md flex items-center gap-1"
+                            className="relative rounded-lg text-white px-1.5 py-0.5 cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:transform hover:-translate-y-px border-2 border-white shadow-md flex items-center gap-1"
                             style={{
                               backgroundColor: representativeEvent.color,
                               width: "100%",

@@ -32,7 +32,8 @@ interface TimelineEvent {
 }
 
 export default function CombinedClassSchedule() {
-  const { data: classesWithSchedules = [], isLoading } = useCombinedClassSchedule();
+  const { data: classesWithSchedules = [], isLoading } =
+    useCombinedClassSchedule();
 
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -85,8 +86,13 @@ export default function CombinedClassSchedule() {
         if (searchQuery) {
           const query = searchQuery.toLowerCase();
           if (c.title.toLowerCase().includes(query)) return true;
-          if (c.teacher && c.teacher.name.toLowerCase().includes(query)) return true;
-          if (c.subject && c.subject.subject_name?.toLowerCase().includes(query)) return true;
+          if (c.teacher && c.teacher.name.toLowerCase().includes(query))
+            return true;
+          if (
+            c.subject &&
+            c.subject.subject_name?.toLowerCase().includes(query)
+          )
+            return true;
           return false;
         }
 
@@ -390,7 +396,9 @@ export default function CombinedClassSchedule() {
               }`}
             >
               <span>선생님</span>
-              {sortField === "teacher" && <ArrowUpDown className="w-3.5 h-3.5" />}
+              {sortField === "teacher" && (
+                <ArrowUpDown className="w-3.5 h-3.5" />
+              )}
             </button>
             <button
               onClick={() => handleSort("subject")}
@@ -401,7 +409,9 @@ export default function CombinedClassSchedule() {
               }`}
             >
               <span>과목</span>
-              {sortField === "subject" && <ArrowUpDown className="w-3.5 h-3.5" />}
+              {sortField === "subject" && (
+                <ArrowUpDown className="w-3.5 h-3.5" />
+              )}
             </button>
             {sortOrder === "desc" && (
               <span className="ml-1 text-xs text-gray-500">내림차순</span>
@@ -457,7 +467,7 @@ export default function CombinedClassSchedule() {
           {classData.map((classItem, rowIndex) => (
             <div
               key={`hover-bg-${classItem.id}`}
-              className="opacity-0 hover:opacity-100 transition-opacity"
+              className="transition-opacity opacity-0 hover:opacity-100"
               style={{
                 gridColumn: "1 / -1",
                 gridRow: rowIndex + 3,
@@ -509,20 +519,26 @@ export default function CombinedClassSchedule() {
                   }}
                 >
                   <div className="grid grid-cols-[80px_70px_60px] gap-2 items-center">
-                    <span className="font-medium truncate">{classItem.title}</span>
+                    <span className="font-medium truncate">
+                      {classItem.title}
+                    </span>
                     {classItem.teacher ? (
                       <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded text-center truncate">
                         {classItem.teacher.name}
                       </span>
                     ) : (
-                      <span className="text-xs text-center text-gray-400">-</span>
+                      <span className="text-xs text-center text-gray-400">
+                        -
+                      </span>
                     )}
                     {classItem.subject ? (
                       <span className="text-xs text-gray-600 bg-blue-50 px-2 py-0.5 rounded text-center truncate">
                         {classItem.subject.subject_name}
                       </span>
                     ) : (
-                      <span className="text-xs text-center text-gray-400">-</span>
+                      <span className="text-xs text-center text-gray-400">
+                        -
+                      </span>
                     )}
                   </div>
                 </div>
@@ -575,7 +591,7 @@ export default function CombinedClassSchedule() {
                             ))}
 
                           <div
-                            className="relative rounded-lg my-0.5 text-white px-1.5 py-0.5 cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:transform hover:-translate-y-px border-2 border-white shadow-md flex items-center gap-1"
+                            className="relative rounded-lg text-white px-1.5 py-0.5 cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:transform hover:-translate-y-px border-2 border-white shadow-md flex items-center gap-1"
                             style={{
                               backgroundColor: representativeEvent.color,
                               width: "100%",
@@ -599,7 +615,9 @@ export default function CombinedClassSchedule() {
                                 backdropFilter: "blur(4px)",
                               }}
                             >
-                              {representativeEvent.type === "class" ? "수업" : "클리닉"}
+                              {representativeEvent.type === "class"
+                                ? "수업"
+                                : "클리닉"}
                             </span>
                           </div>
                         </div>

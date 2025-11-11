@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
 
     // 1. weekly_reports 테이블에 리포트 먼저 생성
     console.log('[WeeklyReportSend] weekly_reports 생성 시작');
+    console.log('[WeeklyReportSend] Recipients:', body.recipients.map(r => ({ studentId: r.studentId, studentName: r.studentName })));
 
     // 학생별로 weekly_report 생성 (upsert 사용하여 중복 방지)
     const weeklyReportsToCreate = body.recipients.map(recipient => ({
@@ -78,6 +79,8 @@ export async function POST(request: NextRequest) {
       week_of: body.weekOf,
       expired_at: new Date(new Date(body.weekOf).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7일 후
     }));
+
+    console.log('[WeeklyReportSend] Creating weekly_reports:', weeklyReportsToCreate);
 
     const { data: weeklyReports, error: weeklyReportError } = await supabase
       .from('weekly_reports')
@@ -88,7 +91,7 @@ export async function POST(request: NextRequest) {
       .select('id, student_id');
 
     if (weeklyReportError) {
-      console.error('weekly_reports 생성 실패:', weeklyReportError);
+      console.error('[WeeklyReportSend] weekly_reports 생성 실패:', weeklyReportError);
       return NextResponse.json(
         {
           success: false,
@@ -98,7 +101,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('[WeeklyReportSend] weekly_reports 생성 완료:', weeklyReports?.length);
+    console.log('[WeeklyReportSend] weekly_reports 생성 완료:', weeklyReports);
+    console.log('[WeeklyReportSend] Created report IDs:', weeklyReports?.map(r => r.id));
 
     // 학생 ID와 report ID 매핑
     const studentReportMap = new Map<string, string>();
