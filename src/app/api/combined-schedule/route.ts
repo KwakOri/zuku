@@ -115,10 +115,10 @@ export async function GET() {
       }
     }
 
-    // 4. compositions_students를 class_students에 매핑
+    // 4. compositions_students를 relations_classes_students에 매핑
     const enrichedStudents = students?.map(student => ({
       ...student,
-      class_students: student.relations_classes_students.map((cs: ClassStudent) => ({
+      relations_classes_students: student.relations_classes_students.map((cs: ClassStudent) => ({
         ...cs,
         student_compositions: compositionsStudents.filter(
           sc => sc.student_id === student.id && sc.class_id === cs.class_id

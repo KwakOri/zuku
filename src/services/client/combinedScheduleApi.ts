@@ -40,7 +40,7 @@ export interface ClassWithSchedules extends Tables<"classes"> {
     id: string;
     name: string;
   } | null;
-  class_composition: Tables<"class_compositions">[];
+  class_compositions: Tables<"class_compositions">[];
 }
 
 // 선생님별 통합 스케줄 타입
@@ -53,7 +53,7 @@ export interface TeacherWithSchedules extends Tables<"teachers"> {
       id: string;
       subject_name: string | null;
     } | null;
-    class_composition: Tables<"class_compositions">[];
+    class_compositions: Tables<"class_compositions">[];
   }>;
 }
 

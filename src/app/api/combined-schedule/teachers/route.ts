@@ -35,7 +35,7 @@ export async function GET() {
               id,
               subject_name
             ),
-            class_composition(
+            class_compositions(
               id,
               class_id,
               day_of_week,

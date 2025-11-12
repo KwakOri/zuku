@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase-server";
 import { TablesUpdate } from "@/types/supabase";
+import { formatDateToYYYYMMDD } from "@/lib/utils";
 
 // GET /api/middle-records/[id] - 특정 중등 기록 조회
 export async function GET(
@@ -71,7 +72,7 @@ export async function PUT(
     // last_modified 자동 업데이트
     const updatedData = {
       ...body,
-      last_modified: new Date().toISOString().split("T")[0],
+      last_modified: formatDateToYYYYMMDD(new Date()),
     };
 
     const { data, error } = await supabase

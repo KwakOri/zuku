@@ -155,6 +155,30 @@ export function useUnenrollStudent() {
   });
 }
 
+// 여러 학생의 수강 과목 일괄 조회
+export function useStudentSubjectsBatch(studentIds: string[]) {
+  return useQuery({
+    queryKey: ["student-subjects-batch", studentIds.sort().join(",")],
+    queryFn: async () => {
+      const response = await fetch(
+        `/api/class-students/by-students?student_ids=${studentIds.join(",")}`
+      );
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to fetch student subjects");
+      }
+      const result = await response.json();
+      return result.data as Record<string, Array<{
+        id: string;
+        subject_name: string;
+        classes: Array<{ id: string; title: string; course_type: string }>;
+      }>>;
+    },
+    enabled: studentIds.length > 0,
+    staleTime: 5 * 60 * 1000, // 5분
+  });
+}
+
 export default {
   classStudentApi,
   classStudentKeys,

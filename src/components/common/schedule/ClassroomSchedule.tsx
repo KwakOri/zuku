@@ -284,6 +284,7 @@ export default function ClassroomSchedule({
     top: 0,
     left: 0,
   }); // 컨테이너 위치
+  const [hoveredSchoolGrade, setHoveredSchoolGrade] = useState<string | null>(null); // 호버된 학교/학년 그룹
 
   // 동적 설정
   const MIN_DAY_COLUMN_WIDTH = 240;
@@ -836,9 +837,8 @@ export default function ClassroomSchedule({
                 SLOT_HEIGHT - 4;
 
               // 학생 블록 레이아웃
-              const studentsPerRow = 3; // 오른쪽 3열
-              const schoolColumnWidth = (width - 20) / 4; // 왼쪽 1열 (전체의 1/4)
-              const studentBlockWidth = ((width - 20) * 3) / 4 / studentsPerRow; // 오른쪽 3/4를 3등분
+              const studentsPerRow = 3; // 한 줄에 3개
+              const studentBlockWidth = (width - 20) / studentsPerRow; // 전체 너비를 3등분
               const studentBlockHeight = 33; // 22 * 1.5
               const studentBlockGap = 4;
 
@@ -921,13 +921,15 @@ export default function ClassroomSchedule({
                 >
                   {/* 수업 정보 */}
                   <div className="px-3 py-2 text-white">
-                    <div className="text-xs font-bold truncate">
-                      {block.title}
+                    <div className="flex items-center justify-between mb-0.5">
+                      <div className="text-sm font-bold truncate">
+                        {block.title}
+                      </div>
+                      <div className="text-xs opacity-90 ml-2 flex-shrink-0">
+                        {block.teacherName}
+                      </div>
                     </div>
-                    <div className="text-[10px] opacity-90 truncate">
-                      {block.teacherName} • {block.subject}
-                    </div>
-                    <div className="text-[10px] opacity-75">
+                    <div className="text-xs opacity-90">
                       {formatDisplayTime(block.startTime)} ~{" "}
                       {formatDisplayTime(block.endTime)}
                     </div>
@@ -939,57 +941,86 @@ export default function ClassroomSchedule({
                       {sortedSchoolGradeEntries.map(
                         ([schoolGradeKey, groupData], groupIndex) => {
                           const studentsInGroup = groupData.students;
-                          const rowHeight =
-                            studentBlockHeight + studentBlockGap;
-                          const groupTopOffset = 60 + groupIndex * rowHeight;
+
+                          // 각 그룹의 시작 위치 계산
+                          let groupTopOffset = 60;
+                          for (let i = 0; i < groupIndex; i++) {
+                            const prevGroupStudents = sortedSchoolGradeEntries[i][1].students.length;
+                            // 학교/학년 블록(1개) + 학생 블록들을 모두 포함한 총 블록 수
+                            const totalBlocks = prevGroupStudents + 1;
+                            const prevGroupRows = Math.ceil(totalBlocks / studentsPerRow);
+                            const prevGroupHeight = (studentBlockHeight + studentBlockGap) * prevGroupRows;
+                            groupTopOffset += prevGroupHeight;
+                          }
 
                           return (
                             <div key={schoolGradeKey}>
-                              {/* 학교/학년 칩 (왼쪽) */}
+                              {/* 학교/학년 칩 (첫 번째 블록 자리, col=0, row=0) */}
                               <div
-                                className="absolute flex items-center justify-center overflow-hidden rounded"
+                                className="absolute flex items-center justify-center overflow-hidden rounded border-2 cursor-pointer transition-all hover:bg-white/25"
                                 style={{
                                   left: 10,
                                   top: groupTopOffset,
-                                  width: schoolColumnWidth - studentBlockGap,
+                                  width: studentBlockWidth - studentBlockGap,
                                   height: studentBlockHeight,
+                                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                  borderColor: "rgba(255, 255, 255, 0.8)",
                                 }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // 해당 그룹의 모든 학생 선택
+                                  if (onStudentClick && studentsInGroup.length > 0) {
+                                    // 첫 번째 학생은 단일 선택으로 기존 선택 초기화
+                                    onStudentClick(studentsInGroup[0], block, false);
+                                    // 나머지 학생들은 다중 선택 모드로 추가
+                                    for (let i = 1; i < studentsInGroup.length; i++) {
+                                      onStudentClick(studentsInGroup[i], block, true);
+                                    }
+                                  }
+                                }}
+                                onMouseEnter={() => setHoveredSchoolGrade(`${block.id}-${schoolGradeKey}`)}
+                                onMouseLeave={() => setHoveredSchoolGrade(null)}
                               >
                                 {/* 텍스트 레이어 */}
                                 <div
                                   className="relative text-xs font-bold truncate px-1 text-white"
                                   style={{
                                     textShadow:
-                                      "0.5px 0.5px 1px rgba(0, 0, 0, 0.3)",
+                                      "1px 1px 2px rgba(0, 0, 0, 0.5)",
                                   }}
                                 >
                                   {groupData.displayText}
                                 </div>
                               </div>
 
-                              {/* 해당 학교/학년의 학생들 (오른쪽) */}
+                              {/* 해당 학교/학년의 학생들 (학교/학년 블록 옆부터 이어짐) */}
                               {studentsInGroup.map((student, studentIndex) => {
                                 const studentKey = `${block.id}-${student.id}`;
                                 const isSelected =
                                   selectedStudentKeys.includes(studentKey);
+                                const isGroupHovered = hoveredSchoolGrade === `${block.id}-${schoolGradeKey}`;
+
+                                // 학생 블록 위치 계산 (학교/학년 블록 이후부터 시작)
+                                const adjustedIndex = studentIndex + 1; // +1 for school/grade label block
+                                const row = Math.floor(adjustedIndex / studentsPerRow);
+                                const col = adjustedIndex % studentsPerRow;
 
                                 return (
                                   <div
                                     key={studentKey}
                                     className="absolute transition-all rounded cursor-pointer group"
                                     style={{
-                                      left:
-                                        10 +
-                                        schoolColumnWidth +
-                                        studentIndex * studentBlockWidth,
-                                      top: groupTopOffset,
-                                      width:
-                                        studentBlockWidth - studentBlockGap,
+                                      left: 10 + col * studentBlockWidth,
+                                      top: groupTopOffset + row * (studentBlockHeight + studentBlockGap),
+                                      width: studentBlockWidth - studentBlockGap,
                                       height: studentBlockHeight,
                                       backgroundColor: isSelected
-                                        ? "rgba(255, 255, 255, 0.2)"
-                                        : "rgba(0, 0, 0, 0.2)",
+                                        ? "rgba(59, 130, 246, 0.9)" // 선택: 파란색 불투명
+                                        : "rgba(0, 0, 0, 0.25)", // 일반: 어두운 반투명
                                       color: "#ffffff",
+                                      boxShadow: isSelected
+                                        ? "0 0 0 2px rgba(59, 130, 246, 0.5)" // 선택 시 외곽선
+                                        : "none",
                                     }}
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -1000,15 +1031,28 @@ export default function ClassroomSchedule({
                                       );
                                     }}
                                   >
-                                    {/* 호버 배경 레이어 */}
+                                    {/* 그룹 호버 배경 레이어 */}
+                                    <div
+                                      className="absolute inset-0 transition-opacity rounded pointer-events-none"
+                                      style={{
+                                        backgroundColor: "rgba(255, 255, 255, 0.15)",
+                                        opacity: isGroupHovered && !isSelected ? 1 : 0,
+                                      }}
+                                    />
+                                    {/* 개별 호버 배경 레이어 */}
                                     <div
                                       className="absolute inset-0 transition-opacity rounded opacity-0 pointer-events-none group-hover:opacity-100"
                                       style={{
-                                        backgroundColor:
-                                          "rgba(255, 255, 255, 0.1)",
+                                        backgroundColor: isSelected
+                                          ? "rgba(96, 165, 250, 0.3)" // 선택된 상태에서 호버: 더 밝은 파란색
+                                          : "rgba(255, 255, 255, 0.2)", // 일반 호버: 흰색 반투명
                                       }}
                                     />
-                                    <div className="relative flex items-center justify-center w-full h-full text-sm font-bold">
+                                    <div className="relative flex items-center justify-center w-full h-full text-sm font-bold"
+                                      style={{
+                                        textShadow: "1px 1px 2px rgba(0, 0, 0, 0.5)",
+                                      }}
+                                    >
                                       {student.name.length > 4
                                         ? student.name.slice(0, 3) + "…"
                                         : student.name}

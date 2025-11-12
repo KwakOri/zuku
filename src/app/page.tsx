@@ -16,6 +16,7 @@ import {
   UserPlus,
   Users,
   ScanLine,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -155,6 +156,16 @@ export default function HomePage() {
       href: "/omr-grading",
       stats: "자동 채점",
       features: ["이미지 자동 처리", "자동 채점", "통계 분석", "CSV 다운로드"],
+    },
+    {
+      id: "omr-python-grading",
+      title: "AI OMR 채점",
+      description: "Python AI 모델로 고정밀 이미지 정렬과 채점을 수행합니다",
+      icon: Sparkles,
+      color: "bg-cyan-50 text-cyan-600 border-cyan-200",
+      href: "/omr-python-grading",
+      stats: "AI 고정밀 채점",
+      features: ["자동 이미지 정렬", "배치 채점", "고정밀 인식", "실시간 결과"],
     },
   ];
 
@@ -363,13 +374,20 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="mt-8 flex justify-center gap-4">
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link
               href="/students"
               className="inline-flex items-center gap-2 px-6 py-3 text-white transition-all duration-200 flat-card bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl hover:from-primary-600 hover:to-primary-700"
             >
               <Users className="w-5 h-5" />
               학생 관리로 시작하기
+            </Link>
+            <Link
+              href="/omr-python-grading"
+              className="inline-flex items-center gap-2 px-6 py-3 text-white transition-all duration-200 flat-card bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-2xl hover:from-cyan-600 hover:to-cyan-700"
+            >
+              <Sparkles className="w-5 h-5" />
+              AI OMR 채점
             </Link>
             <Link
               href="/omr-grading"

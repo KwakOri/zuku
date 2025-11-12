@@ -1,6 +1,22 @@
 import { createAdminSupabaseClient } from "@/lib/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
-import { Tables } from "@/types/supabase";
+import { Database } from "@/types/supabase";
+
+type RelationCompositionStudent = Database['public']['Tables']['relations_compositions_students']['Row'];
+type ClassComposition = Database['public']['Tables']['class_compositions']['Row'];
+type Class = Database['public']['Tables']['classes']['Row'];
+type Subject = Database['public']['Tables']['subjects']['Row'];
+type Teacher = Database['public']['Tables']['teachers']['Row'];
+
+// relations_compositions_students 조회 시 join된 데이터 타입
+// SELECT 절에서 실제로 선택한 필드만 Supabase 타입에서 Pick
+type CompositionWithRelations = Pick<RelationCompositionStudent, 'id' | 'class_id' | 'student_id' | 'enrolled_date'> & {
+  composition: Pick<ClassComposition, 'id' | 'day_of_week' | 'start_time' | 'end_time' | 'type'> | null;
+  class: (Pick<Class, 'id' | 'title' | 'color' | 'room' | 'description'> & {
+    subject: Pick<Subject, 'id' | 'subject_name'> | null;
+    teacher: Pick<Teacher, 'id' | 'name'> | null;
+  }) | null;
+};
 
 /**
  * GET: 학생의 전체 시간표 조회 (개인 일정 + 수업 일정)
@@ -28,12 +44,21 @@ export async function GET(
       throw personalError;
     }
 
-    // 2. 수업 일정 조회 (class_students → student_compositions → class_composition)
-    const { data: classSchedules, error: classError } = await supabase
-      .from("relations_classes_students")
+    // 2. compositions_students 조회 (class 정보 함께 조회)
+    const { data: allCompositions, error: compError } = await supabase
+      .from("relations_compositions_students")
       .select(`
         id,
+        class_id,
+        student_id,
         enrolled_date,
+        composition:class_compositions (
+          id,
+          day_of_week,
+          start_time,
+          end_time,
+          type
+        ),
         class:classes (
           id,
           title,
@@ -53,74 +78,39 @@ export async function GET(
       .eq("student_id", studentId)
       .eq("status", "active");
 
-    if (classError) {
-      console.error("Class schedules fetch error:", classError);
-      throw classError;
-    }
-
-    // 3. compositions_students 조회 (class_id와 student_id로 필터링)
-    const { data: allCompositions, error: compError } = await supabase
-      .from("relations_compositions_students")
-      .select(`
-        id,
-        class_id,
-        student_id,
-        enrolled_date,
-        composition:class_compositions (
-          id,
-          day_of_week,
-          start_time,
-          end_time,
-          type
-        )
-      `)
-      .eq("student_id", studentId)
-      .eq("status", "active");
-
     if (compError) {
       console.error("Compositions fetch error:", compError);
+      throw compError;
     }
 
-    // Type for the composition with nested data
-    interface CompositionWithData extends Pick<Tables<"relations_compositions_students">, "id" | "class_id" | "student_id" | "enrolled_date"> {
-      composition?: Pick<Tables<"class_compositions">, "id" | "day_of_week" | "start_time" | "end_time" | "type"> | null;
-    }
+    console.log('[FullSchedule] Student ID:', studentId);
+    console.log('[FullSchedule] All compositions count:', allCompositions?.length || 0);
 
-    // 4. class_students에 해당하는 compositions 매핑
-    const classSchedulesWithCompositions = (classSchedules || []).map((classStudent) => {
-      const compositions = (allCompositions || []).filter(
-        (comp) => comp.class_id === classStudent.class?.id
-      ) as CompositionWithData[];
+    // 3. 수업 일정을 시간표 형식으로 변환
+    const formattedClassSchedules = (allCompositions || []).map((comp: CompositionWithRelations) => {
+      console.log(`[FullSchedule] Composition: ${comp.class?.title} - ${comp.composition?.type}`);
 
       return {
-        ...classStudent,
-        compositions,
-      };
-    });
-
-    // 5. 수업 일정을 시간표 형식으로 변환
-    const formattedClassSchedules = classSchedulesWithCompositions.flatMap((classStudent) => {
-      return classStudent.compositions.map((comp) => ({
         id: comp.id,
         student_id: studentId,
-        title: classStudent.class?.title || "",
-        description: classStudent.class?.description || null,
+        title: comp.class?.title || "",
+        description: comp.class?.description || null,
         start_time: comp.composition?.start_time || "",
         end_time: comp.composition?.end_time || "",
         day_of_week: comp.composition?.day_of_week || 0,
         type: "class", // 수업 일정
-        color: classStudent.class?.color || "#3b82f6",
-        location: classStudent.class?.room || null,
+        color: comp.class?.color || "#3b82f6",
+        location: comp.class?.room || null,
         recurring: true,
         status: "active",
-        created_date: classStudent.enrolled_date,
+        created_date: comp.enrolled_date,
         // 추가 정보
         class_id: comp.class_id,
         composition_id: comp.composition?.id,
         composition_type: comp.composition?.type, // "class" or "clinic"
-        subject_name: classStudent.class?.subject?.subject_name || null,
-        teacher_name: classStudent.class?.teacher?.name || null,
-      }));
+        subject_name: comp.class?.subject?.subject_name || null,
+        teacher_name: comp.class?.teacher?.name || null,
+      };
     });
 
     // 6. 개인 일정과 수업 일정 합치기

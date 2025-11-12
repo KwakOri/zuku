@@ -149,7 +149,6 @@ export class MiddleRecordApi {
 
   // 미입력 학생 목록 조회
   async getPendingStudents(params: {
-    teacherId: string;
     weekOf?: string;
   }): Promise<{
     data: Array<{
@@ -181,13 +180,15 @@ export class MiddleRecordApi {
     };
   }> {
     const searchParams = new URLSearchParams();
-    searchParams.set("teacher_id", params.teacherId);
 
     if (params.weekOf) {
       searchParams.set("week_of", params.weekOf);
     }
 
-    const url = `${this.baseUrl}/pending?${searchParams}`;
+    const url = searchParams.toString()
+      ? `${this.baseUrl}/pending?${searchParams}`
+      : `${this.baseUrl}/pending`;
+
     const response = await fetch(url, {
       method: "GET",
       headers: {

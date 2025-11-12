@@ -213,14 +213,10 @@ export function useBulkCreateMiddleRecords() {
 }
 
 // 미입력 학생 목록 조회
-export function usePendingStudents(teacherId?: string, weekOf?: string) {
+export function usePendingStudents(weekOf?: string) {
   return useQuery({
-    queryKey: middleRecordKeys.pending(teacherId || "", weekOf),
-    queryFn: () => middleRecordApi.getPendingStudents({
-      teacherId: teacherId!,
-      weekOf
-    }),
-    enabled: !!teacherId,
+    queryKey: middleRecordKeys.pending("", weekOf),
+    queryFn: () => middleRecordApi.getPendingStudents({ weekOf }),
     staleTime: 1 * 60 * 1000, // 1분
   });
 }

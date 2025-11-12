@@ -32,7 +32,8 @@ interface TimelineEvent {
 }
 
 export default function CombinedTeacherSchedule() {
-  const { data: teachersWithSchedules = [], isLoading } = useCombinedTeacherSchedule();
+  const { data: teachersWithSchedules = [], isLoading } =
+    useCombinedTeacherSchedule();
 
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -87,8 +88,8 @@ export default function CombinedTeacherSchedule() {
           if (t.name.toLowerCase().includes(query)) return true;
 
           // 담당하는 수업명 검색
-          const hasMatchingClass = t.classes.some(
-            (c) => c.title.toLowerCase().includes(query)
+          const hasMatchingClass = t.classes.some((c) =>
+            c.title.toLowerCase().includes(query)
           );
           if (hasMatchingClass) return true;
 
@@ -99,7 +100,7 @@ export default function CombinedTeacherSchedule() {
       })
       .map((teacher) => {
         const events: TimelineEvent[] = teacher.classes.flatMap((classItem) => {
-          return classItem.class_composition
+          return classItem.class_compositions
             .filter((comp) => comp !== null)
             .map((comp) => {
               const subjectName = classItem.subject?.subject_name;
@@ -129,12 +130,7 @@ export default function CombinedTeacherSchedule() {
     });
 
     return sortedTeachers;
-  }, [
-    selectedTeachers,
-    teachersWithSchedules,
-    searchQuery,
-    sortOrder,
-  ]);
+  }, [selectedTeachers, teachersWithSchedules, searchQuery, sortOrder]);
 
   const groupOverlappingEvents = (events: TimelineEvent[]) => {
     const groups: TimelineEvent[][] = [];
@@ -371,9 +367,11 @@ export default function CombinedTeacherSchedule() {
       {/* 타임라인 */}
       <div className="flex-1 overflow-auto scrollbar-hide">
         <div
-          className="grid min-w-[4800px]"
+          className="grid min-w-[4800px] pb-20"
           style={{
             gridTemplateColumns: `min-content repeat(${timelineMetrics.totalSlots}, 1fr)`,
+            gridTemplateRows: `30px 30px repeat(${teacherData.length}, 50px)`,
+            minHeight: `${60 + teacherData.length * 50}px`,
           }}
         >
           <div
@@ -408,6 +406,21 @@ export default function CombinedTeacherSchedule() {
               );
             })
           )}
+
+          {/* Row Hover Backgrounds */}
+          {teacherData.map((teacher, rowIndex) => (
+            <div
+              key={`hover-bg-${teacher.id}`}
+              className="transition-opacity opacity-0 hover:opacity-100"
+              style={{
+                gridColumn: "1 / -1",
+                gridRow: rowIndex + 3,
+                height: "50px",
+                backgroundColor: "rgba(0, 0, 0, 0.1)",
+                zIndex: 5,
+              }}
+            />
+          ))}
 
           {/* 정각 세로선 */}
           {teacherData.map((teacher, rowIndex) =>
@@ -502,7 +515,7 @@ export default function CombinedTeacherSchedule() {
                             ))}
 
                           <div
-                            className="relative rounded-lg my-0.5 text-white px-1.5 py-0.5 cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:transform hover:-translate-y-px border-2 border-white shadow-md flex items-center gap-1"
+                            className="relative rounded-lg text-white px-1.5 py-0.5 cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:transform hover:-translate-y-px border-2 border-white shadow-md flex items-center gap-1"
                             style={{
                               backgroundColor: representativeEvent.color,
                               width: "100%",
@@ -526,7 +539,9 @@ export default function CombinedTeacherSchedule() {
                                 backdropFilter: "blur(4px)",
                               }}
                             >
-                              {representativeEvent.type === "class" ? "수업" : "클리닉"}
+                              {representativeEvent.type === "class"
+                                ? "수업"
+                                : "클리닉"}
                             </span>
                           </div>
                         </div>

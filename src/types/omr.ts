@@ -106,6 +106,134 @@ export const DEFAULT_CONFIG: ImageProcessingConfig = {
   fillThreshold: 0.5,
 };
 
+// ========================================
+// Python API 관련 타입 정의
+// ========================================
+
+/**
+ * Python API 이미지 정렬 요청
+ */
+export interface PythonAlignRequest {
+  scan: File;
+  method?: "sift" | "contour";
+  enhance?: boolean;
+  return_image?: boolean;
+}
+
+/**
+ * Python API 이미지 정렬 응답 (return_image=false)
+ */
+export interface PythonAlignResponse {
+  success: boolean;
+  message: string;
+  metadata?: {
+    success: boolean;
+    method: string;
+    width: number;
+    height: number;
+    processing_time: number;
+  };
+}
+
+/**
+ * Python API 답안 검출 요청
+ */
+export interface PythonDetectRequest {
+  scan: File;
+  method?: "sift" | "contour";
+  threshold?: number;
+}
+
+/**
+ * Python API 답안 검출 응답
+ */
+export interface PythonDetectResponse {
+  success: boolean;
+  message: string;
+  detected_answers: Record<string, number | null>;
+  statistics: {
+    total_questions: number;
+    answered: number;
+    blank: number;
+  };
+}
+
+/**
+ * Python API 채점 요청
+ */
+export interface PythonGradeRequest {
+  scan: File;
+  answer_key: number[];
+  method?: "sift" | "contour";
+  threshold?: number;
+  score_per_question?: number;
+}
+
+/**
+ * Python API 채점 상세 (문제별)
+ */
+export interface PythonGradingDetail {
+  question: number;
+  marked: number | null;
+  correct_answer: number;
+  is_correct: boolean;
+  status: "correct" | "wrong" | "blank";
+}
+
+/**
+ * Python API 채점 응답
+ */
+export interface PythonGradingResponse {
+  success: boolean;
+  message: string;
+  grading: {
+    total_score: number;
+    max_score: number;
+    correct: number;
+    wrong: number;
+    blank: number;
+    accuracy: number;
+    details: PythonGradingDetail[];
+  };
+}
+
+/**
+ * Python API 배치 처리 요청
+ */
+export interface PythonBatchGradeRequest {
+  scans: File[];
+  answer_key: number[];
+  method?: "sift" | "contour";
+  threshold?: number;
+  score_per_question?: number;
+}
+
+/**
+ * Python API 배치 처리 응답
+ */
+export interface PythonBatchGradeResponse {
+  success: boolean;
+  total: number;
+  successful: number;
+  failed: number;
+  average_score: number;
+  results: {
+    index: number;
+    filename: string;
+    success: boolean;
+    grading: PythonGradingResponse["grading"];
+  }[];
+}
+
+/**
+ * Python API 에러 응답
+ */
+export interface PythonAPIError {
+  success: false;
+  error: string;
+  detail?: string;
+}
+
 /**
  * OMR 마킹 좌표 (수동 설정용)
  */

@@ -1034,6 +1034,86 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_report_logs: {
+        Row: {
+          created_at: string
+          id: string
+          sent_at: string
+          sent_by: string
+          student_id: string
+          subject_id: string
+          week_of: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sent_at?: string
+          sent_by: string
+          student_id: string
+          subject_id: string
+          week_of: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sent_at?: string
+          sent_by?: string
+          student_id?: string
+          subject_id?: string
+          week_of?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_report_logs_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_report_logs_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_reports: {
+        Row: {
+          created_at: string
+          expired_at: string
+          id: string
+          student_id: string
+          updated_at: string
+          week_of: string
+        }
+        Insert: {
+          created_at?: string
+          expired_at?: string
+          id?: string
+          student_id: string
+          updated_at?: string
+          week_of: string
+        }
+        Update: {
+          created_at?: string
+          expired_at?: string
+          id?: string
+          student_id?: string
+          updated_at?: string
+          week_of?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_reports_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

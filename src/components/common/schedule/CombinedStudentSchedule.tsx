@@ -155,8 +155,8 @@ export default function CombinedStudentSchedule() {
       })
       .map((student) => {
         // 수업 이벤트 생성
-        const classEvents: TimelineEvent[] = student.relations_classes_students.flatMap(
-          (classStudent, index) => {
+        const classEvents: TimelineEvent[] =
+          student.relations_classes_students.flatMap((classStudent, index) => {
             if (!classStudent.class) {
               console.warn(
                 `  ⚠️ [DEBUG] Class not found for class_student:`,
@@ -168,7 +168,7 @@ export default function CombinedStudentSchedule() {
             const classInfo = classStudent.class;
 
             // student_compositions를 통해 시간표 생성
-            const events = classStudent.student_compositions
+            const events = (classStudent.student_compositions || [])
               .filter((sc) => sc.composition !== null)
               .map((sc) => {
                 const composition = sc.composition!;
@@ -190,8 +190,7 @@ export default function CombinedStudentSchedule() {
               });
 
             return events;
-          }
-        );
+          });
 
         // 개인 일정 이벤트 생성 (회색으로 표시)
         const personalEvents: TimelineEvent[] = student.student_schedules.map(
@@ -549,9 +548,11 @@ export default function CombinedStudentSchedule() {
       {/* 타임라인 */}
       <div className="flex-1 overflow-auto scrollbar-hide">
         <div
-          className="grid min-w-[4800px]"
+          className="grid min-w-[4800px] pb-20"
           style={{
             gridTemplateColumns: `min-content repeat(${timelineMetrics.totalSlots}, 1fr)`,
+            gridTemplateRows: `30px 30px repeat(${studentData.length}, 50px)`,
+            minHeight: `${60 + studentData.length * 50}px`,
           }}
         >
           {/* Timeline Header */}
@@ -588,6 +589,21 @@ export default function CombinedStudentSchedule() {
               );
             })
           )}
+
+          {/* Row Hover Backgrounds */}
+          {studentData.map((student, rowIndex) => (
+            <div
+              key={`hover-bg-${student.id}`}
+              className="transition-opacity opacity-0 hover:opacity-100 row-hover-trigger"
+              style={{
+                gridColumn: "1 / -1",
+                gridRow: rowIndex + 3,
+                height: "50px",
+                backgroundColor: "rgba(0, 0, 0, 0.1)",
+                zIndex: 5,
+              }}
+            />
+          ))}
 
           {/* 정각 세로선 */}
           {studentData.map((student, rowIndex) =>
@@ -715,7 +731,7 @@ export default function CombinedStudentSchedule() {
 
                           {/* 메인 아이템 */}
                           <div
-                            className="relative rounded-lg my-0.5 text-white px-1.5 py-0.5 cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:transform hover:-translate-y-px border-2 border-white shadow-md flex items-center gap-1"
+                            className="relative rounded-lg text-white px-1.5 py-0.5 cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:transform hover:-translate-y-px border-2 border-white shadow-md flex items-center gap-1"
                             style={{
                               backgroundColor: representativeEvent.color,
                               width: "100%",

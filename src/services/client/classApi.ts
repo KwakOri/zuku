@@ -15,7 +15,7 @@ interface ClassWithTeacher extends Tables<"classes"> {
     name: string;
   } | null;
   subject?: Tables<"subjects"> | null;
-  class_composition?: Tables<"class_compositions">[];
+  class_compositions?: Tables<"class_compositions">[];
 }
 
 // 수업 생성을 위한 새로운 인터페이스
@@ -72,7 +72,9 @@ export class ClassApi {
     return result.data;
   }
 
-  async createClass(classData: TablesInsert<"classes">): Promise<ClassWithTeacher> {
+  async createClass(
+    classData: TablesInsert<"classes">
+  ): Promise<ClassWithTeacher> {
     const response = await fetch(this.baseUrl, {
       method: "POST",
       headers: {
@@ -91,7 +93,9 @@ export class ClassApi {
   }
 
   // 새로운 수업 생성 메서드 (학생 등록 포함)
-  async createClassWithStudents(classData: CreateClassData): Promise<ClassWithTeacher> {
+  async createClassWithStudents(
+    classData: CreateClassData
+  ): Promise<ClassWithTeacher> {
     const response = await fetch(this.baseUrl, {
       method: "POST",
       headers: {
@@ -109,7 +113,10 @@ export class ClassApi {
     return result.data;
   }
 
-  async updateClass(id: string, updateData: TablesUpdate<"classes">): Promise<ClassWithTeacher> {
+  async updateClass(
+    id: string,
+    updateData: TablesUpdate<"classes">
+  ): Promise<ClassWithTeacher> {
     const response = await fetch(`${this.baseUrl}/${id}`, {
       method: "PUT",
       headers: {
