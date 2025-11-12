@@ -195,14 +195,14 @@ export default function WeeklyReportPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white">주간 학습 리포트</h1>
-                <p className="text-sm text-blue-100">
+                <p className="hidden md:block text-sm text-blue-100">
                   {new Date(weekStart).toLocaleDateString('ko-KR')} ~ {new Date(weekEnd).toLocaleDateString('ko-KR')}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="p-6 space-y-3">
+          <div className="hidden md:block p-6 space-y-3">
             <div className="flex items-center gap-3">
               <User className="w-5 h-5 text-gray-400" />
               <div>

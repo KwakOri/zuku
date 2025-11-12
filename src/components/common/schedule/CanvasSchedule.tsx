@@ -349,11 +349,11 @@ export default function CanvasSchedule({
   const SLOT_HEIGHT = 10; // 10분당 10px
   const GRID_START_Y = HEADER_HEIGHT + 20;
 
-  // 표시할 요일 수 계산 (최소 1일, 최대 7일)
+  // 표시할 요일 수 계산 (최소 3일, 최대 7일)
   const availableWidth = containerWidth - TIME_COLUMN_WIDTH;
   const visibleDays = Math.min(
     7,
-    Math.max(1, Math.floor(availableWidth / MIN_DAY_COLUMN_WIDTH))
+    Math.max(3, Math.floor(availableWidth / MIN_DAY_COLUMN_WIDTH))
   );
   const visibleDaysArray = days.slice(0, visibleDays);
   const DAY_COLUMN_WIDTH = availableWidth / visibleDays;

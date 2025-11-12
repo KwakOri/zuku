@@ -248,7 +248,7 @@ export default function StudentList({
                         if (onStudentSelect) {
                           onStudentSelect(student);
                         } else {
-                          router.push(`/students/${student.id}`);
+                          router.push(`/student-schedule/${student.id}`);
                         }
                       }}
                     >

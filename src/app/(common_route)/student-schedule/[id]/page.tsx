@@ -456,15 +456,15 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-gray-50">
       {/* 헤더 */}
-      <header className="border-0 shadow-sm flat-surface bg-gray-50">
+      <header className="flex-shrink-0 border-0 shadow-sm flat-surface bg-gray-50">
         <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <Link
                 href="/"
-                className="p-2 text-gray-500 transition-all duration-200 flat-card hover:text-gray-700 rounded-2xl hover:flat-pressed"
+                className="hidden md:block p-2 text-gray-500 transition-all duration-200 flat-card hover:text-gray-700 rounded-2xl hover:flat-pressed"
               >
                 <Home className="w-5 h-5" />
               </Link>
@@ -475,46 +475,25 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-gray-800">
-                    {student.name} 시간표 관리
+                    {student.name} 시간표
                   </h1>
-                  <p className="text-sm text-gray-600">
-                    개별 학생의 시간표를 수정할 수 있습니다
+                  <p className="hidden md:block text-sm text-gray-600">
+                    주간 시간표를 확인할 수 있습니다
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* 학생 정보 카드 및 액션 버튼 */}
-            <div className="flex items-center gap-4">
-              {/* 수업 등록 버튼 */}
-              <button
-                onClick={() => setShowEnrollModal(true)}
-                className="flex items-center gap-2 px-4 py-2 text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700"
-              >
-                <Plus className="w-4 h-4" />
-                수업 등록
-              </button>
-
-              {/* 일정 추가 버튼 */}
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="flex items-center gap-2 px-4 py-2 text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
-              >
-                <Plus className="w-4 h-4" />
-                일정 추가
-              </button>
-
-              {/* 학생 정보 카드 */}
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
-                <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full">
-                  <User className="w-5 h-5 text-blue-600" />
+            {/* 학생 정보 카드 */}
+            <div className="hidden md:flex items-center gap-3 p-3 rounded-lg bg-gray-50">
+              <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full">
+                <User className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="text-sm">
+                <div className="font-medium text-gray-900">
+                  {student.name}
                 </div>
-                <div className="text-sm">
-                  <div className="font-medium text-gray-900">
-                    {student.name}
-                  </div>
-                  <div className="text-gray-500">{getGrade(student.grade)}</div>
-                </div>
+                <div className="text-gray-500">{getGrade(student.grade)}</div>
               </div>
             </div>
           </div>
@@ -522,166 +501,16 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
       </header>
 
       {/* 메인 콘텐츠 */}
-      <main className="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
-          {/* 좌측 패널 - 일정 관리 */}
-          <div className="lg:col-span-1">
-            {/* 일정 통계 */}
-            <div className="p-4 mb-6 bg-white border border-gray-200 rounded-lg shadow-sm">
-              <h3 className="mb-4 text-lg font-semibold text-gray-900">
-                일정 통계
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">전체 일정</span>
-                  <span className="font-medium text-gray-900">
-                    {scheduleStats.total}개
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">개인 일정</span>
-                  <span className="font-medium text-blue-600">
-                    {scheduleStats.personal}개
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">수업 일정</span>
-                  <span className="font-medium text-green-600">
-                    {scheduleStats.class}개
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* 검색 및 필터 */}
-            <div className="p-4 mb-6 bg-white border border-gray-200 rounded-lg shadow-sm">
-              <h3 className="mb-4 text-lg font-semibold text-gray-900">
-                일정 검색
-              </h3>
-
-              {/* 검색 입력 */}
-              <div className="relative mb-4">
-                <Search className="absolute w-4 h-4 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
-                <input
-                  type="text"
-                  placeholder="일정 검색..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              {/* 필터 버튼 */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  필터
-                </label>
-                <div className="flex flex-col gap-2">
-                  {[
-                    { value: "all", label: "전체", count: scheduleStats.total },
-                    {
-                      value: "personal",
-                      label: "개인 일정",
-                      count: scheduleStats.personal,
-                    },
-                    {
-                      value: "class",
-                      label: "수업 일정",
-                      count: scheduleStats.class,
-                    },
-                  ].map((filter) => (
-                    <button
-                      key={filter.value}
-                      onClick={() =>
-                        setFilterType(
-                          filter.value as "all" | "personal" | "class"
-                        )
-                      }
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                        filterType === filter.value
-                          ? "bg-blue-100 text-blue-700 border border-blue-200"
-                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span>{filter.label}</span>
-                        <span className="text-xs">{filter.count}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* 일정 목록 */}
-            <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-              <h3 className="mb-4 text-lg font-semibold text-gray-900">
-                일정 목록
-              </h3>
-              <div className="space-y-2 overflow-y-auto max-h-64">
-                {filteredSchedules.length === 0 ? (
-                  <p className="py-4 text-sm text-center text-gray-500">
-                    {searchTerm ? "검색 결과가 없습니다." : "일정이 없습니다."}
-                  </p>
-                ) : (
-                  filteredSchedules.map((schedule) => (
-                    <div
-                      key={schedule.id}
-                      className="p-3 transition-colors rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
-                      onClick={() => setSelectedSchedule(schedule)}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: schedule.color }}
-                            />
-                            <span className="text-sm font-medium text-gray-900">
-                              {schedule.title}
-                            </span>
-                          </div>
-                          <div className="space-y-1 text-xs text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {schedule.startTime} - {schedule.endTime}
-                            </div>
-                            {schedule.room && (
-                              <div className="flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                {schedule.room}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteSchedule(schedule.id);
-                          }}
-                          className="p-1 text-red-500 hover:text-red-700"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* 우측 패널 - 시간표 */}
-          <div className="lg:col-span-3">
-            <CanvasSchedule
-              key={`schedule-${scheduleBlocks.length}-${scheduleBlocks
-                .map((b) => b.id)
-                .join("-")}`}
-              customBlocks={scheduleBlocks}
-              onBlocksChange={handleBlocksChange}
-              editMode={"view"}
-            />
-          </div>
+      <main className="flex-1 flex flex-col overflow-hidden px-4 py-4">
+        <div className="flex-1 w-full h-full min-h-0">
+          <CanvasSchedule
+            key={`schedule-${scheduleBlocks.length}-${scheduleBlocks
+              .map((b) => b.id)
+              .join("-")}`}
+            customBlocks={scheduleBlocks}
+            onBlocksChange={handleBlocksChange}
+            editMode={"view"}
+          />
         </div>
       </main>
 
