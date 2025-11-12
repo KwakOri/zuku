@@ -28,9 +28,6 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-// 고정 템플릿 ID
-const TEMPLATE_ID = process.env.NEXT_PUBLIC_WEEKLY_REPORT_TEMPLATE_ID || "";
-
 // 버튼 URL 베이스
 const HOMEWORK_URL_BASE =
   process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
@@ -337,11 +334,6 @@ export default function NotificationsPage() {
 
   // 단일 발송
   const handleSendSingle = async (recipientData: RecipientData) => {
-    if (!TEMPLATE_ID) {
-      alert("템플릿 ID가 설정되지 않았습니다.");
-      return;
-    }
-
     if (!user?.id) {
       alert("사용자 정보를 불러올 수 없습니다. 다시 로그인해주세요.");
       return;
@@ -350,7 +342,6 @@ export default function NotificationsPage() {
     try {
       // 주간 보고서 발송 (weekly_reports 생성 + 알림톡 발송 + 로그 저장)
       await sendSingleWeeklyReport.mutateAsync({
-        templateId: TEMPLATE_ID,
         recipient: {
           studentId: recipientData.studentId,
           studentName: recipientData.studentName,
@@ -374,11 +365,6 @@ export default function NotificationsPage() {
 
   // 일괄 발송
   const handleBulkSend = async () => {
-    if (!TEMPLATE_ID) {
-      alert("템플릿 ID가 설정되지 않았습니다.");
-      return;
-    }
-
     if (!user?.id) {
       alert("사용자 정보를 불러올 수 없습니다. 다시 로그인해주세요.");
       return;
@@ -408,7 +394,6 @@ export default function NotificationsPage() {
     try {
       // 주간 보고서 일괄 발송 (weekly_reports 생성 + 알림톡 발송 + 로그 저장)
       await sendWeeklyReport.mutateAsync({
-        templateId: TEMPLATE_ID,
         recipients: recipientsData.map((r) => ({
           studentId: r.studentId,
           studentName: r.studentName,

@@ -4,24 +4,9 @@
  */
 
 import {
-  AlimtalkTemplatesResponse,
   AlimtalkSendRequest,
   AlimtalkSendResponse,
 } from '@/types/alimtalk';
-
-/**
- * 템플릿 목록 조회
- */
-export async function fetchTemplates(): Promise<AlimtalkTemplatesResponse> {
-  const response = await fetch('/api/alimtalk/templates');
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || '템플릿 조회에 실패했습니다.');
-  }
-
-  return response.json();
-}
 
 /**
  * 알림톡 발송 (단일/다중)

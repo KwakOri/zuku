@@ -44,7 +44,9 @@
       "Bash(npx next build:*)",
       "Bash(node:*)",
       "Bash(/Users/kwakori/projects/promotion/zuku/public/omr-template.json)",
-      "Bash(psql:*)"
+      "Bash(psql:*)",
+      "WebFetch(domain:developers.solapi.dev)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ],
     "deny": [],
     "ask": []

@@ -20,7 +20,6 @@ export interface WeeklyReportRecipient {
 }
 
 export interface WeeklyReportSendRequest {
-  templateId: string;
   recipients: WeeklyReportRecipient[];
   weekOf: string;
   sentBy: string;
@@ -66,7 +65,6 @@ export async function sendWeeklyReport(
  * 단일 학생 주간 보고서 발송
  */
 export async function sendSingleWeeklyReport(
-  templateId: string,
   recipient: WeeklyReportRecipient,
   weekOf: string,
   sentBy: string,
@@ -74,7 +72,6 @@ export async function sendSingleWeeklyReport(
   smsSender?: string
 ): Promise<WeeklyReportSendResponse> {
   return sendWeeklyReport({
-    templateId,
     recipients: [recipient],
     weekOf,
     sentBy,

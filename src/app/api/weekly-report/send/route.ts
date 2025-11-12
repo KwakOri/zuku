@@ -3,12 +3,14 @@
  * POST /api/weekly-report/send
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { sendBulkAlimtalk } from "@/services/server/alimtalkService";
 import { createAdminSupabaseClient } from "@/lib/supabase-server";
+import { sendBulkAlimtalk } from "@/services/server/alimtalkService";
+import { NextRequest, NextResponse } from "next/server";
+
+// 서버에서 템플릿 ID 가져오기
+const SOLAPI_TEMPLATE_ID = process.env.SOLAPI_TEMPLATE_ID;
 
 interface WeeklyReportSendRequest {
-  templateId: string;
   recipients: Array<{
     studentId: string;
     studentName: string;
@@ -25,15 +27,16 @@ interface WeeklyReportSendRequest {
 export async function POST(request: NextRequest) {
   try {
     const body: WeeklyReportSendRequest = await request.json();
+    console.log("body", body);
 
-    // 유효성 검사
-    if (!body.templateId) {
+    // 템플릿 ID 확인
+    if (!SOLAPI_TEMPLATE_ID) {
       return NextResponse.json(
         {
           success: false,
-          message: "템플릿 ID가 필요합니다.",
+          message: "서버 템플릿 ID가 설정되지 않았습니다.",
         },
-        { status: 400 }
+        { status: 500 }
       );
     }
 
@@ -70,66 +73,88 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminSupabaseClient();
 
     // 1. weekly_reports 테이블에 리포트 먼저 생성
-    console.log('[WeeklyReportSend] weekly_reports 생성 시작');
-    console.log('[WeeklyReportSend] Recipients:', body.recipients.map(r => ({ studentId: r.studentId, studentName: r.studentName })));
+    console.log("[WeeklyReportSend] weekly_reports 생성 시작");
+    console.log(
+      "[WeeklyReportSend] Recipients:",
+      body.recipients.map((r) => ({
+        studentId: r.studentId,
+        studentName: r.studentName,
+      }))
+    );
 
     // 학생별로 weekly_report 생성 (upsert 사용하여 중복 방지)
-    const weeklyReportsToCreate = body.recipients.map(recipient => ({
+    const weeklyReportsToCreate = body.recipients.map((recipient) => ({
       student_id: recipient.studentId,
       week_of: body.weekOf,
-      expired_at: new Date(new Date(body.weekOf).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7일 후
+      expired_at: new Date(
+        new Date(body.weekOf).getTime() + 7 * 24 * 60 * 60 * 1000
+      ).toISOString(), // 7일 후
     }));
 
-    console.log('[WeeklyReportSend] Creating weekly_reports:', weeklyReportsToCreate);
+    console.log(
+      "[WeeklyReportSend] Creating weekly_reports:",
+      weeklyReportsToCreate
+    );
 
     const { data: weeklyReports, error: weeklyReportError } = await supabase
-      .from('weekly_reports')
+      .from("weekly_reports")
       .upsert(weeklyReportsToCreate, {
-        onConflict: 'student_id,week_of',
+        onConflict: "student_id,week_of",
         ignoreDuplicates: false,
       })
-      .select('id, student_id');
+      .select("id, student_id");
 
     if (weeklyReportError) {
-      console.error('[WeeklyReportSend] weekly_reports 생성 실패:', weeklyReportError);
+      console.error(
+        "[WeeklyReportSend] weekly_reports 생성 실패:",
+        weeklyReportError
+      );
       return NextResponse.json(
         {
           success: false,
-          message: 'weekly_reports 생성에 실패했습니다: ' + weeklyReportError.message,
+          message:
+            "weekly_reports 생성에 실패했습니다: " + weeklyReportError.message,
         },
         { status: 500 }
       );
     }
 
-    console.log('[WeeklyReportSend] weekly_reports 생성 완료:', weeklyReports);
-    console.log('[WeeklyReportSend] Created report IDs:', weeklyReports?.map(r => r.id));
+    console.log("[WeeklyReportSend] weekly_reports 생성 완료:", weeklyReports);
+    console.log(
+      "[WeeklyReportSend] Created report IDs:",
+      weeklyReports?.map((r) => r.id)
+    );
 
     // 학생 ID와 report ID 매핑
     const studentReportMap = new Map<string, string>();
-    weeklyReports?.forEach(report => {
+    weeklyReports?.forEach((report) => {
       studentReportMap.set(report.student_id, report.id);
     });
 
     // 2. 알림톡 발송 (report_id를 variables에 포함)
     const alimtalkRecipients = body.recipients.map((recipient) => {
-      const reportId = studentReportMap.get(recipient.studentId);
+      const studentId = recipient.studentId;
+      const reportId = studentReportMap.get(studentId);
 
       if (!reportId) {
-        console.warn(`학생 ${recipient.studentName}의 report_id를 찾을 수 없습니다.`);
+        console.warn(
+          `학생 ${recipient.studentName}의 report_id를 찾을 수 없습니다.`
+        );
       }
 
       return {
         to: recipient.phone,
         variables: {
           ...recipient.variables,
-          report_id: reportId || '', // report_id 추가
+          report_id: reportId || "", // report_id 추가
+          student_id: studentId || "",
         },
       };
     });
 
-    console.log('[WeeklyReportSend] 알림톡 발송 시작');
+    console.log("[WeeklyReportSend] 알림톡 발송 시작");
     const sendResult = await sendBulkAlimtalk(
-      body.templateId,
+      SOLAPI_TEMPLATE_ID,
       alimtalkRecipients,
       body.fallbackType || "NONE",
       body.smsSender
@@ -137,7 +162,7 @@ export async function POST(request: NextRequest) {
 
     // 발송 실패 시 조기 리턴
     if (!sendResult.success) {
-      console.error('[WeeklyReportSend] 알림톡 발송 실패:', sendResult.message);
+      console.error("[WeeklyReportSend] 알림톡 발송 실패:", sendResult.message);
       return NextResponse.json(
         {
           success: false,
@@ -147,7 +172,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('[WeeklyReportSend] 알림톡 발송 완료');
+    console.log("[WeeklyReportSend] 알림톡 발송 완료");
 
     // 3. 발송 성공 시 로그 저장
 
@@ -164,8 +189,7 @@ export async function POST(request: NextRequest) {
 
     const { data: logData, error: logError } = await supabase
       .from("weekly_report_logs")
-      .insert(logsToInsert)
-      .select(`
+      .insert(logsToInsert).select(`
         *,
         student:students(id, name),
         subject:subjects(id, subject_name)

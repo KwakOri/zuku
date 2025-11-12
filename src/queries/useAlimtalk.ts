@@ -2,26 +2,11 @@
  * 알림톡 React Query Hooks
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  fetchTemplates,
   sendSingleMessage,
   sendBulkMessages,
 } from '@/services/client/alimtalkApi';
-import {
-  AlimtalkSendRequest,
-} from '@/types/alimtalk';
-
-/**
- * 템플릿 목록 조회 Hook
- */
-export function useAlimtalkTemplates() {
-  return useQuery({
-    queryKey: ['alimtalk', 'templates'],
-    queryFn: fetchTemplates,
-    staleTime: 1000 * 60 * 5, // 5분
-  });
-}
 
 /**
  * 단일 알림톡 발송 Hook

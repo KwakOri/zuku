@@ -34,14 +34,12 @@ export function useSendSingleWeeklyReport() {
 
   return useMutation({
     mutationFn: ({
-      templateId,
       recipient,
       weekOf,
       sentBy,
       fallbackType = "NONE",
       smsSender,
     }: {
-      templateId: string;
       recipient: WeeklyReportRecipient;
       weekOf: string;
       sentBy: string;
@@ -49,7 +47,6 @@ export function useSendSingleWeeklyReport() {
       smsSender?: string;
     }) =>
       sendSingleWeeklyReport(
-        templateId,
         recipient,
         weekOf,
         sentBy,
