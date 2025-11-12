@@ -295,9 +295,6 @@ export default function CanvasSchedule({
   const headerCanvasRef = useRef<HTMLCanvasElement>(null);
   const scheduleCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const timeContainerRef = useRef<HTMLDivElement>(null);
-  const headerContainerRef = useRef<HTMLDivElement>(null);
-  const scheduleContainerRef = useRef<HTMLDivElement>(null);
   // 강사 모드에서는 선택된 수업만 표시
   const filteredBlocks = React.useMemo(() => {
     if (selectedClassId && customBlocks) {
@@ -1220,69 +1217,7 @@ export default function CanvasSchedule({
     return () => window.removeEventListener("resize", updateSize);
   }, []);
 
-  // 스크롤 동기화 (세로: 시간-스케줄, 가로: 헤더-스케줄)
-  useEffect(() => {
-    const timeContainer = timeContainerRef.current;
-    const headerContainer = headerContainerRef.current;
-    const scheduleContainer = scheduleContainerRef.current;
-
-    if (!timeContainer || !headerContainer || !scheduleContainer) return;
-
-    let isVerticalScrolling = false;
-    let isHorizontalScrolling = false;
-
-    // 세로 스크롤 동기화 (시간 ↔ 스케줄)
-    const syncVerticalTimeToSchedule = () => {
-      if (isVerticalScrolling) return;
-      isVerticalScrolling = true;
-      scheduleContainer.scrollTop = timeContainer.scrollTop;
-      requestAnimationFrame(() => {
-        isVerticalScrolling = false;
-      });
-    };
-
-    // 가로 스크롤 동기화 (헤더 ↔ 스케줄)
-    const syncHorizontalHeaderToSchedule = () => {
-      if (isHorizontalScrolling) return;
-      isHorizontalScrolling = true;
-      scheduleContainer.scrollLeft = headerContainer.scrollLeft;
-      requestAnimationFrame(() => {
-        isHorizontalScrolling = false;
-      });
-    };
-
-    // 통합 스크롤 핸들러
-    const handleScheduleScroll = () => {
-      if (!isVerticalScrolling) {
-        isVerticalScrolling = true;
-        timeContainer.scrollTop = scheduleContainer.scrollTop;
-        requestAnimationFrame(() => {
-          isVerticalScrolling = false;
-        });
-      }
-      if (!isHorizontalScrolling) {
-        isHorizontalScrolling = true;
-        headerContainer.scrollLeft = scheduleContainer.scrollLeft;
-        requestAnimationFrame(() => {
-          isHorizontalScrolling = false;
-        });
-      }
-    };
-
-    // 이벤트 리스너 등록
-    timeContainer.addEventListener("scroll", syncVerticalTimeToSchedule);
-    headerContainer.addEventListener("scroll", syncHorizontalHeaderToSchedule);
-    scheduleContainer.addEventListener("scroll", handleScheduleScroll);
-
-    return () => {
-      timeContainer.removeEventListener("scroll", syncVerticalTimeToSchedule);
-      headerContainer.removeEventListener(
-        "scroll",
-        syncHorizontalHeaderToSchedule
-      );
-      scheduleContainer.removeEventListener("scroll", handleScheduleScroll);
-    };
-  }, []);
+  // 스크롤 동기화는 CSS position: sticky로 처리 (JS 동기화 제거)
 
   // 커스텀 블록이 변경될 때 업데이트
   useEffect(() => {
@@ -1306,49 +1241,79 @@ export default function CanvasSchedule({
     <div className="flex-1 min-h-0 w-full h-full flex flex-col max-h-[960px]">
       <div
         ref={containerRef}
-        className="relative flex flex-col flex-1 min-h-0 border-0 flat-card rounded-3xl"
+        className="relative flex-1 min-h-0 border-0 flat-card rounded-3xl overflow-auto"
+        style={{
+          // 모바일 최적화
+          WebkitOverflowScrolling: "touch",
+          overscrollBehavior: "contain",
+        }}
       >
-        {/* 그리드 레이아웃: 시간(고정) + 헤더(가로스크롤) */}
-        <div className="flex shrink-0">
-          {/* 왼쪽 상단 모서리 - 시간 헤더 */}
-          <div className="w-[80px] h-[60px] flex-shrink-0 bg-gray-50 flat-surface border-r border-b border-gray-300/50 flex items-center justify-center rounded-tl-3xl">
+        {/* CSS Grid 레이아웃으로 sticky 구현 */}
+        <div
+          className="grid"
+          style={{
+            gridTemplateColumns: "80px 1fr",
+            gridTemplateRows: "60px 1fr",
+            minWidth: "fit-content",
+          }}
+        >
+          {/* 왼쪽 상단 모서리 - 시간 헤더 (sticky top-left) */}
+          <div
+            className="bg-gray-50 flat-surface border-r border-b border-gray-300/50 flex items-center justify-center z-20"
+            style={{
+              position: "sticky",
+              top: 0,
+              left: 0,
+              gridRow: 1,
+              gridColumn: 1,
+            }}
+          >
             <span className="text-sm font-semibold text-gray-700">시간</span>
           </div>
 
-          {/* 상단 고정 요일 헤더 (가로 스크롤만) */}
+          {/* 상단 고정 요일 헤더 (sticky top) */}
           <div
-            ref={headerContainerRef}
-            className="flex-1 h-[60px] bg-gray-50 border-b border-gray-300/50 overflow-x-auto overflow-y-hidden flat-surface rounded-tr-3xl"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            className="bg-gray-50 flat-surface border-b border-gray-300/50 z-10"
+            style={{
+              position: "sticky",
+              top: 0,
+              gridRow: 1,
+              gridColumn: 2,
+            }}
           >
             <canvas
               ref={headerCanvasRef}
-              className="bg-gray-50 flat-surface rounded-tr-3xl"
+              className="bg-gray-50 flat-surface"
             />
           </div>
-        </div>
 
-        {/* 하단 영역 */}
-        <div className="flex flex-1 min-h-0">
-          {/* 왼쪽 고정 시간 컬럼 (세로 스크롤만) */}
+          {/* 왼쪽 고정 시간 컬럼 (sticky left) */}
           <div
-            ref={timeContainerRef}
-            className="w-[80px] flex-shrink-0 bg-gray-50 flat-surface border-r border-gray-300/50 overflow-hidden rounded-bl-3xl"
+            className="bg-gray-50 flat-surface border-r border-gray-300/50 z-10"
+            style={{
+              position: "sticky",
+              left: 0,
+              gridRow: 2,
+              gridColumn: 1,
+            }}
           >
             <canvas
               ref={timeCanvasRef}
-              className="bg-gray-50 flat-surface rounded-bl-3xl"
+              className="bg-gray-50 flat-surface"
             />
           </div>
 
-          {/* 오른쪽 스케줄 영역 (양방향 스크롤) */}
+          {/* 스케줄 영역 (스크롤 가능) */}
           <div
-            ref={scheduleContainerRef}
-            className="flex-1 overflow-auto bg-gray-50 flat-surface rounded-br-3xl"
+            className="bg-gray-50 flat-surface"
+            style={{
+              gridRow: 2,
+              gridColumn: 2,
+            }}
           >
             <canvas
               ref={scheduleCanvasRef}
-              className="cursor-pointer bg-gray-50 flat-surface rounded-br-3xl"
+              className="cursor-pointer bg-gray-50 flat-surface"
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
