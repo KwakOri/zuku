@@ -87,8 +87,8 @@ export async function POST(request: NextRequest) {
       student_id: recipient.studentId,
       week_of: body.weekOf,
       expired_at: new Date(
-        new Date(body.weekOf).getTime() + 7 * 24 * 60 * 60 * 1000
-      ).toISOString(), // 7일 후
+        Date.now() + 7 * 24 * 60 * 60 * 1000
+      ).toISOString(), // 발송일로부터 7일 후
     }));
 
     console.log(
