@@ -162,14 +162,15 @@ export async function gradeExam(
       body: formData,
       signal: controller.signal,
     });
-  } catch (fetchError: any) {
+  } catch (fetchError: unknown) {
     clearTimeout(timeoutId);
-    if (fetchError.name === "AbortError") {
+    if (fetchError instanceof Error && fetchError.name === "AbortError") {
       throw new Error(
         "Python API 서버 응답 시간 초과 (3분). 서버가 sleep 모드에서 깨어나지 못했거나 이미지 처리 중입니다."
       );
     }
-    throw new Error(`Python API 서버 연결 실패: ${fetchError.message}`);
+    const errorMessage = fetchError instanceof Error ? fetchError.message : String(fetchError);
+    throw new Error(`Python API 서버 연결 실패: ${errorMessage}`);
   }
   clearTimeout(timeoutId);
 
@@ -281,14 +282,15 @@ export async function batchGradeExams(
       body: formData,
       signal: controller.signal,
     });
-  } catch (fetchError: any) {
+  } catch (fetchError: unknown) {
     clearTimeout(timeoutId);
-    if (fetchError.name === "AbortError") {
+    if (fetchError instanceof Error && fetchError.name === "AbortError") {
       throw new Error(
         "Python API 서버 응답 시간 초과 (5분). 서버가 sleep 모드에서 깨어나지 못했거나 이미지 처리 중입니다."
       );
     }
-    throw new Error(`Python API 서버 연결 실패: ${fetchError.message}`);
+    const errorMessage = fetchError instanceof Error ? fetchError.message : String(fetchError);
+    throw new Error(`Python API 서버 연결 실패: ${errorMessage}`);
   }
   clearTimeout(timeoutId);
 

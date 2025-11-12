@@ -16,6 +16,12 @@ type School = Database['public']['Tables']['schools']['Row'];
 type Subject = Database['public']['Tables']['subjects']['Row'];
 type Class = Database['public']['Tables']['classes']['Row'];
 type ClassComposition = Database['public']['Tables']['class_compositions']['Row'];
+type RelationCompositionStudent = Database['public']['Tables']['relations_compositions_students']['Row'];
+
+// relations_compositions_students 조회 시 join된 데이터 타입
+type EnrollmentWithComposition = RelationCompositionStudent & {
+  class_compositions: Pick<ClassComposition, 'id' | 'class_id' | 'day_of_week' | 'start_time' | 'end_time' | 'type'> | null;
+};
 
 /**
  * 학교명 파싱 (레벨과 기본명 분리)
@@ -407,7 +413,9 @@ async function analyzeEnrollments(
       // 모든 스케줄이 기존 수강 정보에 있는지 확인
       const allSchedulesExist = data.classInfo.schedules.every(schedule => {
         return existingEnrollments.some(enroll => {
-          const comp = enroll.class_compositions as any;
+          const comp = enroll.class_compositions;
+          if (!comp) return false;
+
           return (
             enroll.student_id === studentId &&
             comp.class_id === classId &&

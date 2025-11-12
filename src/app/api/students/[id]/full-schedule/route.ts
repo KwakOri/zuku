@@ -1,6 +1,22 @@
 import { createAdminSupabaseClient } from "@/lib/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
-import { Tables } from "@/types/supabase";
+import { Database } from "@/types/supabase";
+
+type RelationCompositionStudent = Database['public']['Tables']['relations_compositions_students']['Row'];
+type ClassComposition = Database['public']['Tables']['class_compositions']['Row'];
+type Class = Database['public']['Tables']['classes']['Row'];
+type Subject = Database['public']['Tables']['subjects']['Row'];
+type Teacher = Database['public']['Tables']['teachers']['Row'];
+
+// relations_compositions_students 조회 시 join된 데이터 타입
+// SELECT 절에서 실제로 선택한 필드만 Supabase 타입에서 Pick
+type CompositionWithRelations = Pick<RelationCompositionStudent, 'id' | 'class_id' | 'student_id' | 'enrolled_date'> & {
+  composition: Pick<ClassComposition, 'id' | 'day_of_week' | 'start_time' | 'end_time' | 'type'> | null;
+  class: (Pick<Class, 'id' | 'title' | 'color' | 'room' | 'description'> & {
+    subject: Pick<Subject, 'id' | 'subject_name'> | null;
+    teacher: Pick<Teacher, 'id' | 'name'> | null;
+  }) | null;
+};
 
 /**
  * GET: 학생의 전체 시간표 조회 (개인 일정 + 수업 일정)
@@ -71,7 +87,7 @@ export async function GET(
     console.log('[FullSchedule] All compositions count:', allCompositions?.length || 0);
 
     // 3. 수업 일정을 시간표 형식으로 변환
-    const formattedClassSchedules = (allCompositions || []).map((comp: any) => {
+    const formattedClassSchedules = (allCompositions || []).map((comp: CompositionWithRelations) => {
       console.log(`[FullSchedule] Composition: ${comp.class?.title} - ${comp.composition?.type}`);
 
       return {
